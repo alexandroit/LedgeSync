@@ -1,12 +1,54 @@
-# LedgeSync — Project Documentation
+# LedgeSync
 
-**Project name:** LedgeSync. Selected explicitly by the owner on 2026-10-01.
-**Specification version:** 0.2.0 · **Prepared:** 2026-10-01.
-**Delivery status:** first offline implementation in progress. Native Google Drive transfers and a production release are not available. See [current status](docs/17_AGENT_HANDOFF_AND_STATUS.md).
+> **Canonical identity:** read [PROJECT_IDENTITY.md](PROJECT_IDENTITY.md) first. It defines LedgeSync, `ledgesync`, and `ledgesync.com`.
+
+**Product name:** **LedgeSync**.
+**CLI command:** `ledgesync`.
+**Primary website/domain:** `ledgesync.com`.
+**Specification version:** 0.2.1 · **Prepared:** 2026-10-01.
+**Implementation status:** offline developer alpha; no production release or live Drive transfers. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
+
+**Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
+[Website](https://alexandroit.github.io/LedgeSync/) ·
+[Builds](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml) ·
+[Apache-2.0 license](LICENSE).
+The [DNS records for ledgesync.com](docs/WEBSITE.md) are prepared; domain
+activation is deferred at the owner's request.
+
+## Try the offline alpha
+
+The first implementation browses local folders, explains policy decisions and
+creates plans against an explicitly simulated, empty destination. Plans are
+deterministic for the same snapshots and creation time.
+It contains no live Google Drive connection, transfer executor or scheduler.
+Source files are read-only. Additional VCS adapters are reported as unavailable
+and required unsupported sources stop preview rather than being skipped.
+
+The desktop is the primary interface. Build instructions for macOS, Ubuntu,
+Windows 11 and headless servers are in [PLATFORMS.md](docs/PLATFORMS.md).
+Open a folder in the app to explore it with the default `.gitignore` policy,
+or open a project JSON configuration to select multiple rule sources.
+
+The CLI calls the same application service:
+
+```sh
+go run ./cmd/ledgesync --help
+go run ./cmd/ledgesync browse --root /path/to/project --json
+go run ./cmd/ledgesync config validate --config project.json
+go run ./cmd/ledgesync explain --config project.json --path src/main.go --json
+go run ./cmd/ledgesync plan --config project.json --output /outside/source/plan.json
+go run ./cmd/ledgesync plan inspect --plan /outside/source/plan.json
+go run ./cmd/ledgesync capabilities
+```
+
+Configuration examples describe the complete contract, including future Drive
+destinations. In this alpha every preview uses a fake destination. A plan can
+be inspected but cannot be applied. JSON output contains paths from the selected
+folder; review it before sharing diagnostics.
 
 ## Product in one sentence
 
-Build an independent, local-first **GUI-first desktop file manager and synchronization application** that feels familiar to Google Drive users, sends selected local files to Google Drive, and uses a reusable policy engine that understands multiple configurable code-management ignore/exclude sources and dialects, explains every decision, and makes destructive synchronization explicit. The CLI remains a secondary automation and engineering surface over the exact same core.
+Build an independent, local-first **GUI-first desktop file manager and synchronization application** that feels familiar to users of the **current Google Drive interface** while keeping its own product identity, sends selected local files to Google Drive, and uses a reusable policy engine that understands multiple configurable code-management ignore/exclude sources and dialects, explains every decision, and makes destructive synchronization explicit. The CLI remains a secondary automation and engineering surface over the exact same core.
 
 The default discovered filename is `.gitignore`, not a mandatory filename. A project can combine `.gitignore`, `.ignore`, a user-chosen filename, rclone filter files, and policy sources from source-control/code-management ecosystems. **Filename, syntax, source mechanism, and composition policy are separate concepts.** Git uses files; Subversion uses directory properties such as `svn:ignore` and `svn:global-ignores`; Mercurial, Perforce, CVS, Bazaar/Breezy, and Fossil each have distinct behavior. A file called `.dockerignore` is not automatically Gitignore-compatible, and `rclone.conf` is a connection/credential configuration file, not an ignore dialect.
 
@@ -14,11 +56,11 @@ The default discovered filename is `.gitignore`, not a mandatory filename. A pro
 
 The user's requirements are recorded in [Product requirements](docs/01_PRODUCT_REQUIREMENTS.md). They include a standalone product inspired by rclone, Google Drive as the first destination, customizable rule filenames, multiple simultaneous rule sources, and documentation suitable for Codex or coding agent.
 
-The proposed implementation baseline is **Go core + TypeScript desktop UI through Wails + SQLite local state**, with a native Google Drive API provider. The **desktop explorer is the primary user experience**; it uses a familiar Drive-style information architecture without copying Google branding or assets. No external rclone installation is required. CLI and desktop reuse one engine; they are not two independently maintained synchronization systems. Optional read-only VCS adapters may invoke a locally installed VCS client with fixed argument arrays when the policy is not stored as a normal file (notably SVN properties); absence of that optional client must be reported as a capability limitation, never silently ignored.
+The proposed implementation baseline is **Go core + TypeScript desktop UI through Wails + SQLite local state**, with a native Google Drive API provider. The **desktop explorer is the primary user experience**; it uses an information architecture familiar to the **current Google Drive experience** without copying Google branding or assets. No external rclone installation is required. CLI and desktop reuse one engine; they are not two independently maintained synchronization systems. Optional read-only VCS adapters may invoke a locally installed VCS client with fixed argument arrays when the policy is not stored as a normal file (notably SVN properties); absence of that optional client must be reported as a capability limitation, never silently ignored.
 
 The 2026-10-01 follow-up explicitly requires source analysis before implementation. Selective source adaptation or pinned in-process reuse is allowed; an independent product does not require rewriting all upstream code. Required notices and our safety boundary must be preserved.
 
-All repository work should be in English: code, identifiers, comments, documentation, tests, commits, and agent implementation reports. Use LedgeSync in the application, repository, binaries, and website.
+All repository work should be in English: code, identifiers, comments, documentation, tests, commits, and agent implementation reports. **LedgeSync** is the selected product name. Use `ledgesync` for the CLI/binary name and `ledgesync.com` for the website/domain.
 
 ## Start here
 
@@ -31,6 +73,7 @@ All repository work should be in English: code, identifiers, comments, documenta
 
 | File | Purpose |
 |---|---|
+| [Project identity](PROJECT_IDENTITY.md) | Canonical product name, CLI command, domain, and GUI identity rules |
 | [01 · Product requirements](docs/01_PRODUCT_REQUIREMENTS.md) | Confirmed requirements, assumptions, milestones, and non-goals |
 | [02 · rclone analysis](docs/02_RCLONE_RESEARCH_AND_GAP_ANALYSIS.md) | Verified capabilities, inspected source, gaps, and staged feature parity |
 | [03 · Architecture](docs/03_ARCHITECTURE.md) | Modules, boundaries, ports, persistence, and execution model |

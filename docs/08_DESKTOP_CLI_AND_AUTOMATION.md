@@ -1,6 +1,6 @@
 # 08 — Desktop Explorer, CLI, and Automation Workflows
 
-**Product direction:** the desktop application is the primary experience. The CLI is a secondary, fully supported automation/headless interface over the same Go application services. The visual model should feel immediately familiar to users of Google Drive or desktop file managers without copying Google trademarks, artwork, proprietary assets, or pixel-for-pixel layout.
+**Product direction:** the desktop application is the primary experience. The CLI is a secondary, fully supported automation/headless interface over the same Go application services. The visual model should feel immediately familiar to users of the **current Google Drive web app / desktop experience** or desktop file managers without copying Google trademarks, artwork, proprietary assets, or pixel-for-pixel layout. Familiar patterns include: left navigation, top breadcrumb/path bar, search entry, list/grid toggle, file rows/cards with status, details pane, and activity/history views.
 
 ## Desktop information architecture
 

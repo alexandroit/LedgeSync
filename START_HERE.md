@@ -1,6 +1,12 @@
 # Start Here
 
-This repository now contains the first offline implementation in addition to the original specification. Read [the current status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform guide](docs/PLATFORMS.md) before using it. Commands and features elsewhere in the original specification remain proposals unless listed as implemented in the status report.
+**Step 0:** read `PROJECT_IDENTITY.md`. The canonical identity is **LedgeSync**, command `ledgesync`, domain `ledgesync.com`.
+
+This repository contains specification 0.2.1 and the first offline implementation in progress. Read [the current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md); proposed commands and milestone requirements are not automatically implemented.
+
+## Naming
+
+The official product name is **LedgeSync**. Use `ledgesync` as the executable/CLI command and `ledgesync.com` as the website/domain in documentation, code, configuration examples, and UI copy.
 
 ## Reading order for the implementation agent
 

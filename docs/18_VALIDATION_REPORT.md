@@ -1,5 +1,12 @@
 # 18 — Documentation Package Validation Report
 
+This is historical evidence from preparation of the specification package.
+Statements below about absent code describe that original delivery, not the
+current checkout. Current product execution evidence is in
+[the implementation handoff](17_AGENT_HANDOFF_AND_STATUS.md); the subsequent
+canonical documentation review is in
+[SPEC_REVIEW_0.2.1.md](research/SPEC_REVIEW_0.2.1.md).
+
 **Prepared:** 2026-10-01. **Package:** LedgeSync specification 0.2.0.
 
 ## Actual validation scope

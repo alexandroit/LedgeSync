@@ -1,0 +1,597 @@
+{
+  "schema_version": 1,
+  "purpose": "Go runtime dependency notices for the union of listed CLI and desktop target imports",
+  "go_version": "go version go1.27.1 darwin/arm64",
+  "build_tags": [
+    "desktop",
+    "production",
+    "webkit2_41"
+  ],
+  "targets": [
+    {
+      "target": "darwin/amd64",
+      "packages": 281,
+      "cgo_enabled": true
+    },
+    {
+      "target": "darwin/arm64",
+      "packages": 280,
+      "cgo_enabled": true
+    },
+    {
+      "target": "linux/amd64",
+      "packages": 284,
+      "cgo_enabled": true
+    },
+    {
+      "target": "linux/arm64",
+      "packages": 283,
+      "cgo_enabled": true
+    },
+    {
+      "target": "windows/amd64",
+      "packages": 310,
+      "cgo_enabled": true
+    },
+    {
+      "target": "windows/arm64",
+      "packages": 309,
+      "cgo_enabled": true
+    }
+  ],
+  "modules": [
+    {
+      "module": "git.sr.ht/~jackmordaunt/go-toast/v2",
+      "version": "v2.0.3",
+      "packages": [
+        "git.sr.ht/~jackmordaunt/go-toast/v2",
+        "git.sr.ht/~jackmordaunt/go-toast/v2/internal/winrt/data/xml/dom",
+        "git.sr.ht/~jackmordaunt/go-toast/v2/internal/winrt/ui/notifications",
+        "git.sr.ht/~jackmordaunt/go-toast/v2/tmpl",
+        "git.sr.ht/~jackmordaunt/go-toast/v2/wintoast"
+      ],
+      "targets": [
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/git.sr.ht__jackmordaunt_go-toast_v2_v2.0.3/LICENSE",
+          "sha256": "1b57eeb121b97d5920085fddd4cf395e71b8b027051a367bec8228688d68292f"
+        }
+      ]
+    },
+    {
+      "module": "github.com/bep/debounce",
+      "version": "v1.2.1",
+      "packages": [
+        "github.com/bep/debounce"
+      ],
+      "targets": [
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_bep_debounce_v1.2.1/LICENSE",
+          "sha256": "77d1b21a5460ffc70d50101e9490a44b35dd713dab8a6f847c54ce4d3e81234a"
+        }
+      ]
+    },
+    {
+      "module": "github.com/go-ole/go-ole",
+      "version": "v1.3.0",
+      "packages": [
+        "github.com/go-ole/go-ole"
+      ],
+      "targets": [
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_go-ole_go-ole_v1.3.0/LICENSE",
+          "sha256": "d883dbca28769ff23dd4368a8edb7ad9f9f23a8f86adde2875c6e41a828aac62"
+        }
+      ]
+    },
+    {
+      "module": "github.com/godbus/dbus/v5",
+      "version": "v5.1.0",
+      "packages": [
+        "github.com/godbus/dbus/v5"
+      ],
+      "targets": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_godbus_dbus_v5_v5.1.0/LICENSE",
+          "sha256": "e4646a82a976369d7ae8f6ed5c11d35dc0af18433a8ccc24c85b459ad8b95128"
+        }
+      ]
+    },
+    {
+      "module": "github.com/google/uuid",
+      "version": "v1.6.0",
+      "packages": [
+        "github.com/google/uuid"
+      ],
+      "targets": [
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_google_uuid_v1.6.0/LICENSE",
+          "sha256": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d"
+        }
+      ]
+    },
+    {
+      "module": "github.com/leaanthony/go-ansi-parser",
+      "version": "v1.6.1",
+      "packages": [
+        "github.com/leaanthony/go-ansi-parser"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_leaanthony_go-ansi-parser_v1.6.1/LICENSE",
+          "sha256": "d0817a3112cb46c57b987f58db0d8c71ca99f26d448a351073e3d69b6702e541"
+        }
+      ]
+    },
+    {
+      "module": "github.com/leaanthony/slicer",
+      "version": "v1.6.0",
+      "packages": [
+        "github.com/leaanthony/slicer"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_leaanthony_slicer_v1.6.0/LICENSE",
+          "sha256": "6ec71bfac83b3a260158e53408a81392f84982fe19c43b4c2b6e2b6f0b44457b"
+        }
+      ]
+    },
+    {
+      "module": "github.com/leaanthony/u",
+      "version": "v1.1.1",
+      "packages": [
+        "github.com/leaanthony/u"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_leaanthony_u_v1.1.1/LICENSE",
+          "sha256": "ff3448b5ffd013b261466bb5d7898094a845756f8a69773331ebbf66518f4109"
+        }
+      ]
+    },
+    {
+      "module": "github.com/pkg/browser",
+      "version": "v0.0.0-20240102092130-5ac0b6a4141c",
+      "packages": [
+        "github.com/pkg/browser"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_pkg_browser_v0.0.0-20240102092130-5ac0b6a4141c/LICENSE",
+          "sha256": "4801bb0c5d70b980b3e1f63d1d2df8d84fec22548e3d73f03a68df1fb808791f"
+        }
+      ]
+    },
+    {
+      "module": "github.com/pkg/errors",
+      "version": "v0.9.1",
+      "packages": [
+        "github.com/pkg/errors"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_pkg_errors_v0.9.1/LICENSE",
+          "sha256": "8d427fd87bc9579ea368fde3d49f9ca22eac857f91a9dec7e3004bdfab7dee86"
+        }
+      ]
+    },
+    {
+      "module": "github.com/rivo/uniseg",
+      "version": "v0.4.7",
+      "packages": [
+        "github.com/rivo/uniseg"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE.txt",
+          "file": "third_party/go_modules/github.com_rivo_uniseg_v0.4.7/LICENSE.txt",
+          "sha256": "a59885f5f0f3b3c07cf9444db5fe399b6f0791eac82055f7b85cc65500551039"
+        }
+      ]
+    },
+    {
+      "module": "github.com/samber/lo",
+      "version": "v1.49.1",
+      "packages": [
+        "github.com/samber/lo",
+        "github.com/samber/lo/internal/constraints",
+        "github.com/samber/lo/internal/rand",
+        "github.com/samber/lo/mutable"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_samber_lo_v1.49.1/LICENSE",
+          "sha256": "adb3ac2e3e382989de6befdd489f4714785af8aca47c01193a9892e8b26b3860"
+        }
+      ]
+    },
+    {
+      "module": "github.com/tkrajina/go-reflector",
+      "version": "v0.5.8",
+      "packages": [
+        "github.com/tkrajina/go-reflector/reflector"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE.txt",
+          "file": "third_party/go_modules/github.com_tkrajina_go-reflector_v0.5.8/LICENSE.txt",
+          "sha256": "3f1fc64a3fded0d8c44382af796cc434fb4026a5d3d56da296dd272277dc336f"
+        }
+      ]
+    },
+    {
+      "module": "github.com/wailsapp/go-webview2",
+      "version": "v1.0.22",
+      "packages": [
+        "github.com/wailsapp/go-webview2/internal/w32",
+        "github.com/wailsapp/go-webview2/pkg/combridge",
+        "github.com/wailsapp/go-webview2/pkg/edge",
+        "github.com/wailsapp/go-webview2/webviewloader"
+      ],
+      "targets": [
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/LICENSE",
+          "sha256": "3f10f3374cf30076196eb239667ce6063c64e4275afd2b397f6343f69676bb79"
+        },
+        {
+          "upstream_path": "webviewloader/LICENSE",
+          "file": "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/webviewloader/LICENSE",
+          "sha256": "e2c9290019954c3c3664428b73b34186b2bb8faad9b2c50605d7cdd9df5c7177"
+        }
+      ]
+    },
+    {
+      "module": "github.com/wailsapp/mimetype",
+      "version": "v1.4.1",
+      "packages": [
+        "github.com/wailsapp/mimetype",
+        "github.com/wailsapp/mimetype/internal/charset",
+        "github.com/wailsapp/mimetype/internal/json",
+        "github.com/wailsapp/mimetype/internal/magic"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_wailsapp_mimetype_v1.4.1/LICENSE",
+          "sha256": "4335e2ceb33d8d7e75125192466ae8604617b0a67492b919604fe52dc56018d9"
+        }
+      ]
+    },
+    {
+      "module": "github.com/wailsapp/wails/v2",
+      "version": "v2.14.0",
+      "packages": [
+        "github.com/wailsapp/wails/v2",
+        "github.com/wailsapp/wails/v2/internal/app",
+        "github.com/wailsapp/wails/v2/internal/binding",
+        "github.com/wailsapp/wails/v2/internal/frontend",
+        "github.com/wailsapp/wails/v2/internal/frontend/desktop",
+        "github.com/wailsapp/wails/v2/internal/frontend/desktop/darwin",
+        "github.com/wailsapp/wails/v2/internal/frontend/desktop/linux",
+        "github.com/wailsapp/wails/v2/internal/frontend/desktop/windows",
+        "github.com/wailsapp/wails/v2/internal/frontend/desktop/windows/win32",
+        "github.com/wailsapp/wails/v2/internal/frontend/desktop/windows/winc",
+        "github.com/wailsapp/wails/v2/internal/frontend/desktop/windows/winc/w32",
+        "github.com/wailsapp/wails/v2/internal/frontend/dispatcher",
+        "github.com/wailsapp/wails/v2/internal/frontend/originvalidator",
+        "github.com/wailsapp/wails/v2/internal/frontend/runtime",
+        "github.com/wailsapp/wails/v2/internal/frontend/utils",
+        "github.com/wailsapp/wails/v2/internal/fs",
+        "github.com/wailsapp/wails/v2/internal/go-common-file-dialog/cfd",
+        "github.com/wailsapp/wails/v2/internal/goversion",
+        "github.com/wailsapp/wails/v2/internal/logger",
+        "github.com/wailsapp/wails/v2/internal/menumanager",
+        "github.com/wailsapp/wails/v2/internal/platform/win32",
+        "github.com/wailsapp/wails/v2/internal/signal",
+        "github.com/wailsapp/wails/v2/internal/system/operatingsystem",
+        "github.com/wailsapp/wails/v2/internal/typescriptify",
+        "github.com/wailsapp/wails/v2/internal/webview2runtime",
+        "github.com/wailsapp/wails/v2/internal/wv2installer",
+        "github.com/wailsapp/wails/v2/pkg/application",
+        "github.com/wailsapp/wails/v2/pkg/assetserver",
+        "github.com/wailsapp/wails/v2/pkg/assetserver/webview",
+        "github.com/wailsapp/wails/v2/pkg/logger",
+        "github.com/wailsapp/wails/v2/pkg/menu",
+        "github.com/wailsapp/wails/v2/pkg/menu/keys",
+        "github.com/wailsapp/wails/v2/pkg/options",
+        "github.com/wailsapp/wails/v2/pkg/options/assetserver",
+        "github.com/wailsapp/wails/v2/pkg/options/linux",
+        "github.com/wailsapp/wails/v2/pkg/options/mac",
+        "github.com/wailsapp/wails/v2/pkg/options/windows",
+        "github.com/wailsapp/wails/v2/pkg/runtime"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/LICENSE",
+          "sha256": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d"
+        },
+        {
+          "upstream_path": "internal/frontend/desktop/windows/winc/AUTHORS",
+          "file": "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/AUTHORS",
+          "sha256": "3e6babb0262dbc81071b4d7296e6038bd3a48e6990b4d54159e11eb1dbcb3220"
+        },
+        {
+          "upstream_path": "internal/frontend/desktop/windows/winc/LICENSE",
+          "file": "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/LICENSE",
+          "sha256": "bccedbce38390429aa2fbb6cdff1e5622be8cd14c2b5b6b1f522db1813cdbb46"
+        },
+        {
+          "upstream_path": "internal/go-common-file-dialog/LICENSE",
+          "file": "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/go-common-file-dialog/LICENSE",
+          "sha256": "2c09e92358414ef4da9739026acadfbd0663118e590238b306d70ccf60db3159"
+        },
+        {
+          "upstream_path": "internal/typescriptify/LICENSE.txt",
+          "file": "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/typescriptify/LICENSE.txt",
+          "sha256": "e4794d2db458f14f6bcbd2958b58729c91f274a27c08068e65d9e521d2bd941d"
+        }
+      ]
+    },
+    {
+      "module": "golang.org/x/net",
+      "version": "v0.56.0",
+      "packages": [
+        "golang.org/x/net/html",
+        "golang.org/x/net/html/atom"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/golang.org_x_net_v0.56.0/LICENSE",
+          "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        },
+        {
+          "upstream_path": "PATENTS",
+          "file": "third_party/go_modules/golang.org_x_net_v0.56.0/PATENTS",
+          "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+        }
+      ]
+    },
+    {
+      "module": "golang.org/x/sys",
+      "version": "v0.46.0",
+      "packages": [
+        "golang.org/x/sys/unix",
+        "golang.org/x/sys/windows",
+        "golang.org/x/sys/windows/registry"
+      ],
+      "targets": [
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/golang.org_x_sys_v0.46.0/LICENSE",
+          "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        },
+        {
+          "upstream_path": "PATENTS",
+          "file": "third_party/go_modules/golang.org_x_sys_v0.46.0/PATENTS",
+          "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+        }
+      ]
+    },
+    {
+      "module": "golang.org/x/text",
+      "version": "v0.39.0",
+      "packages": [
+        "golang.org/x/text/cases",
+        "golang.org/x/text/internal",
+        "golang.org/x/text/internal/language",
+        "golang.org/x/text/internal/language/compact",
+        "golang.org/x/text/internal/tag",
+        "golang.org/x/text/language",
+        "golang.org/x/text/transform",
+        "golang.org/x/text/unicode/norm"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/golang.org_x_text_v0.39.0/LICENSE",
+          "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        },
+        {
+          "upstream_path": "PATENTS",
+          "file": "third_party/go_modules/golang.org_x_text_v0.39.0/PATENTS",
+          "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+        }
+      ]
+    }
+  ],
+  "standard_library_license": {
+    "file": "third_party/go.LICENSE",
+    "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  "standard_library_notices": [
+    {
+      "upstream_path": "LICENSE",
+      "file": "third_party/go_standard/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+    },
+    {
+      "upstream_path": "PATENTS",
+      "file": "third_party/go_standard/PATENTS",
+      "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+    },
+    {
+      "upstream_path": "src/crypto/internal/boring/LICENSE",
+      "file": "third_party/go_standard/src/crypto/internal/boring/LICENSE",
+      "sha256": "56210f826b8f0fbac3160dfe55c97f4019eb6cdda3963b5a0eab8a8bdb62360e"
+    },
+    {
+      "upstream_path": "src/vendor/golang.org/x/crypto/LICENSE",
+      "file": "third_party/go_standard/src/vendor/golang.org/x/crypto/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+    },
+    {
+      "upstream_path": "src/vendor/golang.org/x/crypto/PATENTS",
+      "file": "third_party/go_standard/src/vendor/golang.org/x/crypto/PATENTS",
+      "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+    },
+    {
+      "upstream_path": "src/vendor/golang.org/x/net/LICENSE",
+      "file": "third_party/go_standard/src/vendor/golang.org/x/net/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+    },
+    {
+      "upstream_path": "src/vendor/golang.org/x/net/PATENTS",
+      "file": "third_party/go_standard/src/vendor/golang.org/x/net/PATENTS",
+      "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+    },
+    {
+      "upstream_path": "src/vendor/golang.org/x/sys/LICENSE",
+      "file": "third_party/go_standard/src/vendor/golang.org/x/sys/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+    },
+    {
+      "upstream_path": "src/vendor/golang.org/x/sys/PATENTS",
+      "file": "third_party/go_standard/src/vendor/golang.org/x/sys/PATENTS",
+      "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+    },
+    {
+      "upstream_path": "src/vendor/golang.org/x/text/LICENSE",
+      "file": "third_party/go_standard/src/vendor/golang.org/x/text/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+    },
+    {
+      "upstream_path": "src/vendor/golang.org/x/text/PATENTS",
+      "file": "third_party/go_standard/src/vendor/golang.org/x/text/PATENTS",
+      "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+    }
+  ]
+}

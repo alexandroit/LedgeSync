@@ -1,8 +1,10 @@
 # Agent Instructions — LedgeSync
 
+**First read:** `PROJECT_IDENTITY.md`. Its product name, CLI command, and domain are authoritative.
+
 ## Mission
 
-Implement the independent file-sync product defined by this repository. The owner-selected project name is LedgeSync. The primary deliverable is reliable software, not a collection of wrappers or an untested interface.
+Implement the independent file-sync product defined by this repository. **LedgeSync** is the selected product name. Use `ledgesync` for the executable/CLI and `ledgesync.com` for the website/domain. The primary deliverable is reliable software, not a collection of wrappers or an untested interface.
 
 ## Authoritative inputs
 
@@ -10,7 +12,7 @@ Respect explicit user instructions and this specification. `docs/01_PRODUCT_REQU
 
 ## Non-negotiable rules
 
-- Write all project content in English, using the project name LedgeSync.
+- Write all project content in English and use the official product identity: **LedgeSync** (CLI: `ledgesync`, website/domain: `ledgesync.com`).
 - Keep domain/policy/filter/planning code independent of Wails, Google SDK types, and global mutable configuration.
 - Treat the desktop Files explorer as the primary product experience. The CLI is secondary for automation/headless/testing and must never become a separate implementation.
 - Implement a native Google Drive provider. Do not require a separately installed rclone for normal use. Download and audit the real upstream source before choosing reusable components. Vetted source adaptation or pinned in-process reuse is permitted under the source-analysis assignment and ADRs; standalone Git/rclone executables are development reference tools, not production dependencies.

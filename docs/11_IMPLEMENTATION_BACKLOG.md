@@ -1,8 +1,14 @@
 # 11 — Dependency-Ordered Implementation Backlog
 
-Every task begins `NOT STARTED`. Documentation validation is not implementation progress. Work in small reviewable changes; preserve existing user code. Each completion report names changed files, commands and actual results, remaining risks, and the next task. A task is done only when its acceptance evidence exists.
+This document defines acceptance gates; current execution status is recorded in
+[the handoff](17_AGENT_HANDOFF_AND_STATUS.md). Every task began `NOT STARTED`
+in the original specification. Documentation validation is not implementation
+progress. A task is done only when its acceptance evidence exists.
 
-The mandatory download/audit/reuse workflow is specified in [assignment 19](19_RCLONE_SOURCE_ANALYSIS_AND_IMPLEMENTATION.md). P0-00A–C are new, unexecuted tasks; complete them before production code and then proceed into actual implementation.
+The mandatory download/audit/reuse workflow is specified in [assignment 19](19_RCLONE_SOURCE_ANALYSIS_AND_IMPLEMENTATION.md).
+P0-00A–C were executed before application code; see the pinned
+[source audit](research/RCLONE_SOURCE_AUDIT.md) and ADR-021. Later phases still
+require their own acceptance evidence.
 
 ## P0 — Reproducible foundation
 
@@ -68,7 +74,7 @@ The mandatory download/audit/reuse workflow is specified in [assignment 19](19_R
 
 Add providers only through the same contract suite. Candidate capabilities: OneDrive/S3/SFTP, additional code-tool policy profiles beyond the built-in VCS set, literal manifests, metadata/size/age/marker rules, richer scheduling, bandwidth controls, bidirectional reconciliation, encrypted content, snapshot archives, mount/VFS, and serve/API. Each requires a new ADR, threat model, capability contract, tests, and migration plan. None is automatically authorized by the rclone comparison table.
 
-Bidirectional sync in particular requires two-sided baselines, conflict semantics, deletion propagation rules, offline recovery, and independent release gates; it is not a small option on copy. Public branding, cloud OAuth publication, code signing and final licensing remain owner decisions.
+Bidirectional sync in particular requires two-sided baselines, conflict semantics, deletion propagation rules, offline recovery, and independent release gates; it is not a small option on copy. The owner selected LedgeSync and Apache-2.0 and authorized the public project/site. Public OAuth credentials and code-signing identities remain separate decisions.
 
 ## Per-change definition of done
 

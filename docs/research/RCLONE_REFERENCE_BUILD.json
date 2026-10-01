@@ -1,0 +1,38 @@
+{
+  "source_repository": "https://github.com/rclone/rclone.git",
+  "source_tag": "v1.75.1",
+  "source_commit": "687d264b689b8c49a67e2e52a8a5e0caa01c04ce",
+  "source_clean": true,
+  "go_version": "go version go1.27.1 darwin/arm64",
+  "driver_sha256": "591cd89909f52b31de03a94c69ada386351acb522c8632f562720e0758977473",
+  "registered_backend": "local",
+  "registered_command": "lsf",
+  "build_command": [
+    "go",
+    "build",
+    "-mod=mod",
+    "-trimpath",
+    "-o",
+    "${OUTPUT}/rclone-local-reference",
+    "."
+  ],
+  "build_exit": 0,
+  "smoke_command": [
+    "rclone-local-reference",
+    "lsf",
+    "--files-only",
+    "--recursive",
+    "--exclude",
+    "*.log",
+    "${FIXTURE}"
+  ],
+  "smoke_exit": 0,
+  "smoke_stdout": "keep.txt\n",
+  "binary_sha256": "205b6439659094667d6ace431c1da9475480a0e6571ed5ae5598de1eaae6fc15",
+  "go_sum_sha256": "10b94dc37f3103ee222332179f5539a12fcc9f8c1accde04d6f2e9091c419df0",
+  "wall_duration_seconds": 8.777,
+  "isolation": "Fresh HOME/XDG/TMPDIR, empty explicit RCLONE_CONFIG, allowlisted environment; temporary synthetic local fixtures only; no cloud credentials",
+  "distribution": "Development reference only; never package with LedgeSync",
+  "builder": "tools/build_rclone_reference.py",
+  "reference_source_permalink": "https://github.com/rclone/rclone/tree/687d264b689b8c49a67e2e52a8a5e0caa01c04ce"
+}

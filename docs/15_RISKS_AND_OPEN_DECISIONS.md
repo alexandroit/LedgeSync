@@ -4,11 +4,11 @@
 
 | Decision | Current safe baseline | Resolution point |
 |---|---|---|
-| Final name | Keep LedgeSync, no brand/domain purchase | Owner before publication |
-| Repository license | No inferred license grant | Owner before source publication |
-| Hosting/repository destination | Work only in provided checkout/Drive docs | Owner before creating/publishing repository |
-| Signing accounts and public OAuth project | No credentials assumed | Owner before public release |
-| Secondary desktop OS priority | macOS first; portable core | Packaging/release planning |
+| Final name | Owner selected LedgeSync, command ledgesync, domain ledgesync.com | Resolved; PROJECT_IDENTITY.md |
+| Repository license | Owner requested Apache-2.0; third-party licenses preserved | Resolved; LICENSE and THIRD_PARTY_NOTICES.md |
+| Hosting/repository destination | Public alexandroit/LedgeSync and GitHub Pages; DNS prepared only at owner's request | Resolved for provisional site; WEBSITE.md |
+| Signing accounts and public OAuth project | Developer archives are unsigned; no cloud account connection | Production signing/OAuth identities remain pending |
+| Desktop OS targets | macOS and Ubuntu ARM64/x64; Windows 11 ARM64/x64; CLI for servers | Owner requested; see PLATFORMS.md for actual validation |
 | Additional cloud providers | Interfaces now, implementations later | Separate scoped milestone |
 
 Do not repeatedly ask these questions to avoid building the safe offline foundation. Record unresolved decisions and continue tasks that do not require them.

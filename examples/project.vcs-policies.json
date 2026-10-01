@@ -2,7 +2,7 @@
   "schemaVersion": "1.1",
   "project": {
     "id": "vcs-policies",
-    "displayName": "Multiple VCS policy sources"
+    "displayName": "LedgeSync multiple VCS policy sources"
   },
   "source": {
     "root": "SOURCE_ROOT",

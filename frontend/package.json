@@ -1,0 +1,19 @@
+{
+  "name": "ledgesync-desktop-ui",
+  "private": true,
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "check": "tsc --noEmit",
+    "build": "npm run check && vite build && node scripts/prepare-native.mjs",
+    "prepare:native": "node scripts/prepare-native.mjs",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.2"
+  }
+}

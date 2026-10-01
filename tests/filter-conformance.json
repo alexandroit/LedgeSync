@@ -1,0 +1,859 @@
+{
+  "schemaVersion": "1.0",
+  "notice": "Git cases are independently checked against Git only. rclone and product/mixed engine cases are proposed fixtures, not executed application tests. Expand grammar/traversal corpus before claiming compatibility.",
+  "gitCases": [
+    {
+      "id": "GIT-001",
+      "family": "gitignore",
+      "description": "Optional absent ignore file does not exclude data",
+      "ruleFiles": {},
+      "files": [
+        "a.txt",
+        "src/main.go"
+      ],
+      "expectedExcluded": []
+    },
+    {
+      "id": "GIT-002",
+      "family": "gitignore",
+      "description": "Slashless suffix at multiple depths",
+      "ruleFiles": {
+        ".gitignore": "*.log\n"
+      },
+      "files": [
+        "a.log",
+        "dir/b.log",
+        "src/main.go"
+      ],
+      "expectedExcluded": [
+        "a.log",
+        "dir/b.log"
+      ]
+    },
+    {
+      "id": "GIT-003",
+      "family": "gitignore",
+      "description": "Anchored root directory exclusion",
+      "ruleFiles": {
+        ".gitignore": "/build/\n"
+      },
+      "files": [
+        "build/a.txt",
+        "app/build/a.txt"
+      ],
+      "expectedExcluded": [
+        "build/a.txt"
+      ]
+    },
+    {
+      "id": "GIT-004",
+      "family": "gitignore",
+      "description": "Unanchored directory basename at any depth",
+      "ruleFiles": {
+        ".gitignore": "build/\n"
+      },
+      "files": [
+        "build/a.txt",
+        "app/build/a.txt",
+        "building/a.txt"
+      ],
+      "expectedExcluded": [
+        "build/a.txt",
+        "app/build/a.txt"
+      ]
+    },
+    {
+      "id": "GIT-005",
+      "family": "gitignore",
+      "description": "Negation overrides an earlier pattern in same group",
+      "ruleFiles": {
+        ".gitignore": "*.log\n!important.log\n"
+      },
+      "files": [
+        "a.log",
+        "important.log",
+        "sub/important.log"
+      ],
+      "expectedExcluded": [
+        "a.log"
+      ]
+    },
+    {
+      "id": "GIT-006",
+      "family": "gitignore",
+      "description": "Negated child cannot reopen excluded parent",
+      "ruleFiles": {
+        ".gitignore": "build/\n!build/keep.txt\n"
+      },
+      "files": [
+        "build/keep.txt",
+        "build/drop.txt"
+      ],
+      "expectedExcluded": [
+        "build/keep.txt",
+        "build/drop.txt"
+      ]
+    },
+    {
+      "id": "GIT-007",
+      "family": "gitignore",
+      "description": "Exclude children rather than parent to permit reinclude",
+      "ruleFiles": {
+        ".gitignore": "build/*\n!build/keep.txt\n"
+      },
+      "files": [
+        "build/keep.txt",
+        "build/drop.txt"
+      ],
+      "expectedExcluded": [
+        "build/drop.txt"
+      ]
+    },
+    {
+      "id": "GIT-008",
+      "family": "gitignore",
+      "description": "Escaped leading comment and negation characters",
+      "ruleFiles": {
+        ".gitignore": "# comment\n\\#secret\n\\!literal\n"
+      },
+      "files": [
+        "#secret",
+        "!literal",
+        "comment"
+      ],
+      "expectedExcluded": [
+        "#secret",
+        "!literal"
+      ]
+    },
+    {
+      "id": "GIT-009",
+      "family": "gitignore",
+      "description": "Nested rule overrides ancestor for reachable branch",
+      "ruleFiles": {
+        ".gitignore": "*.log\n",
+        "sub/.gitignore": "!keep.log\n"
+      },
+      "files": [
+        "a.log",
+        "sub/a.log",
+        "sub/keep.log"
+      ],
+      "expectedExcluded": [
+        "a.log",
+        "sub/a.log"
+      ]
+    },
+    {
+      "id": "GIT-010",
+      "family": "gitignore",
+      "description": "Deeper hierarchy can exclude again",
+      "ruleFiles": {
+        ".gitignore": "*.log\n",
+        "sub/.gitignore": "!*.log\n",
+        "sub/private/.gitignore": "*.log\n"
+      },
+      "files": [
+        "root.log",
+        "sub/open.log",
+        "sub/private/a.log"
+      ],
+      "expectedExcluded": [
+        "root.log",
+        "sub/private/a.log"
+      ]
+    },
+    {
+      "id": "GIT-011",
+      "family": "gitignore",
+      "description": "Question mark matches one character",
+      "ruleFiles": {
+        ".gitignore": "temp?\n"
+      },
+      "files": [
+        "temp1",
+        "temp12",
+        "x/tempA"
+      ],
+      "expectedExcluded": [
+        "temp1",
+        "x/tempA"
+      ]
+    },
+    {
+      "id": "GIT-012",
+      "family": "gitignore",
+      "description": "Character class matches a digit",
+      "ruleFiles": {
+        ".gitignore": "file[0-9].txt\n"
+      },
+      "files": [
+        "file1.txt",
+        "filea.txt",
+        "dir/file2.txt"
+      ],
+      "expectedExcluded": [
+        "file1.txt",
+        "dir/file2.txt"
+      ]
+    },
+    {
+      "id": "GIT-013",
+      "family": "gitignore",
+      "description": "Double star directory matching",
+      "ruleFiles": {
+        ".gitignore": "**/cache/**\n"
+      },
+      "files": [
+        "cache/a",
+        "app/cache/b",
+        "app/cached/b"
+      ],
+      "expectedExcluded": [
+        "cache/a",
+        "app/cache/b"
+      ]
+    },
+    {
+      "id": "GIT-014",
+      "family": "gitignore",
+      "description": "Middle double star matches zero or many directories",
+      "ruleFiles": {
+        ".gitignore": "a/**/b.txt\n"
+      },
+      "files": [
+        "a/b.txt",
+        "a/x/b.txt",
+        "a/x/c.txt"
+      ],
+      "expectedExcluded": [
+        "a/b.txt",
+        "a/x/b.txt"
+      ]
+    },
+    {
+      "id": "GIT-015",
+      "family": "gitignore",
+      "description": "Single star does not cross slash",
+      "ruleFiles": {
+        ".gitignore": "docs/*.txt\n"
+      },
+      "files": [
+        "docs/a.txt",
+        "docs/deep/b.txt"
+      ],
+      "expectedExcluded": [
+        "docs/a.txt"
+      ]
+    },
+    {
+      "id": "GIT-016",
+      "family": "gitignore",
+      "description": "Bare basename can exclude a directory subtree",
+      "ruleFiles": {
+        ".gitignore": "secret\n"
+      },
+      "files": [
+        "secret.txt",
+        "top/secret/a",
+        "sub/secret"
+      ],
+      "expectedExcluded": [
+        "top/secret/a",
+        "sub/secret"
+      ]
+    },
+    {
+      "id": "GIT-017",
+      "family": "gitignore",
+      "description": "Trailing slash matches directories not a regular file",
+      "ruleFiles": {
+        ".gitignore": "out/\n"
+      },
+      "files": [
+        "out",
+        "nested/out/a",
+        "nested/output/a"
+      ],
+      "expectedExcluded": [
+        "nested/out/a"
+      ]
+    },
+    {
+      "id": "GIT-018",
+      "family": "gitignore",
+      "description": "Unescaped trailing spaces are ignored in pattern",
+      "ruleFiles": {
+        ".gitignore": "name \n"
+      },
+      "files": [
+        "name",
+        "name "
+      ],
+      "expectedExcluded": [
+        "name"
+      ]
+    },
+    {
+      "id": "GIT-019",
+      "family": "gitignore",
+      "description": "Escaped trailing space is literal",
+      "ruleFiles": {
+        ".gitignore": "name\\ \n"
+      },
+      "files": [
+        "name",
+        "name "
+      ],
+      "expectedExcluded": [
+        "name "
+      ]
+    },
+    {
+      "id": "GIT-020",
+      "family": "gitignore",
+      "description": "CRLF rules",
+      "ruleFiles": {
+        ".gitignore": "*.tmp\r\n!keep.tmp\r\n"
+      },
+      "files": [
+        "drop.tmp",
+        "keep.tmp"
+      ],
+      "expectedExcluded": [
+        "drop.tmp"
+      ]
+    },
+    {
+      "id": "GIT-021",
+      "family": "gitignore",
+      "description": "Unicode names preserve their spelling",
+      "ruleFiles": {
+        ".gitignore": "café.txt\n"
+      },
+      "files": [
+        "café.txt",
+        "cafe.txt",
+        "d/café.txt"
+      ],
+      "expectedExcluded": [
+        "café.txt",
+        "d/café.txt"
+      ]
+    },
+    {
+      "id": "GIT-022",
+      "family": "gitignore",
+      "description": "Root anchor does not match nested basename",
+      "ruleFiles": {
+        ".gitignore": "/foo.txt\n"
+      },
+      "files": [
+        "foo.txt",
+        "d/foo.txt"
+      ],
+      "expectedExcluded": [
+        "foo.txt"
+      ]
+    },
+    {
+      "id": "GIT-023",
+      "family": "gitignore",
+      "description": "Last matching rule wins",
+      "ruleFiles": {
+        ".gitignore": "*.log\n!a.log\na.log\n"
+      },
+      "files": [
+        "a.log",
+        "b.log",
+        "c.txt"
+      ],
+      "expectedExcluded": [
+        "a.log",
+        "b.log"
+      ]
+    },
+    {
+      "id": "GIT-024",
+      "family": "gitignore",
+      "description": "Final rule without newline",
+      "ruleFiles": {
+        ".gitignore": "*.tmp"
+      },
+      "files": [
+        "a.tmp",
+        "b.txt"
+      ],
+      "expectedExcluded": [
+        "a.tmp"
+      ]
+    },
+    {
+      "id": "GIT-025",
+      "family": "gitignore",
+      "description": "Explicitly reopen parent and descendants",
+      "ruleFiles": {
+        ".gitignore": "*\n!.gitignore\n!src/\n!src/**\n"
+      },
+      "files": [
+        "src/main.go",
+        "src/deep/a.go",
+        "other.txt"
+      ],
+      "expectedExcluded": [
+        "other.txt"
+      ]
+    },
+    {
+      "id": "GIT-026",
+      "family": "gitignore",
+      "description": "Nested slash anchors relative to rule directory",
+      "ruleFiles": {
+        ".gitignore": "",
+        "sub/.gitignore": "/only.txt\n"
+      },
+      "files": [
+        "only.txt",
+        "sub/only.txt",
+        "sub/deep/only.txt"
+      ],
+      "expectedExcluded": [
+        "sub/only.txt"
+      ]
+    },
+    {
+      "id": "GIT-027",
+      "family": "gitignore",
+      "description": "Explicit portable case-sensitive profile",
+      "ruleFiles": {
+        ".gitignore": "*.LOG\n"
+      },
+      "files": [
+        "a.LOG",
+        "a.log"
+      ],
+      "expectedExcluded": [
+        "a.LOG"
+      ]
+    },
+    {
+      "id": "GIT-028",
+      "family": "gitignore",
+      "description": "Patterns-only profile deliberately ignores tracked status",
+      "ruleFiles": {
+        ".gitignore": "cache.bin\n"
+      },
+      "files": [
+        "cache.bin",
+        "src/main.go"
+      ],
+      "expectedExcluded": [
+        "cache.bin"
+      ],
+      "trackedFiles": [
+        "cache.bin"
+      ]
+    }
+  ],
+  "rcloneCases": [
+    {
+      "id": "RCL-001",
+      "family": "rclone",
+      "description": "First include beats later exclude",
+      "dialect": "rclone-filter",
+      "ruleStreams": [
+        "+ keep.log\n- *.log\n"
+      ],
+      "files": [
+        "keep.log",
+        "drop.log",
+        "a.txt"
+      ],
+      "expectedExcluded": [
+        "drop.log"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-002",
+      "family": "rclone",
+      "description": "First exclude beats later include",
+      "dialect": "rclone-filter",
+      "ruleStreams": [
+        "- *.log\n+ keep.log\n"
+      ],
+      "files": [
+        "keep.log",
+        "drop.log"
+      ],
+      "expectedExcluded": [
+        "keep.log",
+        "drop.log"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-003",
+      "family": "rclone",
+      "description": "Positive filter rule does not imply deny-all",
+      "dialect": "rclone-filter",
+      "ruleStreams": [
+        "+ *.txt\n"
+      ],
+      "files": [
+        "a.txt",
+        "b.bin"
+      ],
+      "expectedExcluded": [],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-004",
+      "family": "rclone",
+      "description": "Include profile has implicit deny-all",
+      "dialect": "rclone-include",
+      "ruleStreams": [
+        "*.txt\n"
+      ],
+      "files": [
+        "a.txt",
+        "b.bin"
+      ],
+      "expectedExcluded": [
+        "b.bin"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-005",
+      "family": "rclone",
+      "description": "Exclude profile unmatched is permitted",
+      "dialect": "rclone-exclude",
+      "ruleStreams": [
+        "*.tmp\n"
+      ],
+      "files": [
+        "a.tmp",
+        "b.bin"
+      ],
+      "expectedExcluded": [
+        "a.tmp"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-006",
+      "family": "rclone",
+      "description": "Standalone reset clears previous rules",
+      "dialect": "rclone-filter",
+      "ruleStreams": [
+        "- *.log\n!\n+ *.log\n"
+      ],
+      "files": [
+        "a.log",
+        "b.txt"
+      ],
+      "expectedExcluded": [],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-007",
+      "family": "rclone",
+      "description": "Later stream participates in one native ordered group",
+      "dialect": "rclone-filter",
+      "ruleStreams": [
+        "- *.zip\n",
+        "+ keep.zip\n"
+      ],
+      "files": [
+        "keep.zip",
+        "drop.zip"
+      ],
+      "expectedExcluded": [
+        "keep.zip",
+        "drop.zip"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-008",
+      "family": "rclone",
+      "description": "Reset can clear earlier stream within same group",
+      "dialect": "rclone-filter",
+      "ruleStreams": [
+        "- *.zip\n",
+        "!\n+ keep.zip\n- *.zip\n"
+      ],
+      "files": [
+        "keep.zip",
+        "drop.zip"
+      ],
+      "expectedExcluded": [
+        "drop.zip"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-009",
+      "family": "rclone",
+      "description": "Anchored directory subtree",
+      "dialect": "rclone-filter",
+      "ruleStreams": [
+        "- /cache/**\n"
+      ],
+      "files": [
+        "cache/a",
+        "app/cache/a"
+      ],
+      "expectedExcluded": [
+        "cache/a"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-010",
+      "family": "rclone",
+      "description": "Comments and nonraw whitespace handling",
+      "dialect": "rclone-filter",
+      "ruleStreams": [
+        "# comment\n; comment\n  - *.tmp  \n"
+      ],
+      "files": [
+        "a.tmp",
+        "b.txt"
+      ],
+      "expectedExcluded": [
+        "a.tmp"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-011",
+      "family": "rclone",
+      "description": "Brace alternatives",
+      "dialect": "rclone-exclude",
+      "ruleStreams": [
+        "*.{tmp,log}\n"
+      ],
+      "files": [
+        "a.tmp",
+        "a.log",
+        "a.txt"
+      ],
+      "expectedExcluded": [
+        "a.tmp",
+        "a.log"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    },
+    {
+      "id": "RCL-012",
+      "family": "rclone",
+      "description": "Embedded RE2 expression profile",
+      "dialect": "rclone-exclude",
+      "ruleStreams": [
+        "{{[^/]*\\.log}}\n"
+      ],
+      "files": [
+        "a.log",
+        "a.txt"
+      ],
+      "expectedExcluded": [
+        "a.log"
+      ],
+      "executionStatus": "not-run; requires pinned rclone and product adapter"
+    }
+  ],
+  "compositionCases": [
+    {
+      "id": "MIX-001",
+      "description": "Default no group match",
+      "composition": "conservative",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 100,
+          "decision": "PASS"
+        },
+        {
+          "id": "b",
+          "priority": 50,
+          "decision": "PASS"
+        }
+      ],
+      "expected": "include",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-002",
+      "description": "Independent denial wins",
+      "composition": "conservative",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 100,
+          "decision": "ALLOW"
+        },
+        {
+          "id": "b",
+          "priority": 50,
+          "decision": "DENY"
+        }
+      ],
+      "expected": "exclude",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-003",
+      "description": "Priority cannot override conservative denial",
+      "composition": "conservative",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 999,
+          "decision": "ALLOW"
+        },
+        {
+          "id": "b",
+          "priority": 1,
+          "decision": "DENY"
+        }
+      ],
+      "expected": "exclude",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-004",
+      "description": "Ordered high allow beats lower deny",
+      "composition": "ordered",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 100,
+          "decision": "ALLOW"
+        },
+        {
+          "id": "b",
+          "priority": 50,
+          "decision": "DENY"
+        }
+      ],
+      "expected": "include",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-005",
+      "description": "Ordered high deny beats lower allow",
+      "composition": "ordered",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 100,
+          "decision": "DENY"
+        },
+        {
+          "id": "b",
+          "priority": 50,
+          "decision": "ALLOW"
+        }
+      ],
+      "expected": "exclude",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-006",
+      "description": "PASS is not implicit allow in ordered mode",
+      "composition": "ordered",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 100,
+          "decision": "PASS"
+        },
+        {
+          "id": "b",
+          "priority": 50,
+          "decision": "DENY"
+        }
+      ],
+      "expected": "exclude",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-007",
+      "description": "An error blocks conservative result",
+      "composition": "conservative",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 100,
+          "decision": "ALLOW"
+        },
+        {
+          "id": "b",
+          "priority": 50,
+          "decision": "ERROR"
+        }
+      ],
+      "expected": "error",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-008",
+      "description": "Lower error blocks ordered result despite early allow",
+      "composition": "ordered",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 100,
+          "decision": "ALLOW"
+        },
+        {
+          "id": "b",
+          "priority": 50,
+          "decision": "ERROR"
+        }
+      ],
+      "expected": "error",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-009",
+      "description": "All pass falls back to include",
+      "composition": "ordered",
+      "groupDecisions": [
+        {
+          "id": "a",
+          "priority": 100,
+          "decision": "PASS"
+        },
+        {
+          "id": "b",
+          "priority": 50,
+          "decision": "PASS"
+        }
+      ],
+      "expected": "include",
+      "executionStatus": "specification-only; product evaluator pending"
+    },
+    {
+      "id": "MIX-010",
+      "description": "Git negation does not clear independent group denial",
+      "composition": "conservative",
+      "groupDecisions": [
+        {
+          "id": "git",
+          "priority": 100,
+          "decision": "ALLOW"
+        },
+        {
+          "id": "rclone",
+          "priority": 50,
+          "decision": "DENY"
+        }
+      ],
+      "expected": "exclude",
+      "executionStatus": "specification-only; product evaluator pending"
+    }
+  ]
+}

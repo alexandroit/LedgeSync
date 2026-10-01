@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.0",
+  "planId": "example-not-authorized",
+  "projectId": "my-project",
+  "createdAt": "2026-10-01T12:00:00Z",
+  "expiresAt": "2026-10-01T12:15:00Z",
+  "mode": "copy",
+  "sourceIdentity": "EXAMPLE_SOURCE_IDENTITY",
+  "destinationIdentity": "EXAMPLE_DESTINATION_IDENTITY",
+  "configDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "rulesDigest": "2222222222222222222222222222222222222222222222222222222222222222",
+  "inventoryDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+  "scanComplete": {
+    "source": true,
+    "destination": true
+  },
+  "operations": [
+    {
+      "operationId": "example-upload-1",
+      "type": "upload-new",
+      "relativePath": "src/main.go",
+      "objectId": null,
+      "dependsOn": [],
+      "expectedSize": 0,
+      "sourceDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observedRemoteVersion": null,
+      "explanation": "Illustrative zero-byte file upload. No provider/account is configured and no authorization is conveyed."
+    }
+  ],
+  "risks": [
+    "Documentation example only; not executable authorization."
+  ],
+  "summary": {
+    "operationCount": 1,
+    "uploadBytes": 0,
+    "trashCount": 0
+  },
+  "planDigest": "4e557c541095f8ac0ea0ecbf115e04c7fc7d833c75d0145dab92bff54bf57c77"
+}

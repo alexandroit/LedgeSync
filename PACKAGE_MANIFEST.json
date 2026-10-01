@@ -1,0 +1,204 @@
+{
+  "project": "Confirmar",
+  "specificationVersion": "0.2.0",
+  "preparedDate": "2026-10-01",
+  "hashAlgorithm": "SHA-256",
+  "notice": "Manifest excludes itself. Documentation and fixtures only; no product binary or credentials. Hashes provide integrity checking, not signatures.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6180,
+      "sha256": "1c0b0e9315e3012ade67a7c205a84439d8f6d02f9890e7fe03a86d1bf1054c56"
+    },
+    {
+      "path": "AGENT_BOOTSTRAP.md",
+      "bytes": 5404,
+      "sha256": "3f26dfa153c0bc7cc12475cf236c814b22c9175f056925ec85264fd8dc4d8a4e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 8380,
+      "sha256": "3b6e910a5f222e731e9fbc722dd40589df03c9d571a5dbdee40f601a3ac0bf0e"
+    },
+    {
+      "path": "START_HERE.md",
+      "bytes": 4056,
+      "sha256": "c8db0e309b5c35669884cacca765d0980069f72e07ac6783f9fa79174bbc6617"
+    },
+    {
+      "path": "docs/01_PRODUCT_REQUIREMENTS.md",
+      "bytes": 10263,
+      "sha256": "503b9bb188b7d77c360f7abae441955726fe8f17e9038d8abe66f7b31b1fd9b6"
+    },
+    {
+      "path": "docs/02_RCLONE_RESEARCH_AND_GAP_ANALYSIS.md",
+      "bytes": 8969,
+      "sha256": "cf12be7dc3ae431d71c5a5ac543f7e9c452724ab84686d25c7d62a5fd4dbaec2"
+    },
+    {
+      "path": "docs/03_ARCHITECTURE.md",
+      "bytes": 11374,
+      "sha256": "9af4313d0f1cb888ed8fc8aab7fe6a3df7512569fee4803f989fd1bf409b08d1"
+    },
+    {
+      "path": "docs/04_FILTER_ENGINE_SPEC.md",
+      "bytes": 20969,
+      "sha256": "6bae526b0ab9c4146c4183c1d109cfc58ff4307b35a77d5ca42c61dbfab7bacc"
+    },
+    {
+      "path": "docs/05_SYNC_SAFETY_AND_STATE.md",
+      "bytes": 11398,
+      "sha256": "7422187869180f9be0f092ecdbda14fd76bebf920268d75b8a457f28b940cb73"
+    },
+    {
+      "path": "docs/06_GOOGLE_DRIVE_PROVIDER.md",
+      "bytes": 8265,
+      "sha256": "4d098f99c3629750eb98a370c91bff9fb7bd6a9de2f046b9c891b1d74ef62456"
+    },
+    {
+      "path": "docs/07_CONFIGURATION_AND_CONTRACTS.md",
+      "bytes": 10159,
+      "sha256": "f44bbcf9bd4e2fb197f601db0bb793b6479dd9168fcb1899d29793ba6aae6adb"
+    },
+    {
+      "path": "docs/08_DESKTOP_CLI_AND_AUTOMATION.md",
+      "bytes": 10238,
+      "sha256": "2ba794af78dc722739eebee3b109e363ecea85ce7a4045c4fc8757bc9bb133aa"
+    },
+    {
+      "path": "docs/09_SECURITY_AND_PRIVACY.md",
+      "bytes": 6891,
+      "sha256": "3135fa9c66f28470b9a75ac8f0508e0724a684e8a4d169060457acc99dd09458"
+    },
+    {
+      "path": "docs/10_TEST_STRATEGY_AND_ACCEPTANCE.md",
+      "bytes": 9374,
+      "sha256": "3c3c870ea1d86433631aa957c50af6d036cb96c5793b547b1d27c461e29d8652"
+    },
+    {
+      "path": "docs/11_IMPLEMENTATION_BACKLOG.md",
+      "bytes": 8745,
+      "sha256": "fc2f65b477031eb3e8b082c6d50785351c27fd353e6bd9e54413c6f7d72c0660"
+    },
+    {
+      "path": "docs/12_ADR_DECISIONS.md",
+      "bytes": 6819,
+      "sha256": "dd5c555ff216ad4f408d263a9563c0a5de1e7a175acac19ff60c3783f07de5a8"
+    },
+    {
+      "path": "docs/13_RELEASE_AND_OPERATIONS.md",
+      "bytes": 4644,
+      "sha256": "b237aeb8471a0e65c4e4d5156bc7cf220d8f2036287eb9e96f647f10a333c872"
+    },
+    {
+      "path": "docs/14_SOURCES_AND_PROVENANCE.md",
+      "bytes": 8893,
+      "sha256": "60d1a7120ad4e53f778a572294d6da79b35987c79e0b0d95a4e28c894e8110b4"
+    },
+    {
+      "path": "docs/15_RISKS_AND_OPEN_DECISIONS.md",
+      "bytes": 3796,
+      "sha256": "aba2a512378063f13f01f7eb594db422ab0d7083db7757330eb4f5023d94700d"
+    },
+    {
+      "path": "docs/16_REQUIREMENTS_TRACEABILITY.md",
+      "bytes": 4333,
+      "sha256": "cbb746f7c47f9da06bc1e74577416c88ca439a8d5a7bd9d88319bc612b9f34de"
+    },
+    {
+      "path": "docs/17_AGENT_HANDOFF_AND_STATUS.md",
+      "bytes": 4475,
+      "sha256": "ee51eccf6208e66cdb4395f8e4c95914965a16edf0e93ed727911dbac4b7df94"
+    },
+    {
+      "path": "docs/18_VALIDATION_REPORT.md",
+      "bytes": 6706,
+      "sha256": "15e52ab9f3d0aeb9b0fbc2adaf45e5b53f3fd6b5ad739d1b6a3ad2d8637c8da0"
+    },
+    {
+      "path": "docs/19_RCLONE_SOURCE_ANALYSIS_AND_IMPLEMENTATION.md",
+      "bytes": 14458,
+      "sha256": "8323fb0ff916df2f31476f7008bbf22ed553075c7eb5a85f7f891205e951d21f"
+    },
+    {
+      "path": "docs/20_DESKTOP_EXPLORER_AND_CODE_POLICY_ADAPTERS.md",
+      "bytes": 12054,
+      "sha256": "792417c1fae091a1b7d66e483d115c8b0b5b75560d0a4ca9149358a3e12b5c6b"
+    },
+    {
+      "path": "examples/plan.example.json",
+      "bytes": 1345,
+      "sha256": "1c41ccb2b2441031df134ab21c93560b3ccd3bb879c5a6ea17257db8a35351ed"
+    },
+    {
+      "path": "examples/project.default.json",
+      "bytes": 1221,
+      "sha256": "52476394046a2b79a3bac56aed2f93ff63f6cb776108de1df7406ef545ae74b3"
+    },
+    {
+      "path": "examples/project.multiformat.json",
+      "bytes": 2277,
+      "sha256": "8b138e71fc3c2f35ea0e2b39c5a6da7ad47f5017d425c6d6d710af75dc150687"
+    },
+    {
+      "path": "examples/project.ordered.json",
+      "bytes": 2279,
+      "sha256": "106a87a39b28b00b475c6bd2d344d88d2f48bfd3b210b818d2003698648a9c4f"
+    },
+    {
+      "path": "examples/project.vcs-policies.json",
+      "bytes": 3292,
+      "sha256": "4e80f1154cb29ac586819e37c24b3c151437a6a60422b3375ccf9cba845ade7e"
+    },
+    {
+      "path": "examples/rules.gitignore",
+      "bytes": 111,
+      "sha256": "ff8e4d8d97e37ea71d26b77b3895824003f20dddd6408f287b0f23304d2dbdc1"
+    },
+    {
+      "path": "examples/rules.rclone-exclude",
+      "bytes": 49,
+      "sha256": "94733a360e281069cf0b0d1cab2138ab59313a0166daec61376b876749946c75"
+    },
+    {
+      "path": "examples/rules.rclone-filter",
+      "bytes": 148,
+      "sha256": "e7de5b4c30a252c00bc272653b9c9d52e1d47968694f27436ec90495fdb02347"
+    },
+    {
+      "path": "schemas/plan.schema.json",
+      "bytes": 4349,
+      "sha256": "92eba9ab2b758b6d3a4da92a0676b97d0cfba45edbdd8080620475a4fe1519cf"
+    },
+    {
+      "path": "schemas/project.schema.json",
+      "bytes": 8947,
+      "sha256": "e8a872561d435025fadcfacb7943f2ceb2e020525a227620fef41139c8aa41f3"
+    },
+    {
+      "path": "tests/filter-conformance.json",
+      "bytes": 19781,
+      "sha256": "af0f25093f491a88f31d054b0289dbf5836c6d8328af58d6c62d403041c67382"
+    },
+    {
+      "path": "tests/git-reference-results.json",
+      "bytes": 5470,
+      "sha256": "04f9d54435a8758869648a3b2cd3380f8d051aaaccd7618904715648463b5c53"
+    },
+    {
+      "path": "tests/safety-scenarios.json",
+      "bytes": 8435,
+      "sha256": "020db6591afee5073c9bd32976a269b117b24eac5bf83217250113dd1b780b42"
+    },
+    {
+      "path": "tools/check_git_reference.py",
+      "bytes": 5040,
+      "sha256": "fbd413e1519ad069adb841fdac82be90b35f80b8c1168305da666246785d1a37"
+    },
+    {
+      "path": "tools/validate_docs.py",
+      "bytes": 7533,
+      "sha256": "c086f81a9ed0a01b5b16616b44e8d25619b60d49e97aa233c3ab4c62fcab564c"
+    }
+  ]
+}

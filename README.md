@@ -10,6 +10,7 @@
 
 **Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
 [Website](https://alexandroit.github.io/LedgeSync/) ·
+[Download offline alpha](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1) ·
 [Builds](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml) ·
 [Apache-2.0 license](LICENSE).
 The [DNS records for ledgesync.com](docs/WEBSITE.md) are prepared; domain
@@ -26,6 +27,9 @@ and required unsupported sources stop preview rather than being skipped.
 
 The desktop is the primary interface. Build instructions for macOS, Ubuntu,
 Windows 11 and headless servers are in [PLATFORMS.md](docs/PLATFORMS.md).
+Release 0.1.0-alpha.1 provides six desktop and six CLI archives, with checksums
+and retained license notices. All 16 jobs passed in the
+[release CI run](https://github.com/alexandroit/LedgeSync/actions/runs/36942481310).
 Open a folder in the app to explore it with the default `.gitignore` policy,
 or open a project JSON configuration to select multiple rule sources.
 

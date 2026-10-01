@@ -65,7 +65,7 @@ Executed on macOS ARM64 with Go 1.27.1:
 - `npm ci`, `npm run build`, `npm test` in frontend: TypeScript/Vite build passed; four interaction tests passed. Tests cover actual core selection, provenance, navigation, keyboard entry, list/grid, search, preview filters, stale-view clearing, refresh after inventory shrink and untrusted filename rendering.
 - Native macOS ARM64 Wails build and actual WebView smoke passed: native picker, nine-entry synthetic fixture, excluded visibility and provenance, paired preview with nine operations/88 bytes/zero deletions. Bundle identity `com.ledgesync.app`, version 0.1.0 and macOS 13 minimum were verified in plist and Mach-O. This is an ad-hoc-signed developer build without a trusted publisher certificate or notarization. Other platform results are recorded separately after CI.
 - `python3 tools/package_cli.py --version 0.1.0-alpha.1`: six portable CLI archives built; all archive structures, SHA-256 values and required notice files verified. The extracted macOS ARM64 CLI reported the correct version. Cross-compilation is not execution on the other systems.
-- `python3 tools/collect_licenses.py`: six target import graphs inspected; 19 runtime Go modules and 41 copied notice hashes verified. This proves license inventory loading, not six successful native builds.
+- `python3 tools/collect_licenses.py` and `python3 tools/verify_licenses.py`: six target import graphs inspected; 19 runtime Go modules and 42 recorded notice hashes verified. This proves license inventory loading/integrity; the native build results are recorded below.
 - Documentation/schema/fixture structure validation passed with zero failures and zero skipped checks. These structural checks are separate from product tests.
 
 The isolated development reference can be rebuilt using
@@ -88,17 +88,35 @@ upload, overwrite, recovery or deletion paths have been tested.
 The public repository is <https://github.com/alexandroit/LedgeSync>, licensed
 Apache-2.0 with retained third-party notices. The public provisional site is
 <https://alexandroit.github.io/LedgeSync/>. It was verified after the identity
-correction; current implementation publication and native CI results are still
-being completed in this session. See [platforms](PLATFORMS.md) and
+correction and returns HTTP 200 with the stylesheet. See [platforms](PLATFORMS.md) and
 [prepared DNS records](WEBSITE.md). The separate Sites preview remains private.
+
+[Release v0.1.0-alpha.1](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1)
+is public and marked prerelease. Its immutable source commit is
+`89a9121a279c843f77b2d72f8b6e93dc332cb03b`.
+[CI run 36942481310](https://github.com/alexandroit/LedgeSync/actions/runs/36942481310)
+passed **all 16 jobs**: seven native core runners, six native desktop builds,
+frontend interactions, contracts/license integrity and pinned rclone reference.
+Windows ARM64 omits the unavailable race detector; platform-specific filename,
+permission, case-sensitivity and symlink-privilege cases have explicit skips.
+
+All twelve CI archives were downloaded and checked for Mach-O/ELF/PE
+architecture, Go 1.27.1 metadata/module identity, required licenses and recorded
+notice hashes. Their checksums matched the CI package manifests. Release tag,
+all fourteen uploaded asset digests/sizes, and anonymous HTTP 200 checksum
+download were then verified through GitHub. See
+[release evidence](research/OFFLINE_ALPHA_RELEASE.json).
+
+Only macOS ARM64 received a real desktop GUI smoke test in this session.
+Other native desktop compilation and core test results do not establish clean
+installation, accessibility or GUI runtime acceptance on those systems.
 
 Source audit and documentation-only historical results remain in document 18.
 They must not overwrite the actual implementation status above.
 
 ## Next dependency-ready work
 
-Complete the remote platform build matrix and record exact artifact/release
-identity. Then prioritize persistent state/migration/locking and the remaining
+Prioritize persistent state/migration/locking and the remaining
 policy adapter contracts before native Drive OAuth and provider integration.
 Use fake providers and temporary roots for development. Real accounts and
 mutations require the corresponding explicit authorization. Keep unsupported

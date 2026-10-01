@@ -21,6 +21,26 @@ ARM means ARM64 in this project; there are no 32-bit packages. Windows Server
 desktop use is not an acceptance target; use the CLI for Server Core/headless
 systems. No macOS Server-specific package or operating-system service is required.
 
+## Observed release results
+
+[Version 0.1.0-alpha.1](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1)
+contains six desktop archives and six CLI archives for `darwin`, `linux` and
+`windows`, each in `amd64` and `arm64`. All 16 jobs in
+[CI run 36942481310](https://github.com/alexandroit/LedgeSync/actions/runs/36942481310)
+passed at source commit `89a9121a279c843f77b2d72f8b6e93dc332cb03b`.
+
+Native desktop builds passed on all six targets. Native core tests/static
+checks passed on Ubuntu 24.04 x64/ARM64, macOS 15 ARM64/Intel, Windows Server
+2022/2025 x64 and Windows 11 ARM64. Race tests passed where supported; Windows
+ARM64 excludes that detector. Tests for unavailable POSIX permissions/filenames,
+case-insensitive paths or symlink privileges explicitly skip where inapplicable.
+
+The macOS ARM64 app was additionally opened and exercised with the real native
+folder picker, file explorer, excluded-rule inspector and simulated plan.
+Other desktop GUI runtime and clean installation remain unverified. The release
+includes `SHA256SUMS` and `RELEASE.json`; archive architecture and public asset
+digests were verified after downloading the CI artifacts.
+
 Go 1.27 raises the effective macOS minimum to 13. Framework-only minimums are
 insufficient to determine the packaged application's minimum. See the official
 [Go requirements](https://go.dev/wiki/MinimumRequirements),

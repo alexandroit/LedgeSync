@@ -1,0 +1,124 @@
+{
+  "product": "LedgeSync",
+  "version": "0.1.0-alpha.1",
+  "scope": "offline developer alpha; no live Google Drive transfers",
+  "sourceCommit": "89a9121a279c843f77b2d72f8b6e93dc332cb03b",
+  "ciRunId": 36942481310,
+  "ciRunUrl": "https://github.com/alexandroit/LedgeSync/actions/runs/36942481310",
+  "trustedPublisherSignature": false,
+  "notarized": false,
+  "artifacts": [
+    {
+      "filename": "ledgesync-desktop-0.1.0-alpha.1-darwin-arm64.tar.gz",
+      "sha256": "2f144739b5573d79be36a0ba3850d46afe97e53ca3c81c4d7db217a618b8c62d",
+      "bytes": 3503854,
+      "surface": "desktop",
+      "goos": "darwin",
+      "goarch": "arm64",
+      "embeddedVcsRevision": null
+    },
+    {
+      "filename": "ledgesync-desktop-0.1.0-alpha.1-darwin-amd64.tar.gz",
+      "sha256": "b05fc353b09549f6569ae7a36661a38388bd71545ab4dc2f8603347330bd6210",
+      "bytes": 3853024,
+      "surface": "desktop",
+      "goos": "darwin",
+      "goarch": "amd64",
+      "embeddedVcsRevision": null
+    },
+    {
+      "filename": "ledgesync-desktop-0.1.0-alpha.1-linux-amd64.tar.gz",
+      "sha256": "437b10f4486fce031ec655f2c1cd378574576e852948145c24c560a506397337",
+      "bytes": 3910179,
+      "surface": "desktop",
+      "goos": "linux",
+      "goarch": "amd64",
+      "embeddedVcsRevision": null
+    },
+    {
+      "filename": "ledgesync-desktop-0.1.0-alpha.1-linux-arm64.tar.gz",
+      "sha256": "7fe49e77edfc041d50e11e1c028972c02fcdf7412bf65643e95e7796dd372243",
+      "bytes": 3548413,
+      "surface": "desktop",
+      "goos": "linux",
+      "goarch": "arm64",
+      "embeddedVcsRevision": null
+    },
+    {
+      "filename": "ledgesync-desktop-0.1.0-alpha.1-windows-arm64.zip",
+      "sha256": "1704c7828cea85538aaf382b008f8b78f64e49bdc94ec324d838af683bee4225",
+      "bytes": 4432870,
+      "surface": "desktop",
+      "goos": "windows",
+      "goarch": "arm64",
+      "embeddedVcsRevision": null
+    },
+    {
+      "filename": "ledgesync-desktop-0.1.0-alpha.1-windows-amd64.zip",
+      "sha256": "0b29bcc5c86da99522a70eeef09fcb423b3d83e56efa1a82697320d3c0d76860",
+      "bytes": 4948464,
+      "surface": "desktop",
+      "goos": "windows",
+      "goarch": "amd64",
+      "embeddedVcsRevision": null
+    },
+    {
+      "filename": "ledgesync-0.1.0-alpha.1-darwin-amd64.tar.gz",
+      "sha256": "f7b71c8ecf304310ce22e9f0e0b7696aa1b27f304d05619d92822aadf14a80a4",
+      "bytes": 3086228,
+      "surface": "cli",
+      "goos": "darwin",
+      "goarch": "amd64",
+      "embeddedVcsRevision": "89a9121a279c843f77b2d72f8b6e93dc332cb03b"
+    },
+    {
+      "filename": "ledgesync-0.1.0-alpha.1-darwin-arm64.tar.gz",
+      "sha256": "18d1915404d0d7eb607f1dc9baff43e52ce2e6ff73137a1c149044673b23dd35",
+      "bytes": 2890214,
+      "surface": "cli",
+      "goos": "darwin",
+      "goarch": "arm64",
+      "embeddedVcsRevision": "89a9121a279c843f77b2d72f8b6e93dc332cb03b"
+    },
+    {
+      "filename": "ledgesync-0.1.0-alpha.1-linux-amd64.tar.gz",
+      "sha256": "c5b0c9bfa2303503c9cfee89facdeee4913c35e8b4181d8cdc1a224dae19d4e8",
+      "bytes": 3044399,
+      "surface": "cli",
+      "goos": "linux",
+      "goarch": "amd64",
+      "embeddedVcsRevision": "89a9121a279c843f77b2d72f8b6e93dc332cb03b"
+    },
+    {
+      "filename": "ledgesync-0.1.0-alpha.1-linux-arm64.tar.gz",
+      "sha256": "9f2477194d0f152063c02bf5adedab380d4c4ed53615a3ff8b164d41884f6518",
+      "bytes": 2788517,
+      "surface": "cli",
+      "goos": "linux",
+      "goarch": "arm64",
+      "embeddedVcsRevision": "89a9121a279c843f77b2d72f8b6e93dc332cb03b"
+    },
+    {
+      "filename": "ledgesync-0.1.0-alpha.1-windows-amd64.zip",
+      "sha256": "b18a1b77cab1b2c098c5af525e337d20c8104ba2e4f1052d3c9e7ce0c512d861",
+      "bytes": 3133160,
+      "surface": "cli",
+      "goos": "windows",
+      "goarch": "amd64",
+      "embeddedVcsRevision": "89a9121a279c843f77b2d72f8b6e93dc332cb03b"
+    },
+    {
+      "filename": "ledgesync-0.1.0-alpha.1-windows-arm64.zip",
+      "sha256": "f05c64e6a3c38b0cc4c9ef332ec15223a44c55e78f9e0a4bdf19009a3b4bb8b3",
+      "bytes": 2854295,
+      "surface": "cli",
+      "goos": "windows",
+      "goarch": "arm64",
+      "embeddedVcsRevision": "89a9121a279c843f77b2d72f8b6e93dc332cb03b"
+    }
+  ],
+  "releaseUrl": "https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1",
+  "releaseId": 401440073,
+  "releaseAssetsVerified": true,
+  "ciJobsPassed": 16
+}

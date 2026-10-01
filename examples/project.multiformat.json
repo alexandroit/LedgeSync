@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "1.1",
+  "project": {
+    "id": "multi-format",
+    "displayName": "Multiple rule files"
+  },
+  "source": {
+    "root": "SOURCE_ROOT",
+    "caseSensitive": true,
+    "symlinks": "reject"
+  },
+  "destination": {
+    "provider": "google-drive",
+    "accountRef": "ACCOUNT_REFERENCE",
+    "rootFolderId": "DESTINATION_FOLDER_ID",
+    "namespaceMode": "app-managed"
+  },
+  "filters": {
+    "composition": "conservative",
+    "gitMode": "patterns-only",
+    "defaultDecision": "include",
+    "failOnError": true,
+    "groups": [
+      {
+        "id": "git-and-custom",
+        "priority": 100,
+        "enabled": true,
+        "dialect": "gitignore",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "recursive-basename",
+            "value": ".gitignore",
+            "required": false
+          },
+          {
+            "type": "recursive-basename",
+            "value": ".ignore",
+            "required": false
+          },
+          {
+            "type": "recursive-basename",
+            "value": ".uploadignore",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "transfer-policy",
+        "priority": 200,
+        "enabled": true,
+        "dialect": "rclone-filter",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "root-file",
+            "value": "upload.rules",
+            "required": true
+          },
+          {
+            "type": "root-file",
+            "value": "extra-upload.rules",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "extra-denials",
+        "priority": 50,
+        "enabled": true,
+        "dialect": "rclone-exclude",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "root-file",
+            "value": "exclude.patterns",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "sync": {
+    "mode": "copy",
+    "approvalPolicy": "interactive",
+    "conflictPolicy": "keep-both",
+    "overwritePolicy": "deny",
+    "verification": "content-hash",
+    "maxTransfers": 4,
+    "maxRetries": 6,
+    "maxDeleteCount": 0,
+    "maxDeletePercent": 0
+  },
+  "automation": {
+    "enabled": false,
+    "trigger": "manual",
+    "intervalSeconds": 0
+  }
+}

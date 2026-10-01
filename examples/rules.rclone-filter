@@ -1,0 +1,5 @@
+# Example for upload.rules: native first-match ordering
++ /release.zip
+- *.zip
+- /cache/**
+# No implicit deny-all: unmatched files pass this group.

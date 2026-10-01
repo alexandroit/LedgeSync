@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "product": "Confirmar",
+  "scope": "Selected implementation and test source review, not a repository-wide security audit",
+  "remote_url": "https://github.com/rclone/rclone.git",
+  "reference_checkout": "${REFERENCE_ROOT}/rclone-confirmar",
+  "selected_tag": "v1.75.1",
+  "tag_object_sha": "1616ee3414fbef9d59a2a90357cbdeee3b10f5e9",
+  "commit_sha": "687d264b689b8c49a67e2e52a8a5e0caa01c04ce",
+  "commit_timestamp": "2026-09-04T17:03:20+01:00",
+  "release_published_at": "2026-09-04T17:11:27Z",
+  "retrieved_at": "2026-10-01T23:05:46.584571+00:00",
+  "release_evidence": {
+    "api": "https://api.github.com/repos/rclone/rclone/releases/latest",
+    "html": "https://github.com/rclone/rclone/releases/tag/v1.75.1",
+    "draft": false,
+    "prerelease": false,
+    "selection": "Latest stable returned by official GitHub API at retrieval"
+  },
+  "detached_head": true,
+  "tree_clean": true,
+  "signature_verification": {
+    "locally_verified": false,
+    "note": "GitHub release page displayed verified tag signature; no local GPG verification performed."
+  },
+  "license": {
+    "spdx": "MIT",
+    "file": "COPYING",
+    "sha256": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+    "notice_required_for_substantial_reuse": true
+  },
+  "toolchain": {
+    "upstream_go_directive": "1.26.0",
+    "executed_go": "go version go1.27.0 darwin/arm64",
+    "git": "git version 2.55.0",
+    "gh": "gh version 2.98.0 (2026-08-20)"
+  },
+  "module_inventory": {
+    "direct_requirements": 110,
+    "all_requirements": 274,
+    "note": "go.mod declarations, not linked dependency count; Confirmar initially uses no upstream module dependency."
+  },
+  "inspected_files": [
+    {
+      "path": "COPYING",
+      "sha256": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "go.mod",
+      "sha256": "3bc26d0be116da2c4edac7bb37599b14f6c41de51ea147fd3c281ec588441837",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "go.sum",
+      "sha256": "af9fc4d4a90e4006bdcf1e3376171bc48571de36cd68194e55dbaca87fb08f49",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "rclone.go",
+      "sha256": "ecc21dad3e738081c49d7ccd22a358b6a685b4ae6509b64eede3cbb1b3f3dd84",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "cmd/cmd.go",
+      "sha256": "b559a7b0a1360cc2a6ed72f157501e34772723bbc5a1cfcc25fcf26ae960a3f9",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "cmd/sync/sync.go",
+      "sha256": "3cf446b70a1c4ae2f04d8b160924b520d7c34ec41e9b577737c3f6aea52df9dd",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "cmd/copy/copy.go",
+      "sha256": "7ed74fabed7c8013ee7e1f8bd5d488cd8244803267f8aa54cd6d468bdba85c04",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/fs.go",
+      "sha256": "07eb5196aef7525ec9d784bd67386615fade7fb6fecbf96375ab73e24c2e99d0",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/types.go",
+      "sha256": "d356368eb1245deafde9eba525c360ba4fbdf8cfdb738ff4bdb148b7a1a32c51",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/filter/filter.go",
+      "sha256": "164c3acbe0ef4a09d144881eef634f7853fc7808e0de870616e1483b587bf3cb",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/filter/rules.go",
+      "sha256": "4750d33865ee8a251ac30df2d9b530e64b0f41e6d3e4cebf5b40e8f904cb078f",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/filter/glob.go",
+      "sha256": "f1714caa024b70a7fc6e17945baf6ffef3451f5c07c1e1db2cb642a5d9ea0233",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/filter/filter_test.go",
+      "sha256": "3e3be0889aa197db2d135702db4168c1ad1ac67c871777fa6b9e6f4ec2705f44",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/filter/glob_test.go",
+      "sha256": "10728be51a9597027142cc47760c77f4ad544d7498238d4bdc5b9e2163da9fae",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/walk/walk.go",
+      "sha256": "14872aae2e11af3bf23337d79a0c1fab43f7dd2769bec0ab67f9e1ae4a00c3dd",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/walk/walk_test.go",
+      "sha256": "b01d0099ec311c829e7d04977618c85d3f8d3bd615a9b31aba789415488db8b4",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/operations/copy.go",
+      "sha256": "57e4a678282a91197c5d66e475cafe0219b329dce7cb9955300867622dd28767",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/operations/copy_test.go",
+      "sha256": "4dee6de4ebc285935bce041b751b00fd41c32af78ecbb01de8fbfde7cba04567",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/sync/sync.go",
+      "sha256": "0740a05a8dfa29a3d481b1e3a975e4e99b08fd0563575bde2ba329031fb67d94",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/sync/sync_test.go",
+      "sha256": "c25400e5669bb35da472617e70bde587b443d14f8b12ca539b4e58c23b6ac1c9",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "backend/drive/drive.go",
+      "sha256": "b29d8dd733425cb3e2e54e460586d8a966ccc1b88cedfe48b9decb49049ce41a",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "backend/drive/upload.go",
+      "sha256": "2eb0130c8a62e18ec5e14726ebb4a48f36996837beb26363b49df6bb9a21889d",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "backend/drive/drive_internal_test.go",
+      "sha256": "98580741dd9f67d4e97e7c2ed2e3d134bea7460306c1e1cee2562f2e62a67a9d",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "backend/drive/drive_test.go",
+      "sha256": "09f60844f11d4fe0abe48717b02ea393d078b740064839e8f72f212ff7512ea3",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "lib/pacer/pacer.go",
+      "sha256": "01ae0fa8fabf2e6873500a9ae7988e07dc1701938e37c939e25691399a1fdc6e",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "lib/pacer/pacer_test.go",
+      "sha256": "2f7f96b6510486e2b75bab4e795a0a0a097e12b0f4ec7606ce8e0886cb28809f",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/accounting/accounting.go",
+      "sha256": "18883f5205c113e30c7cdca6790a3613425f1fd778ccf6455cb00a24604b8301",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/accounting/stats_groups.go",
+      "sha256": "35533b7bf6f90892d4d75e563adee063e1970710e3b765fd2ac32c4e1703ba3a",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/accounting/accounting_test.go",
+      "sha256": "5f98cdecaef76c273b8d8c558b77b6ef14ce59a1440064dfa9f3ed74cf9e9165",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/accounting/stats_groups_test.go",
+      "sha256": "a5d1d49cc4f7e230e157fc5356eb74b8938828ab5f329b1af95f21b359611782",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fs/config/config.go",
+      "sha256": "d602ea89967ae0ccf50a73a68a9042cf697f8c2f4faae1d9b3cd5bf22bc0d738",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "lib/oauthutil/oauthutil.go",
+      "sha256": "a18088e7c8cf1577822b08d08973bb6363c1922aea0d03707ce8cacdfb742620",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "librclone/librclone.go",
+      "sha256": "27dfabc02ac46f2e7c753dc98fcf2fe71116da2a7702a1ee2220d2a65a75d6b5",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "librclone/librclone/librclone.go",
+      "sha256": "03038c8fd7d632a31aeba961817a9824651363d7958bd54bb6fa74c863f2ad17",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fstest/fstest.go",
+      "sha256": "7d00e62bd7d08377f2a83c7d33164d21e1f8f8ae609f218f378e6c988b8a1eef",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "fstest/run.go",
+      "sha256": "fc52eac90c7a0583812592e5ec145954f7db1e7159ae48cff5a56b38db98fe41",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "cc51c6da296f69b9937e6d62fe7b2d5166e45301051766586c1ea0401fbea92d",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "Makefile",
+      "sha256": "a8c1e2badd78692826e36c795ab3e59c180d7662e0f748c69b8263d3719e4758",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": ".github/workflows/build.yml",
+      "sha256": "60f8e855398d7229e892be6f529f12fd6cea5f442e485ca868b52cf6047ba381",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    },
+    {
+      "path": "docs/content/install.md",
+      "sha256": "2ed6339c8ed73e7b8c646adf28fa62696c341b12ec6d57daa57c1ee3751ec8da",
+      "review": "Relevant sections; see audit for line ranges and review limits."
+    }
+  ],
+  "test_evidence": {
+    "state": "passed",
+    "packages": [
+      "./fs/filter",
+      "./lib/pacer"
+    ],
+    "environment": "Fresh HOME, XDG config/cache, TMPDIR, GOMODCACHE, GOCACHE; explicit empty rclone config; allowlisted process environment; no inherited credentials",
+    "log_directory": "${AUDIT_TMP}",
+    "command": [
+      "/opt/homebrew/bin/go",
+      "test",
+      "-count=1",
+      "-timeout=90s",
+      "./fs/filter",
+      "./lib/pacer"
+    ],
+    "exit_code": 0,
+    "wall_duration_seconds": 6.891,
+    "package_results": [
+      {
+        "package": "github.com/rclone/rclone/fs/filter",
+        "result": "pass",
+        "duration_seconds": 0.347
+      },
+      {
+        "package": "github.com/rclone/rclone/lib/pacer",
+        "result": "pass",
+        "duration_seconds": 1.263
+      }
+    ],
+    "environment_values": {
+      "PATH": "/opt/homebrew/bin:/usr/bin:/bin",
+      "HOME": "${AUDIT_TMP}/home",
+      "XDG_CONFIG_HOME": "${AUDIT_TMP}/config",
+      "XDG_CACHE_HOME": "${AUDIT_TMP}/cache",
+      "TMPDIR": "${AUDIT_TMP}/tmp",
+      "RCLONE_CONFIG": "${AUDIT_TMP}/empty-rclone.conf",
+      "GOMODCACHE": "${AUDIT_TMP}/gomod",
+      "GOCACHE": "${AUDIT_TMP}/gobuild",
+      "GOTOOLCHAIN": "local",
+      "GOPROXY": "https://proxy.golang.org",
+      "GOSUMDB": "sum.golang.org",
+      "CGO_ENABLED": "0"
+    },
+    "log_sha256": "17b61389044a55ad04b6078d36e662217903f81e7f919baf71ad22f1c21d0884",
+    "sanitized_log": "go: downloading golang.org/x/time v0.15.0\ngo: downloading github.com/stretchr/testify v1.11.1\ngo: downloading golang.org/x/sync v0.22.0\ngo: downloading golang.org/x/text v0.41.0\ngo: downloading github.com/jzelinskie/whirlpool v0.0.0-20201016144138-0675e54bb004\ngo: downloading github.com/zeebo/blake3 v0.2.4\ngo: downloading github.com/zeebo/xxh3 v1.1.0\ngo: downloading gopkg.in/yaml.v3 v3.0.1\ngo: downloading github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc\ngo: downloading github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2\ngo: downloading github.com/klauspost/cpuid/v2 v2.4.0\ngo: downloading golang.org/x/sys v0.47.0\nok  \tgithub.com/rclone/rclone/fs/filter\t0.347s\nok  \tgithub.com/rclone/rclone/lib/pacer\t1.263s\n",
+    "not_run": [
+      "Drive cloud integration",
+      "sync and operations broad tests",
+      "race",
+      "fuzz",
+      "full repository tests"
+    ]
+  },
+  "runtime_reuse_decision": "Selectively adapt fs/filter/glob.go with MIT notice; no rclone executable or Go module in runtime; retain separate dialect policy/provenance layer; Drive provider remains deferred pending object-level plan and fake-server tests.",
+  "local_evidence_note": "Exact local checkout and temporary paths are retained only in ignored build/audit-local/UPSTREAM_BASELINE.local.json. Public paths are placeholders; hashes, versions and results are unchanged.",
+  "test_dependency_license_samples": [
+    {
+      "module": "github.com/stretchr/testify@v1.11.1",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "license_sha256": "f8e536c1c7b695810427095dc85f5f80d44ff7c10535e8a9486cf393e2599189",
+      "usage": "Upstream audit tests only; not Confirmar production dependency"
+    },
+    {
+      "module": "golang.org/x/time@v0.15.0",
+      "license": "BSD-3-Clause",
+      "license_file": "LICENSE",
+      "license_sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "usage": "Upstream audit tests only; not Confirmar production dependency"
+    }
+  ]
+}

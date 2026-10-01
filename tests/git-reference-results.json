@@ -1,0 +1,312 @@
+{
+  "testedAt": "2026-10-01T11:55:21.158093+00:00",
+  "reference": "git version 2.47.3",
+  "scope": "Git expected fixture answers only; no Confirmar or rclone executable tested.",
+  "caseCount": 28,
+  "passed": 28,
+  "failed": 0,
+  "results": [
+    {
+      "id": "GIT-001",
+      "passed": true,
+      "expectedExcluded": [],
+      "actualExcluded": []
+    },
+    {
+      "id": "GIT-002",
+      "passed": true,
+      "expectedExcluded": [
+        "a.log",
+        "dir/b.log"
+      ],
+      "actualExcluded": [
+        "a.log",
+        "dir/b.log"
+      ]
+    },
+    {
+      "id": "GIT-003",
+      "passed": true,
+      "expectedExcluded": [
+        "build/a.txt"
+      ],
+      "actualExcluded": [
+        "build/a.txt"
+      ]
+    },
+    {
+      "id": "GIT-004",
+      "passed": true,
+      "expectedExcluded": [
+        "app/build/a.txt",
+        "build/a.txt"
+      ],
+      "actualExcluded": [
+        "app/build/a.txt",
+        "build/a.txt"
+      ]
+    },
+    {
+      "id": "GIT-005",
+      "passed": true,
+      "expectedExcluded": [
+        "a.log"
+      ],
+      "actualExcluded": [
+        "a.log"
+      ]
+    },
+    {
+      "id": "GIT-006",
+      "passed": true,
+      "expectedExcluded": [
+        "build/drop.txt",
+        "build/keep.txt"
+      ],
+      "actualExcluded": [
+        "build/drop.txt",
+        "build/keep.txt"
+      ]
+    },
+    {
+      "id": "GIT-007",
+      "passed": true,
+      "expectedExcluded": [
+        "build/drop.txt"
+      ],
+      "actualExcluded": [
+        "build/drop.txt"
+      ]
+    },
+    {
+      "id": "GIT-008",
+      "passed": true,
+      "expectedExcluded": [
+        "!literal",
+        "#secret"
+      ],
+      "actualExcluded": [
+        "!literal",
+        "#secret"
+      ]
+    },
+    {
+      "id": "GIT-009",
+      "passed": true,
+      "expectedExcluded": [
+        "a.log",
+        "sub/a.log"
+      ],
+      "actualExcluded": [
+        "a.log",
+        "sub/a.log"
+      ]
+    },
+    {
+      "id": "GIT-010",
+      "passed": true,
+      "expectedExcluded": [
+        "root.log",
+        "sub/private/a.log"
+      ],
+      "actualExcluded": [
+        "root.log",
+        "sub/private/a.log"
+      ]
+    },
+    {
+      "id": "GIT-011",
+      "passed": true,
+      "expectedExcluded": [
+        "temp1",
+        "x/tempA"
+      ],
+      "actualExcluded": [
+        "temp1",
+        "x/tempA"
+      ]
+    },
+    {
+      "id": "GIT-012",
+      "passed": true,
+      "expectedExcluded": [
+        "dir/file2.txt",
+        "file1.txt"
+      ],
+      "actualExcluded": [
+        "dir/file2.txt",
+        "file1.txt"
+      ]
+    },
+    {
+      "id": "GIT-013",
+      "passed": true,
+      "expectedExcluded": [
+        "app/cache/b",
+        "cache/a"
+      ],
+      "actualExcluded": [
+        "app/cache/b",
+        "cache/a"
+      ]
+    },
+    {
+      "id": "GIT-014",
+      "passed": true,
+      "expectedExcluded": [
+        "a/b.txt",
+        "a/x/b.txt"
+      ],
+      "actualExcluded": [
+        "a/b.txt",
+        "a/x/b.txt"
+      ]
+    },
+    {
+      "id": "GIT-015",
+      "passed": true,
+      "expectedExcluded": [
+        "docs/a.txt"
+      ],
+      "actualExcluded": [
+        "docs/a.txt"
+      ]
+    },
+    {
+      "id": "GIT-016",
+      "passed": true,
+      "expectedExcluded": [
+        "sub/secret",
+        "top/secret/a"
+      ],
+      "actualExcluded": [
+        "sub/secret",
+        "top/secret/a"
+      ]
+    },
+    {
+      "id": "GIT-017",
+      "passed": true,
+      "expectedExcluded": [
+        "nested/out/a"
+      ],
+      "actualExcluded": [
+        "nested/out/a"
+      ]
+    },
+    {
+      "id": "GIT-018",
+      "passed": true,
+      "expectedExcluded": [
+        "name"
+      ],
+      "actualExcluded": [
+        "name"
+      ]
+    },
+    {
+      "id": "GIT-019",
+      "passed": true,
+      "expectedExcluded": [
+        "name "
+      ],
+      "actualExcluded": [
+        "name "
+      ]
+    },
+    {
+      "id": "GIT-020",
+      "passed": true,
+      "expectedExcluded": [
+        "drop.tmp"
+      ],
+      "actualExcluded": [
+        "drop.tmp"
+      ]
+    },
+    {
+      "id": "GIT-021",
+      "passed": true,
+      "expectedExcluded": [
+        "café.txt",
+        "d/café.txt"
+      ],
+      "actualExcluded": [
+        "café.txt",
+        "d/café.txt"
+      ]
+    },
+    {
+      "id": "GIT-022",
+      "passed": true,
+      "expectedExcluded": [
+        "foo.txt"
+      ],
+      "actualExcluded": [
+        "foo.txt"
+      ]
+    },
+    {
+      "id": "GIT-023",
+      "passed": true,
+      "expectedExcluded": [
+        "a.log",
+        "b.log"
+      ],
+      "actualExcluded": [
+        "a.log",
+        "b.log"
+      ]
+    },
+    {
+      "id": "GIT-024",
+      "passed": true,
+      "expectedExcluded": [
+        "a.tmp"
+      ],
+      "actualExcluded": [
+        "a.tmp"
+      ]
+    },
+    {
+      "id": "GIT-025",
+      "passed": true,
+      "expectedExcluded": [
+        "other.txt"
+      ],
+      "actualExcluded": [
+        "other.txt"
+      ]
+    },
+    {
+      "id": "GIT-026",
+      "passed": true,
+      "expectedExcluded": [
+        "sub/only.txt"
+      ],
+      "actualExcluded": [
+        "sub/only.txt"
+      ]
+    },
+    {
+      "id": "GIT-027",
+      "passed": true,
+      "expectedExcluded": [
+        "a.LOG"
+      ],
+      "actualExcluded": [
+        "a.LOG"
+      ]
+    },
+    {
+      "id": "GIT-028",
+      "passed": true,
+      "expectedExcluded": [
+        "cache.bin"
+      ],
+      "actualExcluded": [
+        "cache.bin"
+      ]
+    }
+  ]
+}

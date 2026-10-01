@@ -1,0 +1,396 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "1.1"
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "displayName"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caseSensitive": {
+          "type": "boolean"
+        },
+        "symlinks": {
+          "const": "reject"
+        }
+      },
+      "required": [
+        "root",
+        "caseSensitive",
+        "symlinks"
+      ]
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "const": "google-drive"
+        },
+        "accountRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rootFolderId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "namespaceMode": {
+          "const": "app-managed"
+        }
+      },
+      "required": [
+        "provider",
+        "accountRef",
+        "rootFolderId",
+        "namespaceMode"
+      ]
+    },
+    "filters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "composition": {
+          "type": "string",
+          "enum": [
+            "conservative",
+            "ordered"
+          ]
+        },
+        "gitMode": {
+          "const": "patterns-only"
+        },
+        "defaultDecision": {
+          "const": "include"
+        },
+        "failOnError": {
+          "const": true
+        },
+        "groups": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,63}$"
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "dialect": {
+                "type": "string",
+                "enum": [
+                  "gitignore",
+                  "rclone-filter",
+                  "rclone-include",
+                  "rclone-exclude",
+                  "hgignore",
+                  "p4ignore",
+                  "cvsignore",
+                  "bzrignore",
+                  "fossil-ignore-glob",
+                  "svn-ignore",
+                  "svn-global-ignores",
+                  "dockerignore",
+                  "npmignore",
+                  "prettierignore",
+                  "helmignore"
+                ]
+              },
+              "scope": {
+                "const": "project"
+              },
+              "sources": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "recursive-basename",
+                        "root-file",
+                        "recursive-vcs-property"
+                      ]
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "required": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "value",
+                    "required"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "priority",
+              "enabled",
+              "dialect",
+              "scope",
+              "sources"
+            ]
+          }
+        }
+      },
+      "required": [
+        "composition",
+        "gitMode",
+        "defaultDecision",
+        "failOnError",
+        "groups"
+      ]
+    },
+    "sync": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "copy",
+            "mirror"
+          ]
+        },
+        "approvalPolicy": {
+          "type": "string",
+          "enum": [
+            "interactive",
+            "copy-preauthorized"
+          ]
+        },
+        "conflictPolicy": {
+          "type": "string",
+          "enum": [
+            "keep-both",
+            "pause"
+          ]
+        },
+        "overwritePolicy": {
+          "type": "string",
+          "enum": [
+            "deny",
+            "recover-managed"
+          ]
+        },
+        "verification": {
+          "const": "content-hash"
+        },
+        "maxTransfers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "maxDeleteCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxDeletePercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "mode",
+        "approvalPolicy",
+        "conflictPolicy",
+        "overwritePolicy",
+        "verification",
+        "maxTransfers",
+        "maxRetries",
+        "maxDeleteCount",
+        "maxDeletePercent"
+      ]
+    },
+    "automation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "trigger": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "interval",
+            "watch"
+          ]
+        },
+        "intervalSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800
+        }
+      },
+      "required": [
+        "enabled",
+        "trigger",
+        "intervalSeconds"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "project",
+    "source",
+    "destination",
+    "filters",
+    "sync",
+    "automation"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Confirmar project configuration v1.1",
+  "description": "Specification contract. Runtime authorization, filesystem identity, duplicate priorities, and capability checks are mandatory beyond this schema.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "automation": {
+            "properties": {
+              "enabled": {
+                "const": false
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "automation": {
+            "properties": {
+              "trigger": {
+                "const": "manual"
+              },
+              "intervalSeconds": {
+                "const": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "automation": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "automation": {
+            "properties": {
+              "trigger": {
+                "type": "string",
+                "enum": [
+                  "interval",
+                  "watch"
+                ]
+              },
+              "intervalSeconds": {
+                "minimum": 60
+              }
+            }
+          },
+          "sync": {
+            "properties": {
+              "mode": {
+                "const": "copy"
+              },
+              "approvalPolicy": {
+                "const": "copy-preauthorized"
+              },
+              "overwritePolicy": {
+                "const": "deny"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "sync": {
+            "properties": {
+              "mode": {
+                "const": "mirror"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "automation": {
+            "properties": {
+              "enabled": {
+                "const": false
+              }
+            }
+          },
+          "sync": {
+            "properties": {
+              "approvalPolicy": {
+                "const": "interactive"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

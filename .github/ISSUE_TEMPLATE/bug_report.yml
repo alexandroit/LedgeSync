@@ -1,0 +1,16 @@
+name: Bug report
+description: Report an unexpected result using a non-sensitive reproduction.
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and expected result
+      description: Use a temporary fixture. Do not include personal files or credentials.
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Version, operating system, and architecture
+    validations:
+      required: true

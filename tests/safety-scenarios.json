@@ -1,0 +1,262 @@
+{
+  "schemaVersion": "1.0",
+  "executionStatus": "not-run; application does not exist",
+  "scenarios": [
+    {
+      "id": "SAFE-001",
+      "title": "Preview cannot create remote folders",
+      "given": "plan needs missing destination subdirectory",
+      "expected": "no mutation; explicit create-directory operation only",
+      "invariant": "S02",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-002",
+      "title": "Missing external volume",
+      "given": "source mount disappears before discovery",
+      "expected": "SOURCE_UNAVAILABLE; zero mutation",
+      "invariant": "S03",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-003",
+      "title": "Permission-denied local subtree",
+      "given": "walk returns EACCES",
+      "expected": "SCAN_INCOMPLETE; no delete; no apply",
+      "invariant": "S03",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-004",
+      "title": "Malformed required rule source",
+      "given": "rclone filter line has invalid prefix",
+      "expected": "RULE_PARSE_ERROR; no fallback",
+      "invariant": "S04",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-005",
+      "title": "Previously present ignore file disappears",
+      "given": "watch sees deleted .gitignore",
+      "expected": "new snapshot; NEEDS_REVIEW; automation paused",
+      "invariant": "S16",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-006",
+      "title": "Ignored managed file remains remote",
+      "given": "new rule excludes previously uploaded file",
+      "expected": "protect remote ID; never infer removal",
+      "invariant": "S05",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-007",
+      "title": "Remote inventory loses a page",
+      "given": "second listing page fails",
+      "expected": "destination incomplete; no deletion",
+      "invariant": "S11",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-008",
+      "title": "Wrong Google account",
+      "given": "credential resolves to different account",
+      "expected": "block before apply",
+      "invariant": "S07",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-009",
+      "title": "Wrong destination root",
+      "given": "configured folder moved/replaced/ID changed",
+      "expected": "DESTINATION_CHANGED; no apply",
+      "invariant": "S07",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-010",
+      "title": "Plan modified after approval",
+      "given": "operation list or rule digest changed",
+      "expected": "PLAN_STALE or invalid digest; zero new mutation",
+      "invariant": "S06",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-011",
+      "title": "Source changes while streaming",
+      "given": "writer changes same file",
+      "expected": "no verified success; reconcile remote acknowledgement",
+      "invariant": "S09",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-012",
+      "title": "Upload response lost",
+      "given": "provider creates file; client times out",
+      "expected": "UNKNOWN_REMOTE_RESULT; reconcile marker/ID before retry",
+      "invariant": "S10",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-013",
+      "title": "Crash after acknowledgement",
+      "given": "process dies before local baseline transaction",
+      "expected": "recover journal; read-only reconcile; no duplicate blind upload",
+      "invariant": "S13",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-014",
+      "title": "Expired resumable session",
+      "given": "provider rejects old session",
+      "expected": "revalidate source; safely restart/reconcile",
+      "invariant": "S10",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-015",
+      "title": "Cancelled transfer",
+      "given": "cancel after several operations commit",
+      "expected": "stop new work; truthful PARTIAL/CANCELLED report; no rollback claim",
+      "invariant": "S14",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-016",
+      "title": "Remote duplicate sibling names",
+      "given": "two IDs share target name",
+      "expected": "AMBIGUOUS_DESTINATION; explicit resolution",
+      "invariant": "S12",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-017",
+      "title": "Unmanaged remote collision",
+      "given": "matching filename exists without ownership",
+      "expected": "keep-both/pause; no adoption or overwrite",
+      "invariant": "S12",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-018",
+      "title": "Concurrent remote modification",
+      "given": "observed version differs before update",
+      "expected": "CONFLICT; preserve both; no update",
+      "invariant": "S12",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-019",
+      "title": "Remote race after precheck",
+      "given": "external writer changes before API mutation",
+      "expected": "unsupported atomicity exposed; destructive capability gated",
+      "invariant": "S12",
+      "requiredMilestone": "P4"
+    },
+    {
+      "id": "SAFE-020",
+      "title": "Mirror exceeds delete count",
+      "given": "candidate count exceeds configured cap",
+      "expected": "all destructive operations blocked before apply",
+      "invariant": "S08",
+      "requiredMilestone": "P4"
+    },
+    {
+      "id": "SAFE-021",
+      "title": "Mirror exceeds delete percentage",
+      "given": "eligible baseline denominator triggers cap",
+      "expected": "all destructive operations blocked before apply",
+      "invariant": "S08",
+      "requiredMilestone": "P4"
+    },
+    {
+      "id": "SAFE-022",
+      "title": "Mirror has zero cap",
+      "given": "either deletion limit remains zero",
+      "expected": "no trash authorization possible",
+      "invariant": "S08",
+      "requiredMilestone": "P4"
+    },
+    {
+      "id": "SAFE-023",
+      "title": "Folder contains ignored child",
+      "given": "managed parent has protected descendant",
+      "expected": "never recursively trash parent",
+      "invariant": "S05",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-024",
+      "title": "Recovery copy fails",
+      "given": "backup cannot be verified",
+      "expected": "no overwrite/trash",
+      "invariant": "S15",
+      "requiredMilestone": "P4"
+    },
+    {
+      "id": "SAFE-025",
+      "title": "Integrity mismatch",
+      "given": "local and provider content hashes differ",
+      "expected": "INTEGRITY_FAILED; previous good baseline retained",
+      "invariant": "S09",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-026",
+      "title": "Rule symlink points outside root",
+      "given": "configured source resolves beyond root",
+      "expected": "PATH_UNSAFE or NODE_UNSUPPORTED; no follow",
+      "invariant": "S04",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-027",
+      "title": "Restore traversal attempt",
+      "given": "remote path contains ../",
+      "expected": "PATH_UNSAFE; no write outside restore root",
+      "invariant": "S01",
+      "requiredMilestone": "P4"
+    },
+    {
+      "id": "SAFE-028",
+      "title": "Permission lost looks like missing file",
+      "given": "known Drive ID returns 404/403",
+      "expected": "reconcile access; never infer source or remote deletion blindly",
+      "invariant": "S11",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-029",
+      "title": "Scheduler rule change",
+      "given": "broad ordered include added",
+      "expected": "pause; selection diff; new approval",
+      "invariant": "S16",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-030",
+      "title": "Secret-bearing diagnostic",
+      "given": "error contains OAuth token/session URI",
+      "expected": "redact from logs/UI/export; security test fails otherwise",
+      "invariant": "S07",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-031",
+      "title": "Overlapping writer projects",
+      "given": "two projects target same namespace",
+      "expected": "block unsupported overlap and lock conflicts",
+      "invariant": "S12",
+      "requiredMilestone": "P2"
+    },
+    {
+      "id": "SAFE-032",
+      "title": "Plan introduces extra operation at runtime",
+      "given": "executor discovers unplanned new file",
+      "expected": "new plan required; no extra upload",
+      "invariant": "S06",
+      "requiredMilestone": "P2"
+    }
+  ]
+}

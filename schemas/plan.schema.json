@@ -1,0 +1,202 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "planId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projectId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "copy",
+        "mirror"
+      ]
+    },
+    "sourceIdentity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "destinationIdentity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "configDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "rulesDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "inventoryDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "planDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "scanComplete": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "boolean"
+        },
+        "destination": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source",
+        "destination"
+      ]
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "create-directory",
+              "upload-new",
+              "skip",
+              "conflict",
+              "backup-managed",
+              "update-managed",
+              "trash-managed"
+            ]
+          },
+          "relativePath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "objectId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dependsOn": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "expectedSize": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sourceDigest": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observedRemoteVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "explanation": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "operationId",
+          "type",
+          "relativePath",
+          "objectId",
+          "dependsOn",
+          "expectedSize",
+          "sourceDigest",
+          "observedRemoteVersion",
+          "explanation"
+        ]
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operationCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uploadBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "trashCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "operationCount",
+        "uploadBytes",
+        "trashCount"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "planId",
+    "projectId",
+    "createdAt",
+    "expiresAt",
+    "mode",
+    "sourceIdentity",
+    "destinationIdentity",
+    "configDigest",
+    "rulesDigest",
+    "inventoryDigest",
+    "planDigest",
+    "scanComplete",
+    "operations",
+    "risks",
+    "summary"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Confirmar plan envelope v1.0",
+  "description": "An example transport envelope, not an authorized executable journal. Apply requires trusted state, typed runtime preconditions and explicit approval."
+}

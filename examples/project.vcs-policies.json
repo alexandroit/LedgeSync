@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "1.1",
+  "project": {
+    "id": "vcs-policies",
+    "displayName": "Multiple VCS policy sources"
+  },
+  "source": {
+    "root": "SOURCE_ROOT",
+    "caseSensitive": true,
+    "symlinks": "reject"
+  },
+  "destination": {
+    "provider": "google-drive",
+    "accountRef": "ACCOUNT_REFERENCE",
+    "rootFolderId": "DESTINATION_FOLDER_ID",
+    "namespaceMode": "app-managed"
+  },
+  "filters": {
+    "composition": "conservative",
+    "gitMode": "patterns-only",
+    "defaultDecision": "include",
+    "failOnError": true,
+    "groups": [
+      {
+        "id": "git",
+        "priority": 600,
+        "enabled": true,
+        "dialect": "gitignore",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "recursive-basename",
+            "value": ".gitignore",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "mercurial",
+        "priority": 500,
+        "enabled": true,
+        "dialect": "hgignore",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "root-file",
+            "value": ".hgignore",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "svn-local",
+        "priority": 400,
+        "enabled": true,
+        "dialect": "svn-ignore",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "recursive-vcs-property",
+            "value": "svn:ignore",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "svn-global",
+        "priority": 390,
+        "enabled": true,
+        "dialect": "svn-global-ignores",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "recursive-vcs-property",
+            "value": "svn:global-ignores",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "perforce",
+        "priority": 300,
+        "enabled": true,
+        "dialect": "p4ignore",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "recursive-basename",
+            "value": ".p4ignore",
+            "required": false
+          },
+          {
+            "type": "recursive-basename",
+            "value": "p4ignore.txt",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "cvs",
+        "priority": 200,
+        "enabled": true,
+        "dialect": "cvsignore",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "recursive-basename",
+            "value": ".cvsignore",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "fossil",
+        "priority": 100,
+        "enabled": true,
+        "dialect": "fossil-ignore-glob",
+        "scope": "project",
+        "sources": [
+          {
+            "type": "root-file",
+            "value": ".fossil-settings/ignore-glob",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "sync": {
+    "mode": "copy",
+    "approvalPolicy": "interactive",
+    "conflictPolicy": "keep-both",
+    "overwritePolicy": "deny",
+    "verification": "content-hash",
+    "maxTransfers": 4,
+    "maxRetries": 6,
+    "maxDeleteCount": 0,
+    "maxDeletePercent": 0
+  },
+  "automation": {
+    "enabled": false,
+    "trigger": "manual",
+    "intervalSeconds": 0
+  }
+}

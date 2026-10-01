@@ -1,0 +1,6 @@
+# Example for any filename explicitly mapped to gitignore
+node_modules/
+.DS_Store
+*.log
+!important.log
+/build/

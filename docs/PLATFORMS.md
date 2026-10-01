@@ -34,7 +34,8 @@ Ubuntu desktop needs GTK3 and WebKitGTK 4.1 (`libgtk-3-0t64` and
 `libwebkit2gtk-4.1-dev`, `pkg-config`, and a C compiler. Windows desktop needs
 Microsoft Edge WebView2 Runtime. The macOS app uses the system WebKit.
 
-Desktop archives are developer builds: **unsigned and not notarized**. No claim
+Desktop archives are developer builds: **no trusted publisher signature or notarization**.
+The macOS build uses an ad-hoc local signature. No claim
 is made that Gatekeeper, SmartScreen, clean installation, update, uninstall,
 accessibility, or vault integration has passed on every target. Do not disable
 operating-system security controls to run a downloaded package; building from
@@ -60,6 +61,12 @@ go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -tags desktop -nosyn
 
 On Ubuntu use `-tags desktop,webkit2_41`. Native packages are built on each
 target OS; a successful cross-compilation alone is not a runtime test.
+
+On macOS set `CGO_CFLAGS=-mmacosx-version-min=13.0` and
+`CGO_LDFLAGS=-mmacosx-version-min=13.0` for the build command. The frontend build
+automatically runs `frontend/scripts/prepare-native.mjs`, generating the app's
+own icon and macOS property-list templates from tracked source. The native
+bundle identifier is `com.ledgesync.app`; the minimum macOS version is 13.0.
 
 ## CI artifacts and checksums
 

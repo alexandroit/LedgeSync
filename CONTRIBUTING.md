@@ -9,8 +9,12 @@ Keep code, comments, documentation, and commits in English. Contributions are
 licensed under Apache-2.0 unless explicitly stated otherwise.
 
 Run `go test ./...`, `go vet ./...`, and `go test -race ./...` for core changes.
-Run `npm ci` and `npm run build` inside `frontend` for desktop frontend changes.
+Run `npm ci`, `npm run build`, and `npm test` inside `frontend` for desktop frontend changes.
 Run `python3 tools/validate_docs.py` for documentation and contract changes.
+
+After changing a runtime dependency, run `python3 tools/collect_licenses.py`
+after compiling the frontend and review the updated notice manifest. Distributed
+archives must include the application license and applicable third-party notices.
 
 Use temporary fixture roots and fake providers. Never attach real account tokens,
 private file contents, personal source trees, or upload-session URLs to an issue.

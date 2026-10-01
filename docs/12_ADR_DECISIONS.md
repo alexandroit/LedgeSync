@@ -85,3 +85,23 @@ named LedgeSync. Their SHA-256 hashes match the original documentation manifest.
 They retain stale temporary-name wording, which the owner's explicit correction
 overrides. The technical Go/Wails, GUI-first, policy and safety contracts remain
 in force. No requirements from the unrelated PixelJS folder were adopted.
+
+## ADR-024 — Canonical specification 0.2.1 reread
+
+**Accepted, 2026-10-01.** Read PROJECT_IDENTITY.md first. The updated Drive
+specification fixes the identity to LedgeSync, command `ledgesync`, primary
+domain `ledgesync.com`, and requires familiar current-Google-Drive navigation,
+breadcrumbs, search, list/grid, details, statuses, activity and paired comparison
+without copying Google's branding or assets. All six root Markdown documents
+and all twenty technical documents were fetched and compared with the prior
+read. Filtering, mutation safety, native Drive boundaries and the source-analysis
+gate are unchanged. Existing source audit evidence remains valid.
+
+The `.com` domain is the requested canonical destination. Temporary GitHub Pages
+and private preview URLs do not establish domain ownership, DNS setup or a
+working custom domain; those require separate observed hosting evidence.
+
+The owner subsequently requested preparation of the DNS records only. The
+public provisional site remains on GitHub Pages; [WEBSITE.md](WEBSITE.md)
+records the prepared values and activation checks. No DNS change is required
+for this session's delivery.

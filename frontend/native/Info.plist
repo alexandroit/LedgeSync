@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleName</key><string>LedgeSync</string>
+  <key>CFBundleDisplayName</key><string>LedgeSync</string>
+  <key>CFBundleExecutable</key><string>{{.OutputFilename}}</string>
+  <key>CFBundleIdentifier</key><string>com.ledgesync.app</string>
+  <key>CFBundleVersion</key><string>{{.Info.ProductVersion}}</string>
+  <key>CFBundleShortVersionString</key><string>{{.Info.ProductVersion}}</string>
+  <key>CFBundleGetInfoString</key><string>{{.Info.Comments}}</string>
+  <key>CFBundleIconFile</key><string>iconfile</string>
+  <key>LSMinimumSystemVersion</key><string>13.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSHumanReadableCopyright</key><string>{{.Info.Copyright}}</string>
+</dict>
+</plist>

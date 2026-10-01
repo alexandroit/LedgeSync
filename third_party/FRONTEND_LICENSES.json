@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "purpose": "Direct frontend build-tool notices, including Vite's bundled module-preload helper",
+  "packages": [
+    {
+      "package": "vite",
+      "version": "8.3.2",
+      "license": "MIT",
+      "usage": "build tool and bundled module-preload helper",
+      "notices": [
+        {
+          "upstream_path": "LICENSE.md",
+          "file": "third_party/frontend/vite-8.3.2/LICENSE.md",
+          "sha256": "a47172e44a86a7e2cd1c16282341f7726ec60caafe3a6166fe3e0602005b6fa6"
+        }
+      ]
+    },
+    {
+      "package": "typescript",
+      "version": "7.0.2",
+      "license": "Apache-2.0",
+      "usage": "build-time compiler; not packaged as a compiler",
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/frontend/typescript-7.0.2/LICENSE",
+          "sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47"
+        },
+        {
+          "upstream_path": "NOTICE.txt",
+          "file": "third_party/frontend/typescript-7.0.2/NOTICE.txt",
+          "sha256": "f5c708b59114507b8b27b48181b6883d106bbca0c1634bbee45b5e344237b66b"
+        }
+      ]
+    }
+  ]
+}

@@ -19,12 +19,16 @@ This inventory was checked on 2026-10-01 against local module/package metadata a
 
 | Component | Selected version | Usage | License and retained source |
 |---|---|---|---|
-| Go toolchain / standard library | 1.27.0 | Builds Go code; standard-library portions are linked into binaries | BSD-3-Clause; [third_party/go.LICENSE](third_party/go.LICENSE), copied from the installed toolchain |
+| Go toolchain / standard library | 1.27.1 | Builds Go code; standard-library portions are linked into binaries | BSD-3-Clause; [third_party/go.LICENSE](third_party/go.LICENSE), copied from the pinned build toolchain |
 | Wails | 2.14.0 | Desktop shell and Go/frontend bridge | MIT; [third_party/wails.LICENSE](third_party/wails.LICENSE), from the pinned module's [LICENSE](https://github.com/wailsapp/wails/blob/v2.14.0/LICENSE) |
 | TypeScript | 7.0.2 | Frontend build-time compiler | Apache-2.0; official [LICENSE.txt](https://github.com/microsoft/TypeScript/blob/v7.0.2/LICENSE.txt); npm metadata verified |
 | Vite | 8.3.2 | Frontend build-time bundler | MIT; official [LICENSE](https://github.com/vitejs/vite/blob/v8.3.2/LICENSE); npm metadata verified |
 
-Wails contains additional components with their own notices and has transitive dependencies. The table above is a direct dependency inventory, not a completed license audit of every transitive dependency or a binary bill of materials. Preserve generated/bundled dependency notices and include all applicable transitive licenses when assembling redistributable desktop artifacts. Build-time packages need their notices if the tools/packages themselves are redistributed.
+The actual CLI/desktop import graph was loaded for macOS, Linux and Windows on amd64 and arm64 with the pinned Go 1.27.1 toolchain. [third_party/GO_RUNTIME_LICENSES.json](third_party/GO_RUNTIME_LICENSES.json) records the union of 19 runtime modules, their imported packages, target membership and license hashes. Full upstream license/notice texts are retained in `third_party/go_modules/`, including Wails' nested Windows, file-dialog and TypeScript-conversion notices. `third_party/go_standard/` preserves additional notices found along the actual standard-library import graph. This package-loading evidence does not claim that all six native desktop builds were executed.
+
+[third_party/FRONTEND_LICENSES.json](third_party/FRONTEND_LICENSES.json) records exact installed Vite and TypeScript license/notice texts retained in `third_party/frontend/`. Vite's module-preload helper appears in the bundled frontend and its MIT notice is included. The TypeScript compiler and frontend development/test tools are not shipped as runtime applications.
+
+Regenerate these inventories with `python3 tools/collect_licenses.py` after dependency changes and a successful frontend build. Include the entire `third_party/` directory with packaged binaries; the CLI and desktop packagers do this. Operating-system WebKit/WebView runtimes remain platform-provided prerequisites; their binaries are not vendored into these archives.
 
 The isolated upstream audit additionally used testify v1.11.1 (MIT) and golang.org/x/time v0.15.0 (BSD-3-Clause), among upstream test dependencies. Their checked license hashes are recorded in the source baseline; those modules are not introduced into the LedgeSync core by the audit.
 

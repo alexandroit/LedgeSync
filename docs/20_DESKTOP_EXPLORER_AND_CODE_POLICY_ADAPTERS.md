@@ -1,18 +1,20 @@
 # 20 — Desktop Explorer and Code-Policy Adapter Architecture
 
-**Revision:** 0.2.0  
+**Revision:** 0.2.1
 **Prepared:** 2026-10-01  
 **Status:** normative product/implementation specification; no implementation is claimed.
 
+**Product name:** LedgeSync. **CLI command:** `ledgesync`. **Website/domain:** `ledgesync.com`.
+
 ## 1. Owner direction
 
-LedgeSync is no longer conceived as a command-centric tool with an optional graphical wrapper. The **desktop GUI is the primary product**. It should feel familiar to a Google Drive user: browse folders, switch list/grid, search, inspect status, see transfers, and navigate Local/Cloud content visually. The CLI remains important for automation, CI, scripting, remote/headless systems, and reproducible testing, but it calls the same use cases and does not define a separate product.
+LedgeSync is no longer conceived as a command-centric tool with an optional graphical wrapper. The **desktop GUI is the primary product**. It should feel familiar to a user of the **current Google Drive interface**: browse folders, use a left navigation rail, top breadcrumb/path bar, switch list/grid, search, inspect status, open a details pane, review activity, and navigate Local/Cloud content visually. The CLI remains important for automation, CI, scripting, remote/headless systems, and reproducible testing, but it calls the same use cases and does not define a separate product.
 
 The second direction is to support the exclusion/selection conventions developers already use across source-control and code-management ecosystems, including SVN. This cannot be implemented safely as “read every file ending in `ignore` using Git syntax.” Formats differ in grammar, hierarchy, implicit behavior, and even **where rules are stored**.
 
 ## 2. Product UX: familiar, not copied
 
-Use familiar file-manager/Drive interaction patterns without copying Google trademarks, proprietary icons, branding, or pixel-perfect layouts. LedgeSync's own identity and safety model must remain obvious.
+Use familiar file-manager/Drive interaction patterns from the **current Google Drive UX** without copying Google trademarks, proprietary icons, branding, or pixel-perfect layouts. LedgeSync's own identity and safety model must remain obvious.
 
 The primary window contains:
 

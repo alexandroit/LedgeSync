@@ -1,3 +1,5 @@
+**First read:** `PROJECT_IDENTITY.md` — LedgeSync / `ledgesync` / `ledgesync.com` are authoritative.
+
 # Claude Code Project Entry
 
 Read [AGENTS.md](AGENTS.md) as the shared implementation policy. Then follow [START_HERE.md](START_HERE.md) and the [bootstrap prompt](CODEX_CLAUDE_BOOTSTRAP.md).

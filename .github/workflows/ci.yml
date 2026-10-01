@@ -1,0 +1,151 @@
+name: Build and test
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  core:
+    name: Core / ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2022, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.1'
+      - run: go test ./...
+      - run: go vet ./...
+      - name: Race detector
+        if: runner.os != 'Windows' || runner.arch == 'X64'
+        run: go test -race ./...
+      - name: Build CLI for this runner
+        run: go build -trimpath -o build/cli/ ./cmd/ledgesync
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - run: python -m pip install jsonschema==4.26.0
+      - run: python tools/validate_docs.py
+      - run: python tools/verify_licenses.py
+      - run: python tools/check_git_reference.py
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.1'
+      - name: Go formatting
+        shell: bash
+        run: test -z "$(gofmt -l cmd internal)"
+      - name: Portable CLI packages
+        run: python tools/package_cli.py --version 0.1.0-alpha.1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ledgesync-portable-cli
+          path: build/releases/
+          if-no-files-found: error
+  reference:
+    name: Pinned rclone differential
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.1'
+      - name: Obtain audited development reference
+        run: git clone --depth 1 --branch v1.75.1 https://github.com/rclone/rclone.git "$RUNNER_TEMP/rclone"
+      - name: Build isolated local-only reference
+        run: python3 tools/build_rclone_reference.py --source "$RUNNER_TEMP/rclone"
+      - name: Compare product filters with reference
+        env:
+          LEDGESYNC_RCLONE_REFERENCE: ${{ github.workspace }}/build/reference/rclone-local-reference
+        run: go test -count=1 -v ./internal/filters
+  frontend:
+    name: Desktop interaction tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.1'
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.20.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - run: npm audit --audit-level=high
+  desktop:
+    name: Desktop / ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: macos-15, platform: darwin/arm64, tags: desktop}
+          - {runner: macos-15-intel, platform: darwin/amd64, tags: desktop}
+          - {runner: ubuntu-24.04, platform: linux/amd64, tags: 'desktop,webkit2_41'}
+          - {runner: ubuntu-24.04-arm, platform: linux/arm64, tags: 'desktop,webkit2_41'}
+          - {runner: windows-2022, platform: windows/amd64, tags: desktop}
+          - {runner: windows-11-arm, platform: windows/arm64, tags: desktop}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.1'
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.20.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Linux native dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - name: Go vulnerability scan
+        if: matrix.runner == 'ubuntu-24.04'
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 -tags desktop,webkit2_41 ./...
+      - name: Native desktop build
+        working-directory: cmd/ledgesync-desktop
+        env:
+          LEDGESYNC_PLATFORM: ${{ matrix.platform }}
+          LEDGESYNC_TAGS: ${{ matrix.tags }}
+          CGO_CFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
+          CGO_LDFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
+        run: go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -tags "$LEDGESYNC_TAGS" -nosyncgomod -m -trimpath -platform "$LEDGESYNC_PLATFORM"
+      - name: Archive desktop bundle
+        run: python tools/package_desktop.py --runner "${{ matrix.runner }}" --version 0.1.0-alpha.1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ledgesync-desktop-${{ matrix.runner }}
+          path: build/packages/
+          if-no-files-found: error

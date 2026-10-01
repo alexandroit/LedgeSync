@@ -1,12 +1,12 @@
 # 19 — Download rclone, Audit Its Source, and Implement LedgeSync
 
-**Revision:** 0.2.0  
+**Revision:** 0.2.1
 **Requested and prepared:** 2026-10-01  
 **Status:** mandatory implementation-agent assignment; not an executed audit or application build.
 
 ## Owner directive and authority
 
-Download the actual source of https://github.com/rclone/rclone, analyze the implementation and its tests, and use that evidence to build the new project, temporarily named **LedgeSync**. Do not substitute a README summary, a feature list, or another planning-only document for source analysis and working code.
+Download the actual source of https://github.com/rclone/rclone, analyze the implementation and its tests, and use that evidence to build the new project, named **LedgeSync**. Do not substitute a README summary, a feature list, or another planning-only document for source analysis and working code.
 
 This directive updates the earlier reference-only approach. Source-level reuse, adaptation, and pinned in-process dependencies may be selected after evidence-based evaluation. “Independent application” means our own product, boundaries, configuration, and safety contract; it does not mean rewriting sound upstream code merely to make it look original. An installed rclone executable must not be required for normal use. The existing filter and mutation-safety specifications remain authoritative.
 

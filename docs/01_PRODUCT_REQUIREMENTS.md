@@ -6,7 +6,7 @@
 
 | ID | Requirement |
 |---|---|
-| U01 | Create a new project under the existing Google Drive Projects folder; use LedgeSync until the final name is chosen. |
+| U01 | The product name is **LedgeSync**. Use `ledgesync` for the executable/CLI command and `ledgesync.com` for the website/domain. |
 | U02 | Build an independent application inspired by rclone's useful capabilities, not instructions for manually operating rclone. |
 | U03 | Send selected local projects/files to Google Drive; do not depend on Google Drive for desktop ignoring files. |
 | U04 | Use `.gitignore` as the default rule filename, with user-configurable names. |
@@ -14,14 +14,14 @@
 | U06 | Support rclone-format filtering in addition to Gitignore syntax; map each filename explicitly to its dialect. |
 | U07 | Make the solution reusable across application/workflow conventions instead of hardcoding one application. |
 | U08 | Supply detailed rules, architecture, research, tests, and execution instructions for Codex or Claude Code. |
-| U09 | Make the graphical desktop experience the primary product surface, with a file-browser experience familiar to Google Drive users; keep CLI as a secondary automation/headless interface over the same engine. |
+| U09 | Make the graphical desktop experience the primary product surface, with a file-browser experience familiar to the **current Google Drive** interface; keep CLI as a secondary automation/headless interface over the same engine. |
 | U10 | Support code-management exclusion/policy conventions broadly, including Git, Mercurial, Subversion/SVN, Perforce, CVS, Bazaar/Breezy, Fossil, and extensible adapters for additional code-tool ignore formats. SVN support must model `svn:ignore` / `svn:global-ignores` properties rather than inventing a fake `.svnignore` standard. |
 
 Recovered prior context supports a local Mac application, folder/destination selection, manual and automatic operation, subfolder rule handling, configurable precedence, and a preview showing the applied rule. These are carried forward below. A complete transcript was not accessible through the shared link; no unstated language/framework commitment is inferred.
 
 ## Proposed implementation baseline
 
-Go for the shared core, Wails with TypeScript for desktop, SQLite for durable local state, and direct Google Drive API integration. macOS is the first desktop acceptance target; Linux and Windows must remain viable through portable ports and CI tests. These choices are ADRs, not falsely attributed user statements.
+Go for the shared core, Wails with TypeScript for desktop, SQLite for durable local state, and direct Google Drive API integration. macOS is the first desktop acceptance target; Linux and Windows must remain viable through portable ports and CI tests. These choices are ADRs, not falsely attributed user statements. The chosen product identity is fixed: **LedgeSync**, command `ledgesync`, domain `ledgesync.com`.
 
 The architecture must permit a future reusable library and additional cloud providers. It must not require a hosted backend, a paid service, a model API, Google Drive desktop, Git installation for basic filtering, or a separately installed rclone for ordinary operation.
 

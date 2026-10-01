@@ -197,6 +197,6 @@
     "summary"
   ],
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Confirmar plan envelope v1.0",
+  "title": "LedgeSync plan envelope v1.0",
   "description": "An example transport envelope, not an authorized executable journal. Apply requires trusted state, typed runtime preconditions and explicit approval."
 }

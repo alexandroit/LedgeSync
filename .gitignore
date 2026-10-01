@@ -8,15 +8,19 @@ node_modules/
 /bin/
 /artifacts/
 /frontend/dist/
-/cmd/confirmar-desktop/frontend/dist/
+/cmd/ledgesync-desktop/frontend/dist/
 *.log
 .env
 .env.*
 !.env.example
-/Confirmar_Documentacao_Codex_v0.2.0.zip
+/LedgeSync_Documentacao_Codex_v0.2.0.zip
 .openai/*.local.*
 
 
 /frontend/wailsjs/
 *.syso
-/cmd/confirmar-desktop/build/
+/cmd/ledgesync-desktop/build/
+
+/*_Documentacao_Codex_*.zip
+/frontend/playwright-report/
+/frontend/test-results/

@@ -1,6 +1,6 @@
 # Platform builds and installation
 
-Confirmar's first version is **0.1.0-alpha.1, offline only**. Desktop and CLI
+LedgeSync's first version is **0.1.0-alpha.1, offline only**. Desktop and CLI
 share the same Go engine. No package installs a service, schedules jobs, connects
 an account, uploads files, or enables deletion.
 
@@ -48,11 +48,11 @@ required.
 
 ```sh
 go test ./...
-go build -trimpath -o build/cli/ ./cmd/confirmar
+go build -trimpath -o build/cli/ ./cmd/ledgesync
 python3 tools/package_cli.py --version 0.1.0-alpha.1
 ```
 
-For the desktop, run `npm ci` in `frontend`, then from `cmd/confirmar-desktop`:
+For the desktop, run `npm ci` in `frontend`, then from `cmd/ledgesync-desktop`:
 
 ```sh
 go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -tags desktop -nosyncgomod -m -trimpath
@@ -63,7 +63,7 @@ target OS; a successful cross-compilation alone is not a runtime test.
 
 ## CI artifacts and checksums
 
-The [build workflow](https://github.com/alexandroit/confirmar/actions/workflows/ci.yml)
+The [build workflow](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml)
 runs core tests, static analysis, supported race checks, frontend compilation,
 native desktop builds, and CLI packaging. Successful runs attach artifacts.
 Portable CLI archives include `SHA256SUMS`; desktop archives include an adjacent

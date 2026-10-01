@@ -4,7 +4,7 @@
 
 | Decision | Current safe baseline | Resolution point |
 |---|---|---|
-| Final name | Keep Confirmar, no brand/domain purchase | Owner before publication |
+| Final name | Keep LedgeSync, no brand/domain purchase | Owner before publication |
 | Repository license | No inferred license grant | Owner before source publication |
 | Hosting/repository destination | Work only in provided checkout/Drive docs | Owner before creating/publishing repository |
 | Signing accounts and public OAuth project | No credentials assumed | Owner before public release |

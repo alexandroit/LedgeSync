@@ -1,14 +1,14 @@
 # 14 — Sources and Provenance
 
-**Research date:** 2026-10-01. External product/API facts can change; pin actual reference/dependency versions during P0. This register separates observed upstream behavior from original proposed Confirmar requirements.
+**Research date:** 2026-10-01. External product/API facts can change; pin actual reference/dependency versions during P0. This register separates observed upstream behavior from original proposed LedgeSync requirements.
 
 ## User provenance and limitations
 
-The current request explicitly asks for a new `Confirmar` directory under the existing projects folder, an rclone analysis, configurable multiple ignore-rule sources including Gitignore and rclone formats, and agent-ready documentation. Recovered prior conversation context supplies the standalone local-to-Google-Drive application direction, custom basenames and multi-application conventions.
+The current request explicitly asks for a new `LedgeSync` directory under the existing projects folder, an rclone analysis, configurable multiple ignore-rule sources including Gitignore and rclone formats, and agent-ready documentation. Recovered prior conversation context supplies the standalone local-to-Google-Drive application direction, custom basenames and multi-application conventions.
 
 A user-supplied shared conversation page was opened (its personal reference URL is omitted from the public repository). Its public response exposed the conversation title “Ignorar Arquivos no Drive” and a login/share shell, not the complete transcript. No claim is made that the full linked conversation was read. Technology, security defaults, milestone boundaries and mixed-format precedence are proposed decisions documented here, not fabricated prior user quotations.
 
-The destination was verified through the connected Google Drive: `Projects/Confirmar`. Existing sibling projects were not changed. Project folder ID: `15gvWXQ7OcQoFPy_QFXpfyV5H1fzKIRut`; parent Projects ID: `1W91nOMECbeYKXPCE9-OsxWtlyULK09p3`. No public sharing was enabled by this task.
+The destination was verified through the connected Google Drive: `Projects/LedgeSync`. Existing sibling projects were not changed. Project folder ID: `15gvWXQ7OcQoFPy_QFXpfyV5H1fzKIRut`; parent Projects ID: `1W91nOMECbeYKXPCE9-OsxWtlyULK09p3`. No public sharing was enabled by this task.
 
 ## rclone primary sources
 
@@ -48,7 +48,7 @@ The locally available Git version and actual fixture results are recorded in `te
 
 ## Source-control and code-policy primary sources
 
-The following sources were checked on **2026-10-01** to ground the expanded policy-adapter specification. They are reference documentation, not evidence that Confirmar already implements the profiles.
+The following sources were checked on **2026-10-01** to ground the expanded policy-adapter specification. They are reference documentation, not evidence that LedgeSync already implements the profiles.
 
 | ID | Official/source documentation | Evidence used |
 |---|---|---|

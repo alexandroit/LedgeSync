@@ -2,7 +2,7 @@
 
 ## Distinguish evidence from plans
 
-The application is not implemented. This package supplies 28 Git reference cases, 12 proposed rclone cases, 10 composition cases, and 32 safety scenarios. The included Git runner checks fixture expectations against an installed Git in temporary repositories. It does not execute a Confirmar filter engine. The validation report is the authority on checks actually run.
+The application is not implemented. This package supplies 28 Git reference cases, 12 proposed rclone cases, 10 composition cases, and 32 safety scenarios. The included Git runner checks fixture expectations against an installed Git in temporary repositories. It does not execute a LedgeSync filter engine. The validation report is the authority on checks actually run.
 
 A release needs all relevant layers below; passing a finite example corpus is not proof of complete compatibility for Git, rclone, SVN, Mercurial, Perforce, CVS, Bazaar/Breezy, Fossil, or code-tool profiles.
 

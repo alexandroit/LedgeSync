@@ -1,6 +1,6 @@
 # 18 — Documentation Package Validation Report
 
-**Prepared:** 2026-10-01. **Package:** Confirmar specification 0.2.0.
+**Prepared:** 2026-10-01. **Package:** LedgeSync specification 0.2.0.
 
 ## Actual validation scope
 
@@ -28,7 +28,7 @@ These are specification reviews, not executed product tests. During assembly, th
 
 ## Checks explicitly not performed
 
-No Confirmar executable exists. The 12 rclone fixture cases and 10 mixed-composition cases remain proposed application/reference tests. The 32 safety scenarios remain release-gate specifications. The local rclone executable was unavailable and no rclone differential run was claimed. No native Go/desktop build, full grammar proof, live OAuth test, API write test, full rclone repository audit, performance benchmark, signing, or public release was performed.
+No LedgeSync executable exists. The 12 rclone fixture cases and 10 mixed-composition cases remain proposed application/reference tests. The 32 safety scenarios remain release-gate specifications. The local rclone executable was unavailable and no rclone differential run was claimed. No native Go/desktop build, full grammar proof, live OAuth test, API write test, full rclone repository audit, performance benchmark, signing, or public release was performed.
 
 The shared ChatGPT link did not expose the complete conversation transcript. Research used official documentation, two inspected rclone source ranges, the current request, and recovered relevant conversation context. Sources and blob hashes are recorded separately.
 
@@ -53,7 +53,7 @@ Actual local checks performed on the updated documentation package:
 - `python tools/validate_docs.py`: 24 Markdown files, 38 local links, 10 JSON files, 2 schemas, and 4 configuration/plan examples checked; 50 filter fixtures and 32 safety scenarios checked structurally; 38 manifest entries verified (excluding the manifest itself). Result: **0 failures, 0 skipped checks**.
 - `python tools/check_git_reference.py`: **28/28 reference cases passed**, Git **2.47.3**, using temporary fixture repositories. The original archived result JSON was not rewritten.
 
-These checks validate documentation, sample contracts, integrity, and Git reference expectations, not the future application. The new P0-00A/B/C source-clone/audit/reuse tasks remain **NOT STARTED**. No coding agent process was launched, no upstream rclone source was cloned or built, no rclone differential test was run, and no Confirmar code was generated in this documentation update. Official repository/license/filter pages were consulted on 2026-10-01 to ground the assignment.
+These checks validate documentation, sample contracts, integrity, and Git reference expectations, not the future application. The new P0-00A/B/C source-clone/audit/reuse tasks remain **NOT STARTED**. No coding agent process was launched, no upstream rclone source was cloned or built, no rclone differential test was run, and no LedgeSync code was generated in this documentation update. Official repository/license/filter pages were consulted on 2026-10-01 to ground the assignment.
 
 
 ## Specification 0.2.0 follow-up — GUI-first and VCS policy adapters

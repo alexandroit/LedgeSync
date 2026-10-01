@@ -1,8 +1,8 @@
-# Confirmar — Project Documentation
+# LedgeSync — Project Documentation
 
-**Working name:** Confirmar. The final product name is intentionally undecided.
+**Project name:** LedgeSync. Selected explicitly by the owner on 2026-10-01.
 **Specification version:** 0.2.0 · **Prepared:** 2026-10-01.
-**Delivery status:** documentation, schemas, examples, and reference-test tooling; no application has been implemented or released.
+**Delivery status:** first offline implementation in progress. Native Google Drive transfers and a production release are not available. See [current status](docs/17_AGENT_HANDOFF_AND_STATUS.md).
 
 ## Product in one sentence
 
@@ -18,7 +18,7 @@ The proposed implementation baseline is **Go core + TypeScript desktop UI throug
 
 The 2026-10-01 follow-up explicitly requires source analysis before implementation. Selective source adaptation or pinned in-process reuse is allowed; an independent product does not require rewriting all upstream code. Required notices and our safety boundary must be preserved.
 
-All repository work should be in English: code, identifiers, comments, documentation, tests, commits, and agent implementation reports. “Confirmar” remains the explicitly requested working name.
+All repository work should be in English: code, identifiers, comments, documentation, tests, commits, and agent implementation reports. Use LedgeSync in the application, repository, binaries, and website.
 
 ## Start here
 

@@ -6,13 +6,13 @@
 
 ## 1. Owner direction
 
-Confirmar is no longer conceived as a command-centric tool with an optional graphical wrapper. The **desktop GUI is the primary product**. It should feel familiar to a Google Drive user: browse folders, switch list/grid, search, inspect status, see transfers, and navigate Local/Cloud content visually. The CLI remains important for automation, CI, scripting, remote/headless systems, and reproducible testing, but it calls the same use cases and does not define a separate product.
+LedgeSync is no longer conceived as a command-centric tool with an optional graphical wrapper. The **desktop GUI is the primary product**. It should feel familiar to a Google Drive user: browse folders, switch list/grid, search, inspect status, see transfers, and navigate Local/Cloud content visually. The CLI remains important for automation, CI, scripting, remote/headless systems, and reproducible testing, but it calls the same use cases and does not define a separate product.
 
 The second direction is to support the exclusion/selection conventions developers already use across source-control and code-management ecosystems, including SVN. This cannot be implemented safely as “read every file ending in `ignore` using Git syntax.” Formats differ in grammar, hierarchy, implicit behavior, and even **where rules are stored**.
 
 ## 2. Product UX: familiar, not copied
 
-Use familiar file-manager/Drive interaction patterns without copying Google trademarks, proprietary icons, branding, or pixel-perfect layouts. Confirmar's own identity and safety model must remain obvious.
+Use familiar file-manager/Drive interaction patterns without copying Google trademarks, proprietary icons, branding, or pixel-perfect layouts. LedgeSync's own identity and safety model must remain obvious.
 
 The primary window contains:
 
@@ -105,7 +105,7 @@ The same architecture supports code-tool selection formats, but each gets its ow
 - Helm `.helmignore`;
 - other declarative ignore files only after their source/scope/grammar is documented.
 
-Some tools now place ignore patterns inside general executable configuration. Confirmar must **not execute JavaScript, shell, Python, hooks, package scripts, or arbitrary project configuration** merely to extract ignores. Such formats require a safe declarative parser or remain unsupported.
+Some tools now place ignore patterns inside general executable configuration. LedgeSync must **not execute JavaScript, shell, Python, hooks, package scripts, or arbitrary project configuration** merely to extract ignores. Such formats require a safe declarative parser or remain unsupported.
 
 ## 8. SVN implementation contract
 

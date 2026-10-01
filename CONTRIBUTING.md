@@ -1,6 +1,6 @@
-# Contributing to Confirmar
+# Contributing to LedgeSync
 
-Confirmar is an early, GUI-first file synchronization project. Start with
+LedgeSync is an early, GUI-first file synchronization project. Start with
 [the current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md),
 [architecture](docs/03_ARCHITECTURE.md), and [safety invariants](docs/05_SYNC_SAFETY_AND_STATE.md).
 

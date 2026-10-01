@@ -1,6 +1,6 @@
 # Third-party notices
 
-Original Confirmar code is licensed under Apache-2.0. Third-party code retains its own copyright and license. Include this file and the applicable `third_party/` license texts in source and binary distributions.
+Original LedgeSync code is licensed under Apache-2.0. Third-party code retains its own copyright and license. Include this file and the applicable `third_party/` license texts in source and binary distributions.
 
 ## Adapted rclone filtering code
 
@@ -11,7 +11,7 @@ Original Confirmar code is licensed under Apache-2.0. Third-party code retains i
 - License: MIT; full unchanged text in [third_party/rclone.LICENSE](third_party/rclone.LICENSE).
 - Local adaptation: [internal/filters/rclone_glob.go](internal/filters/rclone_glob.go) retains the upstream converter functions, changes the package to `filters`, and removes the `fs` import and informational directory-inference log. Source/group/provenance handling is implemented separately. The adapted source includes its upstream identity. The original upstream source SHA-256 is in [UPSTREAM_BASELINE.json](docs/research/UPSTREAM_BASELINE.json).
 
-Confirmar does not package or invoke an rclone executable. The selectively adapted compiler is not a claim that every rclone command or filtering capability is implemented. The complete original rclone repository and its unrelated dependencies are not redistributed by this extraction. See the [reuse decision](docs/research/RCLONE_REUSE_MATRIX.md).
+LedgeSync does not package or invoke an rclone executable. The selectively adapted compiler is not a claim that every rclone command or filtering capability is implemented. The complete original rclone repository and its unrelated dependencies are not redistributed by this extraction. See the [reuse decision](docs/research/RCLONE_REUSE_MATRIX.md).
 
 ## Direct framework and build-tool inventory
 
@@ -26,8 +26,8 @@ This inventory was checked on 2026-10-01 against local module/package metadata a
 
 Wails contains additional components with their own notices and has transitive dependencies. The table above is a direct dependency inventory, not a completed license audit of every transitive dependency or a binary bill of materials. Preserve generated/bundled dependency notices and include all applicable transitive licenses when assembling redistributable desktop artifacts. Build-time packages need their notices if the tools/packages themselves are redistributed.
 
-The isolated upstream audit additionally used testify v1.11.1 (MIT) and golang.org/x/time v0.15.0 (BSD-3-Clause), among upstream test dependencies. Their checked license hashes are recorded in the source baseline; those modules are not introduced into the Confirmar core by the audit.
+The isolated upstream audit additionally used testify v1.11.1 (MIT) and golang.org/x/time v0.15.0 (BSD-3-Clause), among upstream test dependencies. Their checked license hashes are recorded in the source baseline; those modules are not introduced into the LedgeSync core by the audit.
 
 ## Updating adapted code
 
-Retain the source commit, source-file hash and license text when changing adapted portions. Record meaningful local deviations and rerun upstream-reference and Confirmar regression tests before accepting a new source baseline. New reused files, substantial excerpts or runtime dependencies require an entry here and their applicable notices.
+Retain the source commit, source-file hash and license text when changing adapted portions. Record meaningful local deviations and rerun upstream-reference and LedgeSync regression tests before accepting a new source baseline. New reused files, substantial excerpts or runtime dependencies require an entry here and their applicable notices.

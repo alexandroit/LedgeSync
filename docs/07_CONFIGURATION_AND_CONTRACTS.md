@@ -39,15 +39,15 @@ For `mirror`, automation must be disabled and approval interactive. Both delete 
 These commands describe the product to implement; the executable is not included in this package.
 
 ```text
-confirmar config validate --config project.json
-confirmar explain --config project.json --path src/main.go --json
-confirmar plan --config project.json --output plan.json
-confirmar plan inspect --plan plan.json
-confirmar apply --plan plan.json --approve PLAN_SHA256
-confirmar status --project PROJECT_ID --json
-confirmar runs show RUN_ID --json
-confirmar cancel --run RUN_ID
-confirmar restore --recovery RECOVERY_ID --to NEW_EMPTY_DIRECTORY
+ledgesync config validate --config project.json
+ledgesync explain --config project.json --path src/main.go --json
+ledgesync plan --config project.json --output plan.json
+ledgesync plan inspect --plan plan.json
+ledgesync apply --plan plan.json --approve PLAN_SHA256
+ledgesync status --project PROJECT_ID --json
+ledgesync runs show RUN_ID --json
+ledgesync cancel --run RUN_ID
+ledgesync restore --recovery RECOVERY_ID --to NEW_EMPTY_DIRECTORY
 ```
 
 `explain` is offline when the source can be inspected locally. `plan` may read an authorized provider but never mutates it. `apply` checks exact digest, expiry/start rules, authorization, versioned capabilities, and operation preconditions. A digest flag is not a secret or an independent security token; a managed scheduler also needs its separately stored permission policy.

@@ -2,7 +2,7 @@
 
 Baseline for every row: **v1.75.1 / 687d264b689b8c49a67e2e52a8a5e0caa01c04ce**. Paths and line-level source permalinks are indexed in [RCLONE_SOURCE_AUDIT.md](RCLONE_SOURCE_AUDIT.md). Dispositions concern this milestone; deferred mechanisms require another bounded implementation review before use.
 
-| Component | Upstream paths and behavior | Confirmar requirement | Disposition | Rationale | License / dependency impact | Target module | Tests and residual risks |
+| Component | Upstream paths and behavior | LedgeSync requirement | Disposition | Rationale | License / dependency impact | Target module | Tests and residual risks |
 |---|---|---|---|---|---|---|---|
 | Whole product / maintained fork | `rclone.go`, `cmd/`, `backend/all`; command and backend registration | Own desktop product, policy sources and immutable authorized plans | Reject | Renaming a fork preserves broad command/config surface and does not satisfy product contracts | MIT plus broad module graph; no dependency accepted | None | No equivalence or end-to-end fork assessment claimed |
 | Library RPC | `librclone/librclone/librclone.go`; installs config and dispatches registered RC jobs | Narrow typed provider port; no inherited credentials | Reject | Config/global state and unconstrained RPC are larger than approved-plan boundary | Avoid C/mobile shims and inherited registration | None | No compatible safety-contract tests exist in this review |

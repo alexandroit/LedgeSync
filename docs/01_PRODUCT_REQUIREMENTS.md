@@ -6,7 +6,7 @@
 
 | ID | Requirement |
 |---|---|
-| U01 | Create a new project under the existing Google Drive Projects folder; use Confirmar until the final name is chosen. |
+| U01 | Create a new project under the existing Google Drive Projects folder; use LedgeSync until the final name is chosen. |
 | U02 | Build an independent application inspired by rclone's useful capabilities, not instructions for manually operating rclone. |
 | U03 | Send selected local projects/files to Google Drive; do not depend on Google Drive for desktop ignoring files. |
 | U04 | Use `.gitignore` as the default rule filename, with user-configurable names. |

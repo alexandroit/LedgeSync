@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check Gitignore reference fixtures in isolated temporary Git repositories.
 
-This checks the expected fixture answers against Git, not a Confirmar executable.
+This checks the expected fixture answers against Git, not a LedgeSync executable.
 It performs no network calls and never reads or modifies a user repository.
 """
 from __future__ import annotations
@@ -35,7 +35,7 @@ def main() -> int:
     version = subprocess.run([git, '--version'], check=True, capture_output=True, text=True, timeout=10).stdout.strip()
     results = []
     for case in data['gitCases']:
-        with tempfile.TemporaryDirectory(prefix='confirmar-git-reference-') as temporary:
+        with tempfile.TemporaryDirectory(prefix='ledgesync-git-reference-') as temporary:
             base = Path(temporary)
             repo = base / 'repo'
             repo.mkdir()
@@ -77,7 +77,7 @@ def main() -> int:
             results.append({'id':case['id'], 'passed':passed, 'expectedExcluded':expected, 'actualExcluded':actual})
             print(('PASS' if passed else 'FAIL') + ' ' + case['id'] + ': ' + case['description'])
     report = {'testedAt':dt.datetime.now(dt.timezone.utc).isoformat(), 'reference':version,
-              'scope':'Git expected fixture answers only; no Confirmar or rclone executable tested.',
+              'scope':'Git expected fixture answers only; no LedgeSync or rclone executable tested.',
               'caseCount':len(results), 'passed':sum(x['passed'] for x in results),
               'failed':sum(not x['passed'] for x in results), 'results':results}
     if args.output:

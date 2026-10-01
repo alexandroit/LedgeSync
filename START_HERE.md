@@ -10,7 +10,7 @@ Use `tests/filter-conformance.json` to seed tests, not as proof that the future 
 
 ## Mandatory upstream source review
 
-First follow [the source-analysis and implementation assignment](docs/19_RCLONE_SOURCE_ANALYSIS_AND_IMPLEMENTATION.md). Clone the real rclone repository outside this project, pin a suitable stable tag and full SHA, review source and tests, record a reuse matrix and ADR, then implement working Confirmar code. Source adaptation and in-process reuse are allowed after review; requiring an external rclone installation remains prohibited. A documentation summary alone does not satisfy this gate.
+First follow [the source-analysis and implementation assignment](docs/19_RCLONE_SOURCE_ANALYSIS_AND_IMPLEMENTATION.md). Clone the real rclone repository outside this project, pin a suitable stable tag and full SHA, review source and tests, record a reuse matrix and ADR, then implement working LedgeSync code. Source adaptation and in-process reuse are allowed after review; requiring an external rclone installation remains prohibited. A documentation summary alone does not satisfy this gate.
 
 ## First development session
 
@@ -37,6 +37,6 @@ python tools/validate_docs.py
 python tools/check_git_reference.py
 ```
 
-The first script checks local documentation links, parses JSON, validates configuration and plan examples when `jsonschema` is installed, and checks the manifest. The second uses Git only in temporary directories. It does not inspect or mutate any user repository, contact Google Drive, or test a Confirmar executable.
+The first script checks local documentation links, parses JSON, validates configuration and plan examples when `jsonschema` is installed, and checks the manifest. The second uses Git only in temporary directories. It does not inspect or mutate any user repository, contact Google Drive, or test a LedgeSync executable.
 
 A missing optional dependency must be reported as a skipped check, not as a pass. Product CI commands will be added during P0; this package does not pretend they already exist.

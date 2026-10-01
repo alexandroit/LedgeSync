@@ -29,7 +29,7 @@ To replace an ADR, append the observed problem, alternatives, decision, owner/au
 
 ## ADR-018 — GUI-first desktop explorer; CLI secondary
 
-**Accepted for specification, 2026-10-01; implementation pending.** The owner selected a graphical experience similar in familiarity to Google Drive instead of making a command interface the main product. The desktop Files explorer, policy inspector, paired Local ↔ Cloud preview, activity, and history are first-class deliverables. The CLI remains supported for automation/headless use and must call the same application services. “Drive-style” means familiar information architecture/interactions, not copying Google branding/assets or hiding Confirmar's explicit policy/safety model.
+**Accepted for specification, 2026-10-01; implementation pending.** The owner selected a graphical experience similar in familiarity to Google Drive instead of making a command interface the main product. The desktop Files explorer, policy inspector, paired Local ↔ Cloud preview, activity, and history are first-class deliverables. The CLI remains supported for automation/headless use and must call the same application services. “Drive-style” means familiar information architecture/interactions, not copying Google branding/assets or hiding LedgeSync's explicit policy/safety model.
 
 ## ADR-019 — Generalize rule files into policy-source adapters
 
@@ -43,11 +43,11 @@ To replace an ADR, append the observed problem, alternatives, decision, owner/au
 
 **Accepted for implementation, 2026-10-01.** The actual official rclone v1.75.1 tree at `687d264b689b8c49a67e2e52a8a5e0caa01c04ce` was cloned and reviewed before application implementation. See [source audit](research/RCLONE_SOURCE_AUDIT.md), [baseline](research/UPSTREAM_BASELINE.json) and [reuse matrix](research/RCLONE_REUSE_MATRIX.md).
 
-The concrete problem is that upstream command/RPC/sync integration imports configuration/global state and performs live traversal-driven mutations, whereas Confirmar requires immutable policy snapshots and approved object-level plans. Upstream Drive listing also logs `incompleteSearch` without converting it into a completeness error, and name lookup can select the first duplicate. These are contract differences, not a claim of an upstream security vulnerability.
+The concrete problem is that upstream command/RPC/sync integration imports configuration/global state and performs live traversal-driven mutations, whereas LedgeSync requires immutable policy snapshots and approved object-level plans. Upstream Drive listing also logs `incompleteSearch` without converting it into a completeness error, and name lookup can select the first duplicate. These are contract differences, not a claim of an upstream security vulnerability.
 
 Choose a standard-library offline core and selectively adapt `fs/filter/glob.go` conversion/directory-inference code, preserving the upstream MIT copyright/permission notice and full source pin. Keep source discovery, Git/rclone dialects, group composition, explanations and planning independent. Do not import the whole rclone Go module, fork/rename the whole product, use librclone RPC, or invoke an installed rclone during production. A pinned development oracle is permitted. The source/test review established reuse boundaries; local upstream `fs/filter` and `lib/pacer` tests passed in isolated configuration with no cloud credentials.
 
-Tradeoffs: extraction avoids unused backend/dependency/global state but makes Confirmar responsible for tracking upstream parser fixes and carrying differential/regression tests. Keep source hashes and a list of local changes; review newer stable releases deliberately. Do not claim full rclone compatibility from the parser alone. Native Drive upload/retry mechanisms remain candidates for later selective adaptation after fake-server, identity, journal, cancellation and ambiguous-response contracts are tested. This is a scoped decision, not a full upstream dependency or security audit.
+Tradeoffs: extraction avoids unused backend/dependency/global state but makes LedgeSync responsible for tracking upstream parser fixes and carrying differential/regression tests. Keep source hashes and a list of local changes; review newer stable releases deliberately. Do not claim full rclone compatibility from the parser alone. Native Drive upload/retry mechanisms remain candidates for later selective adaptation after fake-server, identity, journal, cancellation and ambiguous-response contracts are tested. This is a scoped decision, not a full upstream dependency or security audit.
 
 No persistent-state migration exists yet. The first slice contains strict configuration, multi-source policy evaluation, explain, deterministic read-only preview, a fake provider and a local desktop explorer using the same core. Missing/invalid/unsupported policy and incomplete scans fail closed. Initial preview has no deletion/cloud-write capability. Application licensing is resolved by the owner's current Apache-2.0 request; MIT notices remain required for adapted portions. No account connection or cloud-write authorization is inferred from the source audit.
 
@@ -55,9 +55,9 @@ No persistent-state migration exists yet. The first slice contains strict config
 
 **Accepted, 2026-10-01.** The owner explicitly requested starting the project, a
 public GitHub project and website, Apache licensing, and versions for Ubuntu,
-macOS ARM and AMD/Intel, Windows 11 and server systems. Original Confirmar code
+macOS ARM and AMD/Intel, Windows 11 and server systems. Original LedgeSync code
 is licensed under Apache-2.0; third-party notices and licenses remain intact.
-This resolves the license part of ADR-014. Confirmar remains the working name.
+This resolves the license part of ADR-014. The owner selected LedgeSync as the project name.
 
 Target ARM64 and x64 for macOS, Ubuntu desktop/server, and Windows. Headless
 servers use the same Go core through the CLI; there is no automatically installed
@@ -69,3 +69,19 @@ exploration, policy explanations and fake-destination previews. Real Drive
 OAuth, mutations, scheduling, mirror and restore remain gated by their milestone
 requirements. Public source/site authorization does not grant access to private
 Google Drive accounts or authorize synchronization.
+
+## ADR-023 — Project identity and authoritative Drive review
+
+**Accepted, 2026-10-01.** The owner explicitly fixed the project and GitHub name
+to **LedgeSync**. This supersedes every temporary-name instruction in the
+original specification. Use `LedgeSync` for the product/repository and `ledgesync`
+for the command and package identifiers. The GitHub repository was renamed to
+`alexandroit/LedgeSync`; the previous website deployment was withdrawn before
+republishing under the correct identity. Existing history is preserved.
+
+The implementation agent reread the four root entry documents and all 20
+technical documents through the Google Drive connector in the owner's folder
+named LedgeSync. Their SHA-256 hashes match the original documentation manifest.
+They retain stale temporary-name wording, which the owner's explicit correction
+overrides. The technical Go/Wails, GUI-first, policy and safety contracts remain
+in force. No requirements from the unrelated PixelJS folder were adopted.

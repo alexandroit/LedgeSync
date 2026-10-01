@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "product": "Confirmar",
+  "product": "LedgeSync",
   "scope": "Selected implementation and test source review, not a repository-wide security audit",
   "remote_url": "https://github.com/rclone/rclone.git",
-  "reference_checkout": "${REFERENCE_ROOT}/rclone-confirmar",
+  "reference_checkout": "${REFERENCE_ROOT}/rclone-ledgesync",
   "selected_tag": "v1.75.1",
   "tag_object_sha": "1616ee3414fbef9d59a2a90357cbdeee3b10f5e9",
   "commit_sha": "687d264b689b8c49a67e2e52a8a5e0caa01c04ce",
@@ -38,7 +38,7 @@
   "module_inventory": {
     "direct_requirements": 110,
     "all_requirements": 274,
-    "note": "go.mod declarations, not linked dependency count; Confirmar initially uses no upstream module dependency."
+    "note": "go.mod declarations, not linked dependency count; LedgeSync initially uses no upstream module dependency."
   },
   "inspected_files": [
     {
@@ -304,14 +304,14 @@
       "license": "MIT",
       "license_file": "LICENSE",
       "license_sha256": "f8e536c1c7b695810427095dc85f5f80d44ff7c10535e8a9486cf393e2599189",
-      "usage": "Upstream audit tests only; not Confirmar production dependency"
+      "usage": "Upstream audit tests only; not LedgeSync production dependency"
     },
     {
       "module": "golang.org/x/time@v0.15.0",
       "license": "BSD-3-Clause",
       "license_file": "LICENSE",
       "license_sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
-      "usage": "Upstream audit tests only; not Confirmar production dependency"
+      "usage": "Upstream audit tests only; not LedgeSync production dependency"
     }
   ]
 }

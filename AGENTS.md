@@ -1,8 +1,8 @@
-# Agent Instructions — Confirmar
+# Agent Instructions — LedgeSync
 
 ## Mission
 
-Implement the independent file-sync product defined by this repository. “Confirmar” is a temporary name. The primary deliverable is reliable software, not a collection of wrappers or an untested interface.
+Implement the independent file-sync product defined by this repository. The owner-selected project name is LedgeSync. The primary deliverable is reliable software, not a collection of wrappers or an untested interface.
 
 ## Authoritative inputs
 
@@ -10,7 +10,7 @@ Respect explicit user instructions and this specification. `docs/01_PRODUCT_REQU
 
 ## Non-negotiable rules
 
-- Write all project content in English, retaining the working name Confirmar.
+- Write all project content in English, using the project name LedgeSync.
 - Keep domain/policy/filter/planning code independent of Wails, Google SDK types, and global mutable configuration.
 - Treat the desktop Files explorer as the primary product experience. The CLI is secondary for automation/headless/testing and must never become a separate implementation.
 - Implement a native Google Drive provider. Do not require a separately installed rclone for normal use. Download and audit the real upstream source before choosing reusable components. Vetted source adaptation or pinned in-process reuse is permitted under the source-analysis assignment and ADRs; standalone Git/rclone executables are development reference tools, not production dependencies.

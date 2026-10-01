@@ -1,7 +1,7 @@
 {
   "testedAt": "2026-10-01T11:55:21.158093+00:00",
   "reference": "git version 2.47.3",
-  "scope": "Git expected fixture answers only; no Confirmar or rclone executable tested.",
+  "scope": "Git expected fixture answers only; no LedgeSync or rclone executable tested.",
   "caseCount": 28,
   "passed": 28,
   "failed": 0,

@@ -1,6 +1,16 @@
 # 17 — Agent Handoff and Current Status
 
-## Delivered state
+## Active session update — 2026-10-01
+
+The owner selected **LedgeSync** as the project and GitHub name. The repository
+is now `alexandroit/LedgeSync`. The original specification was reread through
+Google Drive and matched by SHA-256; its temporary-name wording is superseded.
+The rclone source gate is implemented in `docs/research`. Shared Go core and
+Wails desktop implementation are in progress; no product tests/builds or Drive
+transfers are claimed yet in this interim update. The previous site deployment
+was withdrawn while identity corrections are completed.
+
+## Original specification delivery state
 
 The repository contains specification Markdown, strict JSON schemas, examples, fixture definitions, documentation-validation tooling, an isolated Git reference runner, and its actual result report. There is no Go application, desktop app, provider implementation, OAuth account, running scheduler, or published release yet.
 
@@ -42,7 +52,7 @@ A reproducible local foundation with strict config, typed domain, parsers/refere
 
 ## Follow-up directive — specification 0.1.1 (2026-10-01)
 
-The owner now explicitly requires a real rclone source download, implementation/test analysis, and new Confirmar code. Read [assignment 19](19_RCLONE_SOURCE_ANALYSIS_AND_IMPLEMENTATION.md) and the updated bootstrap. Next dependency-ready work is P0-00A, then P0-00B/C and the existing P0/P1 implementation slices. Source adaptation and in-process reuse are allowed with provenance, notices, and safety-contract evidence.
+The owner now explicitly requires a real rclone source download, implementation/test analysis, and new LedgeSync code. Read [assignment 19](19_RCLONE_SOURCE_ANALYSIS_AND_IMPLEMENTATION.md) and the updated bootstrap. Next dependency-ready work is P0-00A, then P0-00B/C and the existing P0/P1 implementation slices. Source adaptation and in-process reuse are allowed with provenance, notices, and safety-contract evidence.
 
 **P0-00A / P0-00B / P0-00C: NOT STARTED.** This revision updates instructions; it does not report a Codex execution, source clone, upstream test run, or product build. No real Drive synchronization or cloud credentials were used in application tests. The documentation files themselves were updated in the existing project folder.
 

@@ -51,8 +51,8 @@ Dependencies point toward domain/application ports. Avoid importing the entire r
 ## Suggested implementation tree
 
 ```text
-cmd/confirmar/             CLI composition root
-cmd/confirmar-desktop/     desktop composition root
+cmd/ledgesync/             CLI composition root
+cmd/ledgesync-desktop/     desktop composition root
 internal/domain/
 internal/config/
 internal/policy/

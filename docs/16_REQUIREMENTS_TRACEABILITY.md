@@ -4,7 +4,7 @@ Identifiers originate in product requirements and sync safety. A trace points to
 
 | Requirement | Owning specification | Backlog | Evidence |
 |---|---|---|---|
-| U01 | README / provenance | Documentation delivery | Verified Projects/Confirmar directory and manifest |
+| U01 | README / provenance | Documentation delivery | Verified Projects/LedgeSync directory and manifest |
 | U02 | Architecture / ADR-001 | P0-02, P2-02 | Runtime independent of rclone |
 | U03 | Drive / safety | P2-01–08 | Authorized copy journey |
 | U04–U05 | Filter specification | P1-01, P1-02, P1-04 | Custom basenames, multiple sources, nested hierarchy tests |

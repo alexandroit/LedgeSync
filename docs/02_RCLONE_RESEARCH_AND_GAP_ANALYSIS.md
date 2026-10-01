@@ -15,7 +15,7 @@ The inspected code separates filtering options, compiled path/directory rules, a
 
 ## Capability catalog and adoption plan
 
-| rclone capability | Confirmar treatment | Stage | Evidence |
+| rclone capability | LedgeSync treatment | Stage | Evidence |
 |---|---|---|---|
 | Copy with unchanged-file avoidance | Native incremental upload; no deletion in copy mode | P2 | R02 |
 | One-way sync | Explicit managed-object mirror with stricter deletion policy | P4 | R03 |
@@ -72,7 +72,7 @@ Updated baseline (2026-10-01, specification 0.2.0): download and audit actual rc
 
 Evaluate relevant embedded rclone packages now during the source audit, including for the initial Drive target. A subprocess adapter is not the baseline and remains a separately gated future architectural change. It introduces version coupling, configuration isolation, capability mismatches, licensing inventory, and plan-execution hazards. It must not bypass the approved object-level planner. In particular, passing a filtered manifest to an unrestricted `sync`/`purge` command is prohibited.
 
-rclone is MIT-licensed; any actual reuse must retain required notices and comply with dependency licenses. The final license for Confirmar is an owner decision, not automatically granted by this document. No upstream source has been pasted into this package. [R16]
+rclone is MIT-licensed; any actual reuse must retain required notices and comply with dependency licenses. The final license for LedgeSync is an owner decision, not automatically granted by this document. No upstream source has been pasted into this package. [R16]
 
 ## Reference implementation plan
 

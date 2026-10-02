@@ -1,9 +1,10 @@
 # 17 — Agent Handoff and Current Status
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
-**Implementation:** 0.1.0-alpha.4 candidate implements explicitly approved Drive
-folder uploads. The published download baseline is still alpha.3 until the
-release evidence below is updated.
+**Implementation:** 0.1.0-alpha.4 implements explicitly approved Drive folder
+uploads. All 37 release assets are published and publicly verified. The alpha.4
+APT snapshot is activated and public installation passed on both architectures.
+The canonical Ubuntu website and secondary Pages copy serve the updated release.
 
 **Source follow-up:** OAuth hardening, native destination Picker, durable copy
 journal, resumable binary uploads, desktop approval/progress and interactive
@@ -20,7 +21,7 @@ authorization, then selected a bundled Desktop client with one-click browser
 consent. The owner then confirmed a working connected account and enabled Picker
 API, and requested real whole-folder uploads inside an existing Drive folder.
 
-## Approved Drive folder uploads — alpha.4 candidate
+## Approved Drive folder uploads — alpha.4
 
 ### Cross-platform release follow-up
 
@@ -46,16 +47,16 @@ targets; it predates the additional Linux peer-identity check.
 
 After these fixes, local full `go test -race ./...` and `go vet ./...` passed,
 as did `.venv/bin/python tools/validate_docs.py` with zero failures/skips and
-the 63 notice hash checks. New native CI and immutable installers are still
-required before alpha.4 publication. No live Google acceptance was inferred
-from these checks.
+the 63 notice hash checks. At that checkpoint, new native CI and immutable installers were still
+required before alpha.4 publication. The final build/vault results are recorded
+below; no live Google acceptance was inferred from the local checks.
 
 The security follow-up commit `daf8b1047cbbb8642fd081824e3a61c3a5d3ed2f`
 subsequently passed all 16 jobs in build run `36962530879` and all six native
 vault jobs in `36962530784`. This includes actual native ACL/permission tests
 and the Linux peer-identity check. Those intermediate binaries are not the
-final release inputs: the subsequent CLI/shared OAuth lock changes require
-their own exact-commit build and vault runs.
+final release inputs: the subsequent CLI/shared OAuth lock changes received
+their own exact-commit build and vault runs, recorded below.
 
 The CLI follow-up adds native publisher-configured builds on all six targets
 (macOS CGO/Keychain, Linux and Windows native vaults without CGO), interactive
@@ -66,11 +67,60 @@ without stale account controls. Shared source selection rejects application
 settings and their parents before creating lock files. A targeted race test
 exposed and now guards nil-record status publication during concurrent revocation.
 
-Latest local checks: full Go race suite and vet passed; 46 frontend interaction
+Local checks before final native CI: full Go race suite and vet passed; 46 frontend interaction
 tests and its production build passed; 9 OAuth helper, 6 CLI packaging, 11 Debian
 and 4 Windows packaging guard tests passed. Documentation validated 52 Markdown
 files and 179 local links with zero failures/skips; 63 notice hashes passed.
 No personal account, real cloud write or live SSH consent was used by these tests.
+
+### Final alpha.4 validation and publication
+
+Application/tag source: `fcd578488d07f627372e7f5dd2221e162634bf05`.
+[build run 36963525743](https://github.com/alexandroit/LedgeSync/actions/runs/36963525743) passed **16/16 jobs**, including the seven native core targets,
+six native desktop/CLI packaging targets, contracts, frontend tests/build and
+the pinned rclone differential. Every desktop job completed publisher-client
+injection, the native app/CLI builds and generated-source cleanup. Both macOS
+DMGs passed the packaging/verification step. Race tests ran on supported core
+runners; Windows ARM64 explicitly skips the race detector.
+
+[native-vault run 36963524884](https://github.com/alexandroit/LedgeSync/actions/runs/36963524884) passed **6/6 native vault jobs** at that same SHA.
+This release includes the Linux peer-identity check, native journal/lock
+ACL protections, interactive CLI copy and shared OAuth process lock. The earlier
+failed/intermediate runs above are preserved as history and are not release
+inputs. Automated tests use synthetic credentials/data and disposable native
+vault entries; no personal Google authorization or SSH consent was exercised.
+
+[Installer run 36964667348](https://github.com/alexandroit/LedgeSync/actions/runs/36964667348)
+passed all five required jobs at packaging source
+`13342144685824daa38c774cb3ef7bdf14e315d3`: Windows x64/ARM64 wizard and lifecycle,
+Ubuntu amd64/arm64 package/startup/lifecycle, and local signed APT installation.
+[Installer evidence](research/DRIVE_COPY_INSTALLERS_RELEASE.json) records exact
+inputs and native results. [Public asset verification](research/DRIVE_COPY_PUBLIC_ASSETS.json)
+confirms anonymous SHA-256/size checks for all 37 assets and the exact source tag;
+all 106 earlier assets and their release/tag identities remain unchanged.
+
+APT snapshot `20261002-alpha4-fcd5784` is activated with the existing signing key.
+[Public APT run 36965018881](https://github.com/alexandroit/LedgeSync/actions/runs/36965018881)
+passed on native Ubuntu amd64 and arm64 at packaging source `13342144685824daa38c774cb3ef7bdf14e315d3`: pinned HTTPS key/source,
+metadata signature, tamper rejection, by-hash acquisition, desktop and headless
+CLI install/remove, and preservation of a synthetic user fixture. Installed
+Debian version: `0.1.0~alpha.4-1`. No application was installed on the production
+web server. The previous 36 APT pool/by-hash files and earlier snapshot remain
+unchanged.
+
+Website/Pages source: `6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1`.
+[Pages run 36965146423](https://github.com/alexandroit/LedgeSync/actions/runs/36965146423)
+passed; seven files matched exact source bytes at public HTTPS, origin TLS and
+Pages (21 checks). Seventeen shared configuration hashes and the HiperMusicas
+service PID remained unchanged; public/origin health checks passed. No Nginx
+reload was required. Previous site and APT directories are retained for rollback.
+The public repository identifies Apache-2.0 and release notes match the 37 assets.
+See [application evidence](research/DRIVE_COPY_RELEASE.json), the installer and
+public-asset records above, and [APT/site deployment verification](research/DRIVE_COPY_DEPLOYMENT_VERIFICATION.json).
+All distribution results are collected in [platform release results](PLATFORMS.md#alpha4-native-validation-and-publication-gates).
+No trusted Apple publisher/notarization or Windows Authenticode signing has been
+supplied. Live Google Picker, whole-folder copy, recovery and SSH return remain
+separate acceptance work. No iOS acceptance or package is claimed.
 
 ### Copy behavior
 
@@ -103,7 +153,7 @@ Source decisions and dependencies: [Drive provider/executor review](research/DRI
 [SQLite runtime review](research/TRANSFER_STATE_REVIEW.md). The original pinned
 rclone source was inspected; its update/delete/live-sync loop was not imported.
 
-Local validation completed for this candidate:
+Initial local upload-only validation, before the CLI/process-lock follow-up:
 
 - Go unit/integration run: 484 passing test/subtest events, 3 explicit skips
   (native vault opt-in, case-alias test on the case-sensitive SSD and external
@@ -117,13 +167,13 @@ Local validation completed for this candidate:
   that check does not establish Windows runtime behavior.
 - A native macOS ARM64 graphical build with the already-authorized publisher
   Desktop client succeeded. Generated client source was removed afterward.
-  Packaging, public release and other native platform results are tracked below
-  as they become available; they are not inferred from the local build.
+  Packaging and public release were still pending at this initial checkpoint;
+  their final native and public verification is recorded above.
 
 Changed application areas: `internal/{transfer,transferstate,discovery,driveauth}`,
 `internal/providers/drive`, desktop transport/main, frontend Files/Connections,
 package descriptions, dependency notices and the linked guides. Prior uncommitted
-OAuth hardening and read-only CLI status work were retained in this candidate.
+OAuth hardening and read-only CLI status work were retained in the released source.
 Tests use synthetic contents, local fake endpoints and disposable journals.
 No personal vault was read or real Google upload performed by these checks.
 The owner reported production consent and successful connection; native Picker,
@@ -138,7 +188,7 @@ record and stores operation/object mappings together; destructive recovery and
 future schema migrations remain separate work. Do not call this production-ready
 or claim real Google acceptance from fake-provider tests.
 
-## Public privacy, terms and branding publication
+## Historical initial privacy, terms and branding publication
 
 Published `https://ledgesync.com/privacy-policy` and
 `https://ledgesync.com/public-term` on the existing Ubuntu origin, with homepage
@@ -164,7 +214,10 @@ domain and secondary GitHub Pages copy were updated. Next owner step: enter the
 published URLs and PNG into Google's branding form, reviewing shared-project
 impact before saving project-wide changes.
 
-## OAuth protection verification and hardening (unreleased source)
+## OAuth protection verification and hardening follow-up
+
+The following records the hardening checkpoint before alpha.4 publication.
+Those changes are included in the release described above.
 
 **Latest local follow-up:** [OAuth local review](research/OAUTH_LOCAL_REVIEW.md)
 records the new request, retained protections, code changes, exact checks and
@@ -243,7 +296,7 @@ still separate implementation gates. A failed local cleanup after confirmed
 revocation is remembered only in the running process; finish cleanup before
 closing the app.
 
-## One-click authorization follow-up (alpha.3)
+## Historical one-click authorization follow-up (alpha.3)
 
 The owner selected direct computer-to-Google authorization, with no end-user
 JSON import and no server token store. The supplied path still contained a Web
@@ -331,7 +384,10 @@ remain unverified. Cloud file transfers, trusted publisher signing and
 notarization remain outside this release's acceptance. Alpha.2 evidence below
 is historical to that release.
 
-## Implemented behavior
+## Historical alpha.3 implemented behavior
+
+This section records the earlier authorization/offline baseline. The alpha.4
+copy provider, journal, locks and CLI follow-up are documented at the top.
 
 The Go application service is shared by CLI and Wails desktop. It loads strict
 v1.1 configuration, rejects duplicate/unknown fields and unsupported configured
@@ -355,7 +411,7 @@ root-pair locking, execution, scheduling, mirror and recovery remain unfinished.
 Empty-directory transfer and broad grammar/performance compatibility are not
 claimed. No entire P1/P2/P3/P4 milestone is marked complete.
 
-## Task coverage and source gate
+## Historical task coverage before the alpha.4 copy follow-up
 
 - P0-00A/B/C: actual rclone v1.75.1 source clone, full SHA pin, selected source
   review and isolated upstream tests completed before application code. Audit,
@@ -625,7 +681,7 @@ and notarization are absent; downloaded-app Gatekeeper acceptance and a clean
 Intel installation were not established. The app remains an offline developer
 alpha. Packaging does not implement Drive connections, transfers or scheduling.
 
-## Next dependency-ready work
+## Historical next work after alpha.1
 
 Finish owner-run live OAuth acceptance, then prioritize persistent
 state/migration/locking and remaining policy/provider contracts before transfers.
@@ -703,8 +759,8 @@ release remains available for rollback. No app was installed on the production
 server as a lifecycle test. Main workflows now offer Windows/Ubuntu targets and
 separate public APT verification; failed Windows runs retain diagnostics.
 
-Remaining product work and signing limitations are unchanged: offline preview
-only, no Drive account/transfer, no cross-version installer migration claim,
+At that alpha.1 checkpoint, product work and signing limitations remained:
+offline preview only, no Drive account/transfer, no cross-version installer migration claim,
 no trusted Windows publisher signature, no macOS notarization, and no full
 Windows/Linux graphical application acceptance.
 
@@ -715,17 +771,28 @@ directories were removed; live/rollback releases and signed APT snapshots remain
 
 ## Current handoff
 
-The subsequent OAuth protection changes are in source and covered by the
-hardening section above. They have not replaced the published alpha.3 artifacts.
-Complete live Google acceptance with an authorized account before claiming
-provider interoperability; remote revocation is a separate deliberate action
-with possible impact on other apps in the same Google Cloud project.
+The alpha.4 application/tag source is `fcd578488d07f627372e7f5dd2221e162634bf05`:
+all 16 jobs in build `36963525743` and all six native vault jobs in `36963524884`
+passed. Desktop and interactive native CLI now implement explicitly approved
+Google Drive folder copies using one shared engine. Platform-native vaults,
+journal access checks and cross-process credential locks are implemented and
+covered by the final release checks described above.
 
-Alpha.3 is published with the bundled Desktop OAuth client, native credential
-storage, DMGs, Windows installers and signed Ubuntu packages. Release and
-publication evidence is recorded in the one-click authorization section above.
-Both public APT architectures passed; the website and secondary Pages are current.
-The owner can now open **Connections → Connect Google Drive** and complete
-browser consent using [the connection guide](GOOGLE_DRIVE_AUTH.md); no end-user
-client creation or JSON import is required. Actual Google account acceptance
-remains pending. Cloud file transfers remain unimplemented.
+**Application and installer publication is verified:** all 37 assets passed
+anonymous byte checks. Installer run `36964667348` passed all five required jobs
+at packaging source `13342144685824daa38c774cb3ef7bdf14e315d3`. Prior release
+identities remain unchanged. APT snapshot `20261002-alpha4-fcd5784` is activated,
+and public installation run `36965018881` passed on both architectures. Website
+and Pages source `6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1` passed 21 exact-byte
+checks; Pages run `36965146423` succeeded. Shared server configuration/service
+checks passed, with no Nginx reload and prior rollback directories retained.
+[Platform release results](PLATFORMS.md#alpha4-native-validation-and-publication-gates)
+link the four durable application, installer, public-asset and deployment records.
+
+The owner reports successful account connection and Production OAuth/Picker
+configuration. Independent live Google Picker/copy/recovery and SSH consent
+acceptance remain unverified. Remote revocation needs its own deliberate approval
+because it can affect other clients in the same Google Cloud project. Trusted
+Apple publisher signing/notarization and Windows Authenticode remain unavailable;
+no iOS package or acceptance is claimed. No watcher, schedule, unattended apply,
+remote overwrite/deletion or source modification is enabled.

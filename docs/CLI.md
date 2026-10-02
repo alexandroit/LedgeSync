@@ -1,10 +1,27 @@
 # LedgeSync CLI and server copies
 
-The **alpha.4 source candidate** adds manual Google Drive copies through the
-same authorization, provider, filtering, approval and journal services as the
-desktop. Published alpha.3 CLI packages remain offline. Use an official configured
-alpha.4 build only after its release is available; a source-only build without
-the publisher client reports `OAUTH_UNAVAILABLE`.
+**LedgeSync 0.1.0-alpha.4** provides manual Google Drive copies through the same
+authorization, provider, filtering, approval and journal services as the desktop.
+The [release's native CLI archives](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4)
+are published and publicly verified for macOS, Linux and Windows in AMD64/ARM64.
+Ubuntu CLI DEBs are also published. The signed APT repository serves alpha.4;
+public installation and removal passed on native amd64/arm64 in
+[run 36965018881](https://github.com/alexandroit/LedgeSync/actions/runs/36965018881).
+See the [repository setup](PLATFORMS.md#ubuntu-apt) before running
+`sudo apt-get install ledgesync-cli`.
+Historical alpha.3 CLI packages remain offline. An unconfigured developer build
+reports `OAUTH_UNAVAILABLE` for online commands.
+
+Application source `fcd578488d07f627372e7f5dd2221e162634bf05` passed all 16 jobs in
+[build run 36963525743](https://github.com/alexandroit/LedgeSync/actions/runs/36963525743),
+including configured native CLI packaging on all six targets. Its
+[native-vault run 36963524884](https://github.com/alexandroit/LedgeSync/actions/runs/36963524884)
+passed on those targets. Native builds and synthetic vault checks do not establish
+Google consent, SSH return or vault access in every server-session configuration.
+The Windows downloads have no trusted publisher signature, and Apple Developer
+ID signing/notarization has not been supplied. Complete release, installer,
+public APT and site evidence is linked from the
+[platform release results](PLATFORMS.md#alpha4-native-validation-and-publication-gates).
 
 ## Connect and copy
 

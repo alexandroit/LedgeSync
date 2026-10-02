@@ -1,7 +1,7 @@
 # Security policy
 
-This project is a developer alpha. The alpha.4 desktop candidate authorizes a
-Google Drive account through the publisher's Desktop OAuth client and executes
+This project is a developer alpha. The alpha.4 desktop and native CLI authorize a
+Google Drive account through the publisher's Desktop OAuth client and execute
 explicitly approved, create-only folder copies. Tokens stay behind native OS
 credential storage and never enter project configurations, transfer journals,
 the frontend or the LedgeSync website/server. See

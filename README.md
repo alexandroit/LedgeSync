@@ -1,123 +1,147 @@
 # LedgeSync
 
-> **Canonical identity:** read [PROJECT_IDENTITY.md](PROJECT_IDENTITY.md) first. It defines LedgeSync, `ledgesync`, and `ledgesync.com`.
+LedgeSync copies explicitly approved local folders to Google Drive, preserving
+the included hierarchy and empty folders while applying your ignore policies.
+The desktop is the primary interface; the native CLI uses the same authorization,
+filtering, approval, transfer and recovery services.
 
-**Product name:** **LedgeSync**.
-**CLI command:** `ledgesync`.
-**Primary website/domain:** `ledgesync.com`.
-**Specification version:** 0.2.1 · **Prepared:** 2026-10-01.
-**Source status:** the **0.1.0-alpha.4 candidate** adds manual Google Drive folder uploads, destination selection in Google's browser Picker, and verified transfer recovery. **Published downloads remain 0.1.0-alpha.3**, which connects an account but does not transfer files. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
-
-The candidate also contains [OAuth hardening](docs/research/OAUTH_SECURITY_HARDENING.md), account-bound revocation confirmation and [native Picker integration](docs/research/NATIVE_PICKER_REVIEW.md). These source changes are not present in the immutable alpha.3 downloads. New live Picker/upload acceptance remains pending; the owner has reported successful account connection and production OAuth/Picker configuration.
-
-**Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
 [Website](https://ledgesync.com/) ·
-[Download alpha.3](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3) ·
-[Builds](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml) ·
-[Apache-2.0 license](LICENSE).
-The website is live on the owner's Ubuntu server with HTTPS. See
-[deployment and renewal details](docs/WEBSITE.md).
+[Download 0.1.0-alpha.4](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4) ·
+[Connection guide](docs/GOOGLE_DRIVE_AUTH.md) ·
+[CLI/server guide](docs/CLI.md) ·
+[Apache-2.0 license](LICENSE)
 
-## Published downloads: alpha.3 authorization only
+**Current developer alpha: 0.1.0-alpha.4.** Native application archives, macOS
+DMGs, Windows setup EXEs and Ubuntu DEBs are published from application source
+`fcd578488d07f627372e7f5dd2221e162634bf05`.
+This is a manual copy release: watching, scheduling, bidirectional sync,
+shared-drive transfers, download/restore, overwrite and deletion are unavailable.
 
-**Alpha.3 is published** for macOS, Windows and Ubuntu. Native builds, credential
-vaults, installers and public APT installation passed their respective checks.
-See [the release evidence and limits](docs/PLATFORMS.md).
+All 37 GitHub release assets are publicly verified. The signed APT repository
+serves alpha.4, and public installation checks passed on both Ubuntu architectures.
+The [website](https://ledgesync.com/) and secondary GitHub Pages copy serve the
+updated release. Exact delivery evidence is in the
+[publication status](docs/PLATFORMS.md#alpha4-native-validation-and-publication-gates).
 
-**Download the graphical app for macOS:**
-[Apple Silicon (ARM64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-arm64.dmg) ·
-[Intel (x64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-amd64.dmg).
-Open the disk image and drag `LedgeSync.app` to `Applications`. Requires macOS
-13 or later. These developer builds are not Developer ID signed or notarized;
-macOS may block downloaded apps. See [installation and validation limits](docs/PLATFORMS.md).
-For Windows and Ubuntu, use the [desktop download section](https://ledgesync.com/#downloads).
+## Downloads
 
-**Windows:** download the [x64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe)
-or [ARM64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe).
-Opening it starts the installation wizard. It installs for the current user,
-creates a Start menu entry and registers an uninstaller in Windows Settings.
-These alpha installers are not Authenticode signed.
+| System | Alpha.4 download |
+|---|---|
+| macOS 13+, Apple Silicon | [ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-macos-arm64.dmg) |
+| macOS 13+, Intel | [x64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-macos-amd64.dmg) |
+| Windows 11, x64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-windows-amd64-setup.exe) |
+| Windows 11, ARM64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-windows-arm64-setup.exe) |
+| Ubuntu 24.04, amd64/arm64 | [Signed APT repository](docs/PLATFORMS.md#ubuntu-apt): `apt-get install ledgesync` after setup |
+| Native CLI, all six targets | [CLI archives and checksums](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4) |
 
-**Ubuntu 24.04:** [add the signed LedgeSync APT repository once](docs/PLATFORMS.md#ubuntu-apt),
-then run `sudo apt-get update && sudo apt-get install ledgesync` for the graphical
-app. Use `ledgesync-cli` for headless servers. These packages come from the
-project's own repository, not Ubuntu's default package archive.
-Google Drive authorization on Ubuntu desktop requires a running, unlocked
-Secret Service credential store such as GNOME Keyring in the graphical session.
+On macOS, open the DMG and drag `LedgeSync.app` to Applications. Windows setup
+opens a graphical installation wizard and installs for the current user. Ubuntu
+uses the project's signed APT repository; it is separate from Ubuntu's official
+archive. Native prerequisites and server-session limitations are in the
+[platform guide](docs/PLATFORMS.md).
 
-**Connect Google Drive:** open **Connections → Connect Google Drive**,
-authorize in the system browser and return to LedgeSync. No end-user client
-setup or JSON import is required. The application communicates directly with
-Google and stores the connected account's refresh token in the OS vault; access
-tokens remain in memory. Check, reconnect, cancel and disconnect are available.
-See [account connection](docs/GOOGLE_DRIVE_AUTH.md) and
-[maintainer build configuration](docs/OAUTH_BUILD.md). The owner has reported
-successful live connection. That report does not validate the new upload flow.
+These are developer builds. macOS applications use ad-hoc signing and are not
+Developer ID signed/notarized; Windows app/setup publisher signing is not
+available. Checksums and APT repository signatures do not replace those publisher
+signatures. Do not disable operating-system security protections.
 
-Published alpha.3 browses local folders and previews an explicitly simulated,
-empty destination. Connecting does not upload files in that version. The source
-candidate's real upload workflow is described below. Source files remain
-read-only; required unsupported policy adapters stop preview instead of being
-silently skipped.
+## First folder copy
 
-The desktop is the primary interface. Build instructions for macOS, Ubuntu,
-Windows 11 and headless servers are in [PLATFORMS.md](docs/PLATFORMS.md).
-Release 0.1.0-alpha.3 includes macOS DMGs, Windows setup EXEs, Ubuntu packages,
-and separate desktop/CLI archives with checksums and retained license notices.
-[All 16 build jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36953803971),
-[six native vault jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36953805903),
-[installer lifecycle checks](https://github.com/alexandroit/LedgeSync/actions/runs/36954256173),
-and [public APT checks](https://github.com/alexandroit/LedgeSync/actions/runs/36954499569)
-passed. The previous alpha.1 and alpha.2 assets remain unchanged.
-Open a folder in the app to explore it with the default `.gitignore` policy,
-or open a project JSON configuration to select multiple rule sources.
+1. Open a local folder or project configuration in LedgeSync.
+2. Choose **Connections → Connect Google Drive**, authorize on Google's page
+   and return to the app. End users do not import JSON or supply tokens.
+3. Choose **Use My Drive** or **Choose existing Drive folder**. Google's browser
+   Picker grants access to the selected existing parent.
+4. Choose **Preview folder upload**, review the account, destination ID,
+   included/excluded entries and actions, then choose **Upload folder**.
+5. Keep LedgeSync open until **Folder upload verified**. Use **Open destination
+   folder on Google Drive** to inspect the result.
 
-## Manual folder uploads in the alpha.4 source candidate
+The local root becomes one managed child folder within the selected parent.
+Verified unchanged copies are checked and skipped. Changed files keep both
+versions with a stable `.ledgesync-` suffix; existing cloud data is never
+replaced or deleted. Local source files stay read-only.
 
-1. Open a local folder or project configuration and connect Google Drive.
-2. Choose **Use My Drive** or **Choose existing Drive folder**. The latter opens
-   Google's Picker in your system browser and returns the selected parent to
-   LedgeSync. Selecting a destination does not upload anything.
-3. Choose **Preview folder upload**. Review the connected account, destination
-   ID, included/excluded entries and copy actions, then choose **Upload folder**.
-4. Keep the app open until **Folder upload verified** appears. Use **Open
-   destination folder on Google Drive** to inspect the result in your browser.
+Canceling leaves completed copies in Drive. After cancellation or restart,
+select the same source/destination and approve a fresh preview to reconcile
+saved object IDs and continue. An incomplete file may restart its upload because
+session URLs exist only in memory. If previously observed ignore rules disappear,
+the upload stops even after restart. The native close prompt defaults to
+**Keep Open** during a transfer.
 
-LedgeSync creates a managed child folder named after the local root inside the
-chosen parent, retaining the included hierarchy and empty folders. Active ignore
-rules apply. Verified existing copies are checked and skipped; changed local
-files keep both versions using a stable `.ledgesync-` suffix. Nothing is overwritten
-or deleted. Canceling preserves completed files; a fresh preview reconciles the
-same recorded object IDs before continuing. An interrupted file may restart its
-upload after the app restarts; session URLs are kept only in memory.
+The default policy discovers `.gitignore`; configurations can select multiple
+rule sources and explicit dialects. Unsupported required adapters and unreadable
+or invalid rules fail closed. A filename alone does not identify an ignore
+syntax, and `rclone.conf` is not a filter file. See [policy semantics](docs/04_FILTER_ENGINE_SPEC.md).
 
-A per-user SQLite journal outside source roots stores operation IDs, checksums,
-approved plans and rule-source history, without OAuth tokens or upload-session
-URLs. A previously observed rule source that disappears blocks upload even after
-a restart. The source folder is never modified. Closing during a transfer asks
-whether to stop, with **Keep Open** as the default.
+## CLI and servers
 
-This is an explicit manual copy workflow. Automatic watching/scheduling,
-bidirectional synchronization, shared-drive transfers, downloading, overwriting
-and deletion remain unavailable. `drive.file` does not reveal all pre-existing
-Drive contents or recursively authorize an existing parent. Read the [workflow
-and acceptance checklist](docs/research/DRIVE_UPLOAD_ACCEPTANCE.md) before testing
-the candidate with a disposable folder.
-
-The alpha.4 native CLI uses the same authorization, approval and copy services.
-Online commands require an interactive terminal and the user's native vault:
+Use a configured native build in an interactive terminal with an available
+user credential vault:
 
 ```sh
 ledgesync auth connect
-ledgesync copy --root /path/to/project --destination picker
+ledgesync copy --root "/path/to/project" --destination picker
 ```
 
-Review the complete preview and type its exact digest to approve it. For a
-server reached through SSH, use `--no-browser` and the loopback tunnel shown in
-the terminal. See the [CLI guide](docs/CLI.md) for native vault prerequisites and
-recovery. There is no unattended `apply` command or plaintext credential fallback.
+Review the complete preview and type its exact digest to approve. For an SSH
+server, use `--no-browser` and the displayed loopback tunnel to authorize in your
+computer's browser. The [CLI guide](docs/CLI.md) covers Ubuntu Secret Service,
+Windows logon-session requirements, macOS Keychain and cancellation.
+There is no unattended `apply`, `--yes`, background service or plaintext token
+fallback. The older `plan` command remains an offline inspection against a fake
+destination; its exported file cannot approve a Drive upload.
 
-The following development commands remain useful without publisher configuration:
+## Credentials and local state
+
+Authorization goes directly between your computer/server and Google with
+PKCE/state and the limited `drive.file` scope. The LedgeSync distribution server
+receives no account tokens. Refresh tokens use macOS Keychain, Windows Credential
+Manager or Ubuntu Secret Service; access tokens stay in process memory.
+`drive.file` does not expose every existing Drive file or recursively authorize
+all children of a selected parent.
+
+A private per-user SQLite journal outside upload roots stores plans, object IDs,
+checksums and observed rules. It contains no OAuth tokens, file payloads or upload
+session URLs. Native permission/ACL checks protect journal and lock files;
+Linux also checks the D-Bus peer user. Separate process locks coordinate OAuth
+transactions and journal writers across CLI/desktop. Unavailable protection
+stops the operation. See [security and limits](SECURITY.md).
+
+## Validation and known limits
+
+The exact application source passed [all 16 build/test jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36963525743)
+and [all six native vault jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36963524884).
+The [installer workflow](https://github.com/alexandroit/LedgeSync/actions/runs/36964667348)
+passed both Windows, both Ubuntu and local signed APT jobs at packaging source
+`13342144685824daa38c774cb3ef7bdf14e315d3`. All 37 public alpha.4 assets were
+anonymously downloaded and checked against their recorded sizes/hashes. The
+identities of all 106 earlier public assets and their release tags remain
+unchanged. See the [application evidence](docs/research/DRIVE_COPY_RELEASE.json),
+[installer results](docs/research/DRIVE_COPY_INSTALLERS_RELEASE.json),
+[public asset verification](docs/research/DRIVE_COPY_PUBLIC_ASSETS.json),
+[APT/site deployment verification](docs/research/DRIVE_COPY_DEPLOYMENT_VERIFICATION.json) and
+[platform publication gates](docs/PLATFORMS.md#alpha4-native-validation-and-publication-gates).
+Public [APT run 36965018881](https://github.com/alexandroit/LedgeSync/actions/runs/36965018881)
+passed on native Ubuntu amd64/arm64 against snapshot `20261002-alpha4-fcd5784`,
+including signed metadata, tamper rejection, installation and removal.
+
+These checks use synthetic credentials/data and native disposable stores.
+The owner reports successful connection and Production OAuth/Picker configuration.
+Independent live Picker, whole-folder upload/recovery and SSH return acceptance
+remain unverified. Native compilation, installer lifecycle and public byte checks
+do not establish that live provider journey. No full roadmap completion or iOS
+package is claimed. The [acceptance checklist](docs/research/DRIVE_UPLOAD_ACCEPTANCE.md)
+records the remaining checks.
+
+Alpha.3 and earlier releases are preserved as immutable history. Alpha.3 provided
+account connection and offline previews; it did not contain the new copy engine.
+Its exact release, installer and APT evidence remains in the
+[historical platform results](docs/PLATFORMS.md#observed-alpha3-release-results).
+
+## Build and inspect locally
+
+Without publisher configuration, local development remains available:
 
 ```sh
 go run ./cmd/ledgesync --help
@@ -127,27 +151,19 @@ go run ./cmd/ledgesync explain --config project.json --path src/main.go --json
 go run ./cmd/ledgesync plan --config project.json --output /outside/source/plan.json
 go run ./cmd/ledgesync plan inspect --plan /outside/source/plan.json
 go run ./cmd/ledgesync capabilities
-go run ./cmd/ledgesync auth status
 ```
 
-The offline `plan` command still uses a fake destination and cannot be applied.
-The real `copy` command creates its own fresh approval in the same process. `auth status`
-reads safe local connection metadata only in a configured native build; it does
-not verify Google access online or open a browser. Configuration examples include
-future contract fields that the current copy workflow does not enable. JSON
-output and the local journal contain paths; review them before sharing diagnostics.
+Follow [platform build instructions](docs/PLATFORMS.md#build-from-source) and
+[maintainer OAuth configuration](docs/OAUTH_BUILD.md) for configured native builds.
+`auth status` reads local safe connection metadata; it neither checks the grant
+online nor opens a browser. Configuration examples contain some future contract
+fields that the current copy workflow does not enable.
 
-## Product in one sentence
-
-Build an independent, local-first **GUI-first desktop file manager and synchronization application** that feels familiar to users of the **current Google Drive interface** while keeping its own product identity, sends selected local files to Google Drive, and uses a reusable policy engine that understands multiple configurable code-management ignore/exclude sources and dialects, explains every decision, and makes destructive synchronization explicit. The CLI remains a secondary automation and engineering surface over the exact same core.
-
-The default discovered filename is `.gitignore`, not a mandatory filename. A project can combine `.gitignore`, `.ignore`, a user-chosen filename, rclone filter files, and policy sources from source-control/code-management ecosystems. **Filename, syntax, source mechanism, and composition policy are separate concepts.** Git uses files; Subversion uses directory properties such as `svn:ignore` and `svn:global-ignores`; Mercurial, Perforce, CVS, Bazaar/Breezy, and Fossil each have distinct behavior. A file called `.dockerignore` is not automatically Gitignore-compatible, and `rclone.conf` is a connection/credential configuration file, not an ignore dialect.
-
-## What is fixed and what is proposed
+## Architecture and product scope
 
 The user's requirements are recorded in [Product requirements](docs/01_PRODUCT_REQUIREMENTS.md). They include a standalone product inspired by rclone, Google Drive as the first destination, customizable rule filenames, multiple simultaneous rule sources, and documentation suitable for Codex or Claude Code.
 
-The proposed implementation baseline is **Go core + TypeScript desktop UI through Wails + SQLite local state**, with a native Google Drive API provider. The **desktop explorer is the primary user experience**; it uses an information architecture familiar to the **current Google Drive experience** without copying Google branding or assets. No external rclone installation is required. CLI and desktop reuse one engine; they are not two independently maintained synchronization systems. Optional read-only VCS adapters may invoke a locally installed VCS client with fixed argument arrays when the policy is not stored as a normal file (notably SVN properties); absence of that optional client must be reported as a capability limitation, never silently ignored.
+The implementation uses **Go core + TypeScript desktop UI through Wails + SQLite local state**, with a native Google Drive API provider. The **desktop explorer is the primary user experience**; it uses an information architecture familiar to the **current Google Drive experience** without copying Google branding or assets. No external rclone installation is required. CLI and desktop reuse one engine; they are not two independently maintained synchronization systems. Optional read-only VCS adapters may invoke a locally installed VCS client with fixed argument arrays when the policy is not stored as a normal file (notably SVN properties); absence of that optional client must be reported as a capability limitation, never silently ignored.
 
 The 2026-10-01 follow-up explicitly requires source analysis before implementation. Selective source adaptation or pinned in-process reuse is allowed; an independent product does not require rewriting all upstream code. Required notices and our safety boundary must be preserved.
 
@@ -172,7 +188,7 @@ All repository work should be in English: code, identifiers, comments, documenta
 | [05 · Sync safety](docs/05_SYNC_SAFETY_AND_STATE.md) | Planning, application, ownership, conflicts, deletion, and recovery |
 | [06 · Google Drive](docs/06_GOOGLE_DRIVE_PROVIDER.md) | OAuth, permissions, file IDs, uploads, integrity, quotas, and API limitations |
 | [Google Drive connection](docs/GOOGLE_DRIVE_AUTH.md) | Connect in the browser, select a destination, and understand scope and credential storage |
-| [Drive upload acceptance](docs/research/DRIVE_UPLOAD_ACCEPTANCE.md) | Manual folder-copy behavior, candidate limitations and live acceptance checklist |
+| [Drive upload acceptance](docs/research/DRIVE_UPLOAD_ACCEPTANCE.md) | Manual folder-copy behavior, release limitations and live acceptance checklist |
 | [07 · Configuration and contracts](docs/07_CONFIGURATION_AND_CONTRACTS.md) | Schemas, types, commands, errors, and migrations |
 | [08 · Desktop, CLI, automation](docs/08_DESKTOP_CLI_AND_AUTOMATION.md) | Screens, workflows, scheduling, headless use, and accessibility |
 | [09 · Security and privacy](docs/09_SECURITY_AND_PRIVACY.md) | Threat model, secret handling, path safety, and trust boundaries |

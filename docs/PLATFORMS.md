@@ -1,25 +1,21 @@
 # Platform builds and installation
 
-LedgeSync **0.1.0-alpha.3** includes one-click Google Drive authorization with
-a bundled Desktop client.
-The desktop and CLI share the local policy/preview engine; the headless CLI
-remains offline and has no account-authorization workflow. No package installs
-a service, schedules jobs, connects an account automatically, uploads files or
-enables deletion. Connecting requires an explicit click and browser consent.
+LedgeSync **0.1.0-alpha.4** implements explicitly approved Google Drive folder
+copies in the desktop and native CLI. The [application release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4)
+contains native archives for macOS, Ubuntu and Windows in AMD64/ARM64, macOS
+DMGs, Windows setup EXEs and Ubuntu DEBs. Google consent uses the bundled
+publisher Desktop client; no end-user client creation or credential import is
+needed.
 
-[Alpha.3 is published](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3).
-Evidence for this release and the previous alpha.1/alpha.2 releases is recorded
-separately below.
+All 37 alpha.4 GitHub release assets are publicly verified. Native Windows/Ubuntu
+installer, local APT and public APT checks passed. Snapshot
+`20261002-alpha4-fcd5784` is active and verified on native Ubuntu amd64/arm64.
+The canonical Ubuntu website and secondary GitHub Pages copy serve the updated
+release. Prior release/tag/package identities are preserved unchanged.
 
-The current **alpha.4 source/local candidate** adds manual folder uploads,
-native Google folder selection and [OAuth hardening](research/OAUTH_SECURITY_HARDENING.md).
-It is not yet published. The alpha.3 download links and historical validation
-below do not establish those new capabilities; existing release bytes and tags
-are unchanged. See the [candidate acceptance checklist](research/DRIVE_UPLOAD_ACCEPTANCE.md).
+## Alpha.4 copy behavior and release boundary
 
-## Alpha.4 candidate behavior and release boundary
-
-The desktop candidate connects through the same publisher Desktop client and
+The desktop connects through the same publisher Desktop client and
 exact `drive.file` scope. It can select My Drive or an existing parent using
 Google's system-browser Picker, preview the local folder and upload only after
 the user approves the exact plan. The local root becomes a managed child folder;
@@ -40,13 +36,88 @@ shares browser authorization, folder selection and the approved copy engine.
 `copy` requires an interactive terminal and confirmation of the complete preview;
 offline `plan` output cannot be applied. A server needs an available native vault
 in the user's session; SSH authorization uses an explicit local loopback tunnel.
-See [CLI usage](CLI.md). The current public packages remain alpha.3 until the
-new application and installer release gates pass.
+See [CLI usage](CLI.md). The native alpha.4 CLI archives are published; installer
+and public APT availability are recorded separately below.
 
 The owner reports Production OAuth, enabled Picker API and successful account
-connection. New live Picker/upload acceptance, candidate native installer checks,
-and publication are separate gates. A local build or mock test does not satisfy
-them; use the current handoff for evidence as it becomes available.
+connection. Independent live Picker/upload and SSH acceptance remain separate
+from the automated build, vault and installer results below.
+
+## Alpha.4 native validation and publication gates
+
+Application/tag source: `fcd578488d07f627372e7f5dd2221e162634bf05`.
+[build run 36963525743](https://github.com/alexandroit/LedgeSync/actions/runs/36963525743) passed **16 of 16 jobs**. Native core tests and vet passed on
+Ubuntu 24.04 AMD64/ARM64, macOS 15 Apple Silicon/Intel, Windows Server 2022/2025
+x64 and Windows 11 ARM64. Race checks passed on the supported runners; the
+Windows ARM64 race step is explicitly skipped. Contracts, pinned-rclone
+differential checks and frontend build/tests passed as separate jobs.
+
+All six desktop jobs completed publisher OAuth-client injection, native graphical
+builds, native CLI packaging with the same client and generated-source cleanup.
+macOS CLI builds use CGO for Keychain; Linux and Windows CLI builds use their
+native vaults without CGO. Both macOS jobs packaged and verified their DMGs.
+These CI outcomes establish native builds, not a complete interactive Google
+journey. [native-vault run 36963524884](https://github.com/alexandroit/LedgeSync/actions/runs/36963524884) passed **six of six jobs**,
+covering the same OS/architecture combinations with disposable native vault
+create/read/update/delete checks. No personal account or live Google copy was
+used for this evidence.
+
+The application checks OS-native ownership and access to transfer state and lock
+files, including macOS extended ACLs and Windows protected owner-only DACLs.
+Linux verifies the D-Bus Unix socket's peer user before authentication. OAuth
+transactions and transfer writers have separate cross-process locks. No plaintext
+credential fallback or silent permission relaxation is provided.
+
+All 37 public alpha.4 assets were anonymously downloaded and verified against
+recorded SHA-256 hashes and sizes; the tag resolves to the exact application SHA.
+Release/tag identities and all 106 alpha.1/alpha.2/alpha.3 asset IDs, names, sizes
+and digest metadata remain unchanged. See [application archive/DMG evidence](research/DRIVE_COPY_RELEASE.json)
+and [public asset verification](research/DRIVE_COPY_PUBLIC_ASSETS.json).
+
+[Installer run 36964667348](https://github.com/alexandroit/LedgeSync/actions/runs/36964667348)
+passed all five required jobs at packaging source
+`13342144685824daa38c774cb3ef7bdf14e315d3`: Windows x64/ARM64 graphical wizard,
+install/reinstall/uninstall and payload checks; Ubuntu amd64/arm64 package,
+GUI startup and lifecycle checks; and local signed APT installation. Public APT
+was intentionally not part of that run. These checks do not establish live
+Google/SSH interaction or cross-version data migration. The [installer evidence](research/DRIVE_COPY_INSTALLERS_RELEASE.json)
+records the pinned application inputs, packaging source, native results and hashes.
+
+[Public APT run 36965018881](https://github.com/alexandroit/LedgeSync/actions/runs/36965018881)
+passed on native Ubuntu 24.04 amd64 and arm64 at the same packaging SHA. Both
+jobs verified the pinned HTTPS key/source, signed metadata, tamper rejection,
+by-hash acquisition, desktop and separate headless CLI installation, and removal
+preserving a synthetic user fixture. Installed Debian version: `0.1.0~alpha.4-1`.
+The active snapshot is `20261002-alpha4-fcd5784`; the signing key is unchanged.
+No LedgeSync application was installed on the production web server. These
+checks do not establish an unlocked vault or a Google consent/copy journey in
+a real server session.
+
+The canonical Ubuntu site and secondary GitHub Pages copy serve source
+`6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1`.
+[Pages run 36965146423](https://github.com/alexandroit/LedgeSync/actions/runs/36965146423)
+passed. Seven files matched exact tracked bytes through public HTTPS, origin
+TLS and Pages (21 checks). Seventeen shared configuration hashes and the
+existing HiperMusicas service PID remained unchanged; public/origin health
+checks passed. No Nginx reload was required; earlier site/APT directories remain
+available for rollback. [Deployment evidence](research/DRIVE_COPY_DEPLOYMENT_VERIFICATION.json)
+records the APT snapshot, native public installation, site bytes and preservation
+checks. The public GitHub repository and release identify Apache-2.0.
+
+**Release evidence and remaining acceptance boundaries:**
+
+| Gate | Alpha.4 status |
+|---|---|
+| Application archives/DMGs and immutable tag | Public bytes verified; source/tag fixed at `fcd578488d07f627372e7f5dd2221e162634bf05` |
+| Windows setup EXEs and Ubuntu DEBs | Native installer/local APT run `36964667348` passed; all 37 release assets publicly verified |
+| Public signed APT repository | Snapshot `20261002-alpha4-fcd5784` active; run `36965018881` passed native amd64/arm64 installation and removal |
+| Canonical Ubuntu site and secondary Pages | Source `6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1`, Pages run `36965146423`, 21 exact-byte checks passed |
+| Live Google Picker, copy/recovery and SSH return | Pending separately authorized native acceptance |
+| Apple Developer ID/notarization and Windows Authenticode | Not supplied; no trusted publisher signature is claimed |
+
+The alpha.3 sections below are historical release evidence. All previous assets,
+tags, package bytes and APT snapshots are preserved; alpha.4 publication does not
+replace them.
 
 ## Target matrix
 
@@ -64,8 +135,11 @@ The `amd64` name means the same 64-bit architecture on AMD and Intel processors.
 ARM means ARM64 in this project; there are no 32-bit packages. Windows Server
 desktop use is not an acceptance target; use the CLI for Server Core/headless
 systems. No macOS Server-specific package or operating-system service is required.
+Darwin packages target macOS; there is no iPhone/iPad build or iOS acceptance claim.
 
-## Alpha.3 authorization and validation boundary
+## Historical alpha.3 authorization and validation boundary
+
+This section records alpha.3 only; current copy and CLI behavior is described above.
 
 Read [Google Drive connection](GOOGLE_DRIVE_AUTH.md). Official alpha.3 builds
 include the publisher's Desktop client. Choose **Connections → Connect Google
@@ -85,7 +159,7 @@ refresh or revocation. Native credential storage was separately tested on
 disposable runner accounts as recorded below.
 The owner supplied a Desktop client for alpha.3 and subsequently reported a
 successful real account connection. No personal account was used in automated
-tests; the new candidate's Picker/upload workflow still needs live acceptance.
+tests; the alpha.4 Picker/upload workflow still needs independent live acceptance.
 
 ## Observed alpha.3 release results
 
@@ -215,16 +289,16 @@ insufficient to determine the packaged application's minimum. See the official
 
 | Mac | Download |
 |---|---|
-| Apple Silicon, M-series | [LedgeSync alpha.3 ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-arm64.dmg) |
-| Intel, x64 | [LedgeSync alpha.3 Intel DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-amd64.dmg) |
+| Apple Silicon, M-series | [LedgeSync alpha.4 ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-macos-arm64.dmg) |
+| Intel, x64 | [LedgeSync alpha.4 Intel DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-macos-amd64.dmg) |
 
 1. Download the image matching the processor shown in **About This Mac**.
 2. Open the `.dmg` and drag `LedgeSync.app` to the `Applications` shortcut.
 3. Eject the image and open LedgeSync from Applications. Choose a local folder
-   to browse files and preview the offline policy decisions.
+   to browse files, review the policy decisions and prepare a folder copy.
 4. To authorize Google Drive, open **Connections** and follow the
    [Google Drive connection guide](GOOGLE_DRIVE_AUTH.md). The OS Keychain must
-   be available; authorization does not enable file transfers.
+   be available. Uploads require a separate preview and explicit approval.
 
 The image contains the graphical app, Applications shortcut, installation
 instructions and license notices. It does not install the command-line tool.
@@ -233,10 +307,13 @@ The developer-signing limits below still apply to disk-image downloads.
 
 ### Windows graphical installer
 
-Download the [alpha.3 x64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe)
-or the [alpha.3 ARM64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe).
-The downloaded setup EXE opens a graphical installation wizard, rather than
-launching the portable application immediately. Follow its folder/shortcut
+| Windows architecture | Download |
+|---|---|
+| AMD/Intel x64 | [LedgeSync alpha.4 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-windows-amd64-setup.exe) |
+| ARM64 | [LedgeSync alpha.4 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-windows-arm64-setup.exe) |
+
+Both setup EXEs passed native lifecycle checks and public byte verification.
+The downloaded setup EXE opens a graphical installation wizard. Follow its folder/shortcut
 steps, then open LedgeSync from the Start menu. It installs for the current
 Windows account without requiring administrator privileges. A desktop shortcut
 is optional, and uninstall is available through **Settings > Apps > Installed apps**.
@@ -296,10 +373,12 @@ sudo apt-get install ledgesync-cli
 ledgesync --version
 ```
 
-The published alpha.3 CLI package has no graphical-library dependencies and no OAuth commands.
-The published alpha.3 Debian version is `0.1.0~alpha.3-1`; the application reports
-`0.1.0-alpha.3`. The previous alpha.1 and alpha.2 packages, binaries and notices
-remain in their archived releases and repository snapshots. GitHub normalizes
+APT snapshot `20261002-alpha4-fcd5784` publishes Debian version
+`0.1.0~alpha.4-1`. Native packaging, local APT and both architectures of public
+installation run `36965018881` passed. The alpha.4 CLI supports interactive
+copies with an available user vault and has no graphical-library dependencies.
+Earlier packages, binaries and notices remain in their archived releases and
+repository snapshots. GitHub normalizes
 `~` to `.` in download filenames; the package's internal Debian version and the APT pool
 filenames retain `~`. Adjacent checksums use the actual GitHub download names.
 Package removal does not delete user
@@ -323,7 +402,7 @@ Ubuntu OAuth additionally requires the user's D-Bus session and an unlocked
 Secret Service store such as GNOME Keyring. Windows uses the current user's
 Credential Manager, and macOS uses Keychain. These stores are only accessed
 when account or authorized upload actions require them; headless CLI previews
-remain offline. Candidate `auth status` explicitly reads local vault metadata.
+remain offline. `auth status` explicitly reads local vault metadata.
 
 Desktop archives are developer builds: **no trusted publisher signature or notarization**.
 The macOS build uses an ad-hoc local signature. No claim
@@ -345,10 +424,22 @@ go build -trimpath -o build/cli/ ./cmd/ledgesync
 python3 tools/package_cli.py --version 0.1.0-alpha.4
 ```
 
+The commands above create unconfigured developer CLI builds. To package the
+configured native CLI, follow [maintainer build configuration](OAUTH_BUILD.md),
+then run on the matching native host, for example:
+
+```sh
+python3 tools/package_cli.py --version 0.1.0-alpha.4 --platform darwin/arm64 --native --require-oauth-client
+```
+
+Select the actual host target (`darwin`, `linux` or `windows`, each with `amd64`
+or `arm64`) and clean the generated configuration after both app/CLI builds.
+Portable developer packaging must not contain injected OAuth configuration.
+
 For desktop OAuth, first follow [maintainer build configuration](OAUTH_BUILD.md).
 Without that optional build input, the local explorer works and account connection
 and uploads are explicitly unavailable. These commands build the local alpha.4
-candidate; they do not publish or replace alpha.3. Run `npm ci` in `frontend`, then from
+source; they do not publish a release or replace existing artifacts. Run `npm ci` in `frontend`, then from
 `cmd/ledgesync-desktop`:
 
 ```sh
@@ -377,14 +468,14 @@ Use `--notices-root <extracted-release-directory>` when packaging an existing
 release so the notices come from that same artifact. Creating a DMG does not
 sign or notarize the app.
 For historical artifact work, use packaging code from the matching release;
-current candidate installation text describes the new manual upload workflow.
+current alpha.4 installation text describes the manual upload workflow.
 
 ## CI artifacts and checksums
 
 The [build workflow](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml)
 runs core tests, static analysis, supported race checks, frontend compilation,
 native desktop builds, and CLI packaging. Successful runs attach artifacts.
-Portable CLI archives include `SHA256SUMS`; desktop archives include an adjacent
+CLI archives include `SHA256SUMS`; desktop archives include an adjacent
 SHA-256 file. macOS desktop jobs also produce a DMG and its separate SHA-256
 file. These checksums detect corruption; they are not code signatures.
 

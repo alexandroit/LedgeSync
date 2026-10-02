@@ -40,53 +40,47 @@ nameserver or mail records were changed. The existing `certbot.timer` handles
 renewal. The certificate-specific renewal hook tests Nginx configuration before
 reloading it: `/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx`.
 
-## Verified deployment
+## Verified alpha.4 deployment
 
-Verified on **2026-10-02 UTC**. Current source is
-`43f7ab6ada2711795ca0b14df6bc333f6344e131`, which adds public privacy/terms
-pages and the existing branding assets while retaining the alpha.3 macOS DMGs,
-Windows setup EXEs, Ubuntu APT packages and one-click Google Drive connection
-guide. The prior content release
-`5c702076b39a8170f2065c3262f5060d7b65698f` remains on the server
-for rollback. The stylesheet uses `?v=1c913bddba4f`. Two exact legal routes were
-added only to the LedgeSync vhost, followed by validated graceful Nginx reloads.
-The legal responses use `Cache-Control: no-cache, no-transform` to keep the
-owner-supplied contact readable without Cloudflare email-decoding JavaScript.
-No shared-vhost edits were made.
+Verified on **2026-10-02 UTC**. Current website source is
+`6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1`. It publishes alpha.4 downloads,
+the manual folder-copy workflow, server CLI prerequisites and updated privacy
+and terms disclosures. The previous source
+`43f7ab6ada2711795ca0b14df6bc333f6344e131` remains on the server for rollback.
+The seven tracked HTML/CSS/logo files were packaged directly from that commit,
+installed with root ownership and 0755/0644 modes, and activated by atomic
+symlink replacement. No Nginx reload or application restart was required.
 
-Both native Ubuntu architectures passed
-[alpha.3 public APT installation tests](https://github.com/alexandroit/LedgeSync/actions/runs/36954499569).
-All four desktop download links returned HTTP 200. The 37 public release asset
-hashes and preservation of prior assets are recorded in
-[public download evidence](research/OAUTH_ONECLICK_PUBLIC_ASSETS.json); current production
-and Pages hashes are in [deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
-New legal-page and logo deployment checks are recorded in
-[legal-site evidence](research/LEGAL_SITE_DEPLOYMENT_VERIFICATION.json). Both
-requested URLs return HTTP 200 directly, and homepage links expose them.
-The public contact is `alex@alexandro.net`; see [branding fields](BRANDING.md).
-No Google Cloud project settings were changed.
-Routing/certificate renewal checks below were initially established during the
-original deployment; this content update rechecked public/origin content,
-Nginx configuration and the unaffected HiperMusicas service.
+All seven files match their tracked SHA-256 and size through public HTTPS,
+direct origin HTTPS with certificate verification, and the secondary Pages
+site. This includes direct HTTP 200 responses at `/privacy-policy` and
+`/public-term`. The existing `no-cache, no-transform` handling and contact
+`alex@alexandro.net` remain in place. The stylesheet and logo bytes are unchanged;
+CSS still uses `?v=1c913bddba4f`.
 
-| Check | Observed result |
-|---|---|
-| Public HTTPS apex and stylesheet | HTTP 200; SHA-256 matches the tracked files below |
-| Public HTTP apex | 301 to `https://ledgesync.com/` |
-| Public HTTPS www | 308 to `https://ledgesync.com/` |
-| Direct origin HTTPS | Validated TLS, HTTP 200; no certificate bypass |
-| Direct origin www path/query | 308 preserving path and query at the apex |
-| Missing path / hidden Git path | 404 / 403 |
-| Canonical metadata | `https://ledgesync.com/` |
-| Origin certificate | Let's Encrypt; apex and www SANs; expires 2026-12-30 23:05:10 UTC |
-| Nginx configuration and services | `nginx -t` passed; Nginx and Certbot timer active |
-| Certificate renewal simulation | Scoped Certbot dry run passed, including the Nginx deploy hook |
-| Existing HiperMusicas | Public and origin HTTP 200; same Supervisor PID; shared configuration hashes unchanged |
+The four desktop download URLs refer to the verified alpha.4 DMGs/setup EXEs.
+All **37 public release assets** were downloaded anonymously and checked against
+staged SHA-256/size and GitHub metadata. All **106 older assets**, release IDs and
+tag objects remain unchanged. See [public download evidence](research/DRIVE_COPY_PUBLIC_ASSETS.json).
+The APT snapshot is separately activated as `20261002-alpha4-fcd5784`;
+[public APT run 36965018881](https://github.com/alexandroit/LedgeSync/actions/runs/36965018881)
+passed native amd64 and arm64 installation/removal against the signed repository.
+The website activation preserved that APT target.
 
-SHA-256:
+[Deployment evidence](research/DRIVE_COPY_DEPLOYMENT_VERIFICATION.json) records
+these exact bytes, the retained previous website/APT snapshots and the existing
+service checks. All 17 shared Nginx/Supervisor configuration hashes remain
+unchanged; `nginx -t` passed and Nginx stayed active. HiperMusicas retained the
+same Supervisor PID and returned HTTP 200 through public and direct-origin
+HTTPS. No DNS or Google Cloud settings were changed by this release.
+
+Historical authorization-only distribution and legal-page publication evidence
+remain in [alpha.3 deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json)
+and [legal-site evidence](research/LEGAL_SITE_DEPLOYMENT_VERIFICATION.json).
+The initial routing and certificate-renewal setup is unchanged.
 
 ```text
-e4ca67fbfeea5cdd7d1051a5e588bfee75d08b7acf166658061b814ef6766e8c  dist/index.html
+e6b3e0d083a29d0facfdb678b26f55e2d521c27f7884118f72d9c120c50bba94  dist/index.html
 1c913bddba4fbf3e42d2d59766ae16427a6cbfd56f5342b81aae133b392e1504  dist/style.css
 ```
 
@@ -126,6 +120,6 @@ not deploy to Ubuntu. After publishing website source, dispatch the Pages
 workflow as needed to keep the secondary copy current.
 
 The latest secondary Pages publication is
-[run 36957112425](https://github.com/alexandroit/LedgeSync/actions/runs/36957112425),
-with public HTML and stylesheet bytes matching source commit
-`43f7ab6ada2711795ca0b14df6bc333f6344e131`.
+[run 36965146423](https://github.com/alexandroit/LedgeSync/actions/runs/36965146423),
+with all seven public file hashes matching source commit
+`6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1`.

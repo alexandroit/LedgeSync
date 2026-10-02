@@ -1,0 +1,19 @@
+.legal-page { max-width: 820px; padding-block: 64px 80px; }
+.legal-page h1 { font-size: clamp(2.5rem, 6vw, 3.75rem); letter-spacing: -.04em; line-height: 1.12; }
+.legal-page h2 { font-family: Manrope, sans-serif; font-size: 1.35rem; letter-spacing: -.02em; margin: 2.5rem 0 1rem; }
+.legal-page p, .legal-page li { font-size: 1rem; line-height: 1.8; color: var(--muted); }
+.legal-page li + li { margin-top: .65rem; }
+.legal-page ul { padding-left: 1.4rem; }
+.legal-page a { color: var(--blue); text-decoration: underline; text-underline-offset: .2em; overflow-wrap: anywhere; }
+.legal-page code { font-size: .9em; overflow-wrap: anywhere; }
+.legal-page .effective { font-size: .875rem; margin-bottom: 2rem; }
+.legal-summary { border-left: 3px solid var(--blue); padding: 1.1rem 1.35rem; background: var(--soft); }
+.legal-summary p { margin: 0; color: var(--ink); }
+.legal-nav { display: flex; flex-wrap: wrap; gap: .8rem 1.5rem; padding-block: 1.5rem; border-bottom: 1px solid var(--line); }
+.legal-nav a { font-size: .9rem; }
+.legal-page section { scroll-margin-top: 1.5rem; }
+.legal-site .nav { min-height: 90px; height: auto; padding-block: 22px; gap: 20px; flex-wrap: wrap; }
+.legal-site .nav nav { flex-wrap: wrap; gap: 20px; font-size: .9rem; }
+.legal-site .nav nav > a { display: inline; }
+.legal-site footer > div { flex-wrap: wrap; font-size: .875rem; }
+@media (max-width: 760px) { .legal-page { padding-block: 40px 56px; } .legal-summary { padding: 1rem; } }

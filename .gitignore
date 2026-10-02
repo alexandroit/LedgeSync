@@ -25,3 +25,7 @@ node_modules/
 /frontend/playwright-report/
 /frontend/test-results/
 /frontend/package.json.md5
+
+# Private build input generated from the publisher's Google Desktop client.
+/internal/connections/oauth_client_generated.go
+/internal/connections/.oauth-client-*.tmp

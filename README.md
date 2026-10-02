@@ -6,7 +6,7 @@
 **CLI command:** `ledgesync`.
 **Primary website/domain:** `ledgesync.com`.
 **Specification version:** 0.2.1 · **Prepared:** 2026-10-01.
-**Implementation status:** 0.1.0-alpha.2 adds desktop Google Drive authorization to the local policy explorer. Cloud browsing and file transfers are not implemented. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
+**Implementation status:** 0.1.0-alpha.3 source adds a bundled Desktop OAuth client and one-click Google Drive authorization. Alpha.3 release validation/publication is in progress; published alpha.2 still uses manual client import. Cloud browsing and file transfers are not implemented. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
 
 **Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
 [Website](https://ledgesync.com/) ·
@@ -43,15 +43,14 @@ project's own repository, not Ubuntu's default package archive.
 Google Drive authorization on Ubuntu desktop requires a running, unlocked
 Secret Service credential store such as GNOME Keyring in the graphical session.
 
-**Connect Google Drive:** open **Connections**, import your own Google OAuth
-Desktop app client JSON, and choose **Connect Google Drive**. The system browser
-opens Google's consent screen. No shared client is bundled; follow the
-[Google Cloud setup and authorization guide](docs/GOOGLE_DRIVE_AUTH.md) first.
-One account is supported, using the limited `drive.file` permission. Refresh tokens
-stay in the OS credential vault; access tokens remain in memory. Check, reconnect,
-cancel and disconnect are available
-in the desktop app. Live Google consent remains unverified until an owner-created
-client is configured; automated authorization tests use synthetic credentials.
+**Google Drive in alpha.3 source:** open **Connections → Connect Google Drive**,
+authorize in the system browser and return to LedgeSync. No end-user client
+setup or JSON import is required. The application communicates directly with
+Google and stores each account's refresh token in the OS vault; access tokens
+remain in memory. Check, reconnect, cancel and disconnect are available.
+See [account connection](docs/GOOGLE_DRIVE_AUTH.md) and
+[maintainer build configuration](docs/OAUTH_BUILD.md). Live consent still needs
+owner acceptance; Google project publication controls eligible accounts.
 
 The first implementation browses local folders, explains policy decisions and
 creates plans against an explicitly simulated, empty destination. Plans are

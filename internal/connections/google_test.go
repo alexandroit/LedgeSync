@@ -2,48 +2,27 @@ package connections
 
 import (
 	"errors"
-	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/alexandroit/LedgeSync/internal/credentialvault"
 	"github.com/alexandroit/LedgeSync/internal/driveauth"
 )
 
-func TestReadClientFileBoundsAndRedaction(t *testing.T) {
-	dir := t.TempDir()
-	path := filepath.Join(dir, "private-client.json")
-	want := []byte(`{"installed":{"fixture":"synthetic-only"}}`)
-	if err := os.WriteFile(path, want, 0600); err != nil {
-		t.Fatal(err)
+func TestBundledClientConstructionDoesNotOpenVault(t *testing.T) {
+	previous := bundledClientJSON
+	defer func() { bundledClientJSON = previous }()
+	bundledClientJSON = `{"installed":{"client_id":"123-fake.apps.googleusercontent.com","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","client_secret":"synthetic-client-secret","redirect_uris":["http://localhost"]}}`
+	calls := 0
+	service, err := NewGoogleDrive(func(string) error { calls++; return nil })
+	if service == nil || err != nil || calls != 0 {
+		t.Fatal("construction did not accept a valid bundled client without opening a browser")
 	}
-	got, err := ReadClientFile(path)
-	if err != nil || string(got) != string(want) {
-		t.Fatal("selected regular file was not read")
-	}
-	if err := os.WriteFile(path, make([]byte, MaxClientFileBytes+1), 0600); err != nil {
-		t.Fatal(err)
-	}
-	for _, bad := range []string{path, dir, filepath.Join(dir, "missing-private-client.json")} {
-		if data, err := ReadClientFile(bad); data != nil || err == nil || strings.Contains(err.Error(), dir) {
-			t.Fatal("invalid file was accepted or its path leaked")
+	for _, malformed := range []string{"", `{"web":{"client_secret":"synthetic-private-value"}}`} {
+		bundledClientJSON = malformed
+		service, err := NewGoogleDrive(nil)
+		if service != nil || !errors.Is(err, driveauth.ErrBuildConfig) {
+			t.Fatal("unconfigured build did not fail closed")
 		}
-	}
-}
-
-func TestReadClientFileRejectsSymlink(t *testing.T) {
-	dir := t.TempDir()
-	path := filepath.Join(dir, "client.json")
-	if err := os.WriteFile(path, []byte(`{}`), 0600); err != nil {
-		t.Fatal(err)
-	}
-	link := filepath.Join(dir, "link.json")
-	if err := os.Symlink(path, link); err != nil {
-		t.Skip("symlinks unavailable on this runner")
-	}
-	if data, err := ReadClientFile(link); data != nil || err == nil {
-		t.Fatal("symlink was accepted")
 	}
 }
 

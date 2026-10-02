@@ -24,12 +24,13 @@ type memoryStore struct {
 	mu             sync.Mutex
 	value          string
 	getErr, setErr error
-	writes         int
+	reads, writes  int
 }
 
 func (m *memoryStore) Get(string) (string, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	m.reads++
 	if m.getErr != nil {
 		return "", m.getErr
 	}
@@ -72,6 +73,14 @@ type fixture struct {
 }
 
 func newFixture(t *testing.T) *fixture {
+	return newTestFixture(t, false)
+}
+
+func newBundledFixture(t *testing.T) *fixture {
+	return newTestFixture(t, true)
+}
+
+func newTestFixture(t *testing.T, bundled bool) *fixture {
 	t.Helper()
 	f := &fixture{t: t, store: &memoryStore{}, tokenStatus: 200, identity: "fake-account-1"}
 	f.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,11 +95,21 @@ func newFixture(t *testing.T) *fixture {
 		}
 	}))
 	t.Cleanup(f.server.Close)
-	f.service = New(f.store, f.open)
+	if bundled {
+		var err error
+		f.service, err = NewWithClient(f.store, f.open, []byte(clientJSON))
+		if err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		f.service = New(f.store, f.open)
+	}
 	f.service.tokenURL = f.server.URL + "/token"
 	f.service.aboutURL = f.server.URL + "/about?fields=user(displayName,emailAddress,permissionId)"
-	if st, err := f.service.ConfigureClient(context.Background(), []byte(clientJSON)); err != nil || st.State != "disconnected" {
-		t.Fatalf("configure: %+v %v", st, err)
+	if !bundled {
+		if st, err := f.service.ConfigureClient(context.Background(), []byte(clientJSON)); err != nil || st.State != "disconnected" {
+			t.Fatalf("configure: %+v %v", st, err)
+		}
 	}
 	return f
 }

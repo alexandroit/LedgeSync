@@ -18,8 +18,8 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/policy"
 )
 
-const version = "0.1.0-alpha.2"
-const usage = `LedgeSync 0.1.0-alpha.2 — offline policy explorer
+const version = "0.1.0-alpha.3"
+const usage = `LedgeSync 0.1.0-alpha.3 — offline policy explorer
 
 Usage:
   ledgesync browse --root DIRECTORY --json

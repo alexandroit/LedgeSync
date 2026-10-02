@@ -3,8 +3,7 @@ package desktop
 import (
 	"context"
 	"errors"
-	"os"
-	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -12,13 +11,11 @@ import (
 )
 
 type fakeGoogleDrive struct {
-	status      driveauth.Status
-	err         error
-	imported    string
-	inputBuffer []byte
-	ctx         context.Context
-	calls       []string
-	cancelled   bool
+	status    driveauth.Status
+	err       error
+	ctx       context.Context
+	calls     []string
+	cancelled bool
 }
 
 func (g *fakeGoogleDrive) result(ctx context.Context, method string) (driveauth.Status, error) {
@@ -28,11 +25,6 @@ func (g *fakeGoogleDrive) result(ctx context.Context, method string) (driveauth.
 }
 func (g *fakeGoogleDrive) Status(ctx context.Context) (driveauth.Status, error) {
 	return g.result(ctx, "status")
-}
-func (g *fakeGoogleDrive) ConfigureClient(ctx context.Context, data []byte) (driveauth.Status, error) {
-	g.imported = string(data)
-	g.inputBuffer = data
-	return g.result(ctx, "configure")
 }
 func (g *fakeGoogleDrive) Connect(ctx context.Context) (driveauth.Status, error) {
 	return g.result(ctx, "connect")
@@ -45,48 +37,52 @@ func (g *fakeGoogleDrive) Disconnect(ctx context.Context) (driveauth.Status, err
 }
 func (g *fakeGoogleDrive) Cancel() { g.cancelled = true }
 
-func TestGoogleBridgeImportsOnlyNativeSelectionAndClearsBuffer(t *testing.T) {
-	g := &fakeGoogleDrive{status: driveauth.Status{State: "disconnected", ClientConfigured: true}}
-	path := filepath.Join(t.TempDir(), "client.json")
-	fixture := `{"installed":{"fixture":"synthetic-only"}}`
-	if err := os.WriteFile(path, []byte(fixture), 0600); err != nil {
-		t.Fatal(err)
-	}
-	b := NewWithGoogleDrive(nil, nil, nil, func() (string, error) { return path, nil }, g, nil)
-	if len(g.calls) != 0 {
-		t.Fatal("construction touched vault")
-	}
-	status, err := b.ImportGoogleOAuthClient()
-	if err != nil || status == nil || status.State != "disconnected" || g.imported != fixture {
-		t.Fatal("native selection did not reach core")
-	}
-	for _, value := range g.inputBuffer {
-		if value != 0 {
-			t.Fatal("client import buffer not cleared")
+func TestGoogleBridgeOffersNoClientImport(t *testing.T) {
+	typ := reflect.TypeOf(&App{})
+	for _, name := range []string{"ImportGoogleOAuthClient", "OpenGoogleOAuthSetup", "ConfigureClient"} {
+		if _, ok := typ.MethodByName(name); ok {
+			t.Fatal("client configuration exposed to frontend")
 		}
+	}
+	b := NewWithGoogleDrive(nil, nil, nil, nil, nil)
+	status, err := b.GoogleDriveStatus()
+	if err != nil || status.State != "setup_required" || status.ClientConfigured {
+		t.Fatal("unconfigured build not represented safely")
+	}
+	if _, err = b.ConnectGoogleDrive(); !errors.Is(err, errGoogleUnavailable) {
+		t.Fatal("unconfigured build accepted connect")
 	}
 }
 
-func TestGoogleBridgeCancelledOrFailedPickerDoesNotConfigure(t *testing.T) {
-	for _, pickErr := range []error{nil, errors.New("private/path/secret")} {
-		g := &fakeGoogleDrive{}
-		b := NewWithGoogleDrive(nil, nil, nil, func() (string, error) { return "", pickErr }, g, nil)
-		status, err := b.ImportGoogleOAuthClient()
-		if status != nil || len(g.calls) != 0 {
-			t.Fatal("cancelled picker changed connection")
+func TestGoogleBridgeShowsAppOnlyAfterSuccessfulConnection(t *testing.T) {
+	for _, tc := range []struct {
+		state string
+		err   error
+		want  int
+	}{
+		{"connected", nil, 1}, {"connected", driveauth.ErrStorage, 0},
+		{"disconnected", nil, 0}, {"client_changed", driveauth.ErrClientChanged, 0},
+	} {
+		g := &fakeGoogleDrive{status: driveauth.Status{State: tc.state}, err: tc.err}
+		shown := 0
+		b := NewWithGoogleDrive(nil, nil, nil, g, func() { shown++ })
+		if len(g.calls) != 0 {
+			t.Fatal("construction touched vault")
 		}
-		if pickErr == nil && err != nil {
-			t.Fatal(err)
-		}
-		if pickErr != nil && (err == nil || strings.Contains(err.Error(), "private")) {
-			t.Fatal("picker failure not redacted")
+		b.ConnectGoogleDrive()
+		if shown != tc.want {
+			t.Fatal("wrong native window activation")
 		}
 	}
+	g := &fakeGoogleDrive{status: driveauth.Status{State: "connected"}}
+	b := NewWithGoogleDrive(nil, nil, nil, g, func() { t.Fatal("window shown after shutdown") })
+	b.Shutdown()
+	b.ConnectGoogleDrive()
 }
 
 func TestGoogleBridgeStorageStatusSurvivesWailsErrorContract(t *testing.T) {
 	g := &fakeGoogleDrive{status: driveauth.Status{State: "storage_unavailable", Message: driveauth.ErrStorage.Error()}, err: driveauth.ErrStorage}
-	b := NewWithGoogleDrive(nil, nil, nil, nil, g, nil)
+	b := NewWithGoogleDrive(nil, nil, nil, g, nil)
 	status, err := b.GoogleDriveStatus()
 	if err != nil || status.State != "storage_unavailable" {
 		t.Fatal("expected vault recovery state was lost")
@@ -99,7 +95,7 @@ func TestGoogleBridgeStorageStatusSurvivesWailsErrorContract(t *testing.T) {
 
 func TestGoogleBridgeOperationsAndShutdown(t *testing.T) {
 	g := &fakeGoogleDrive{status: driveauth.Status{State: "connected"}}
-	b := NewWithGoogleDrive(nil, nil, nil, nil, g, func() error { return errors.New("private browser details") })
+	b := NewWithGoogleDrive(nil, nil, nil, g, nil)
 	for _, action := range []func() (driveauth.Status, error){b.ConnectGoogleDrive, b.CheckGoogleDrive, b.DisconnectGoogleDrive} {
 		if _, err := action(); err != nil {
 			t.Fatal(err)
@@ -107,9 +103,6 @@ func TestGoogleBridgeOperationsAndShutdown(t *testing.T) {
 	}
 	if strings.Join(g.calls, ",") != "connect,check,disconnect" {
 		t.Fatal("wrong bridge routing")
-	}
-	if err := b.OpenGoogleOAuthSetup(); err == nil || strings.Contains(err.Error(), "private") {
-		t.Fatal("browser error not redacted")
 	}
 	b.Shutdown()
 	if !g.cancelled || !errors.Is(g.ctx.Err(), context.Canceled) {

@@ -1,73 +1,45 @@
 # Connect Google Drive
 
-The LedgeSync desktop app supports Google Drive authorization through your
-system browser. This developer alpha requires your own Google OAuth **Desktop
-app** client. No shared LedgeSync client is bundled. The downloaded client JSON
-configures the app; it is not an access token or a service-account key.
+Official LedgeSync desktop releases starting with alpha.3 include the project's
+Google OAuth Desktop client. You do not create a Google Cloud project, download
+credentials, import JSON or paste tokens into the app.
 
-## Create the client once
+**Release status:** alpha.3 is being prepared; the published alpha.2 still uses
+manual client import. The steps below describe the new alpha.3 behavior.
 
-1. Open [Google Cloud Console](https://console.cloud.google.com/), select or
-   create your project, and enable the **Google Drive API** in the API Library.
-2. Open **Google Auth Platform** and complete its initial setup. Set the app name
-   to **LedgeSync**, choose your support/contact email, and configure the audience
-   appropriate to your account. For an External app in Testing, add your Google
-   account under **Audience → Test users**.
-3. Under **Data Access**, add only
-   `https://www.googleapis.com/auth/drive.file`. LedgeSync requests that exact
-   scope. Do not add full-Drive access for this alpha.
-4. Under **Clients**, choose **Create client → Desktop app**. Name it
-   **LedgeSync Desktop**, create it, and download its JSON configuration. Do not
-   select Web application or Service account. Desktop loopback redirects use a
-   temporary local port; no server, public callback URL or DNS change is needed.
-5. Keep that downloaded file on your own computer. Do not put it in a project
-   being synced, commit it, paste it into chat or attach it to an issue.
+## Connect your account
 
-Google's console labels can change. The official
-[installed-app OAuth guide](https://developers.google.com/identity/protocols/oauth2/native-app)
-describes enabling APIs, creating credentials, browser consent and loopback
-callbacks. Your Google project settings determine which accounts can authorize
-it. A public shared-client rollout requires a separate owner configuration and
-any verification Google requires for that rollout.
+1. Open **Connections → Google Drive** and choose **Connect Google Drive**.
+2. Your system browser opens Google's account selection and permission screen.
+   Select your account, review the requested access and authorize it if desired.
+   Your Google password is entered only on Google's page.
+3. The authorization response returns directly to the running LedgeSync app
+   through a temporary local callback. LedgeSync requests that its window be
+   shown again after connection succeeds; your operating system controls focus.
+   You can close the browser tab and return manually if necessary.
+4. LedgeSync displays the connected account. **Check connection** performs a
+   read-only account check and renews an expired access token when possible.
+   **Cancel authorization** stops a pending request; the browser tab may remain.
 
-## Authorize in LedgeSync
+Only one account is supported. **Reconnect Google Drive** asks the same account
+for fresh consent after expiry or revocation. **Disconnect account** must be
+used before switching accounts. Authorization can expire or be revoked; a
+saved refresh token does not promise permanent access.
 
-1. Open **Connections → Google Drive**.
-2. Choose **Import OAuth client JSON** and select the downloaded file in the native
-   file picker. The application validates Google's Desktop configuration and
-   stores it in the operating-system credential vault.
-3. Choose **Connect Google Drive**. Your default browser opens Google's account
-   selection and permission screen. Sign in there and approve access if desired.
-   LedgeSync never asks for your Google password or a pasted access token.
-4. Return to LedgeSync. The app displays the authorized account and its connection
-   status. **Check connection** performs a read-only account check and renews an
-   expired access token when possible. **Cancel authorization** stops a pending authorization;
-   the browser tab may remain open and can be closed.
+## Updating from alpha.2
 
-Only one account is supported. Disconnect before importing a different client
-or changing accounts. If authorization expires or is revoked, **Reconnect Google Drive**
-requires the same account; selecting another account does not silently replace
-the saved identity.
+If the saved authorization belongs to a different OAuth client, LedgeSync shows
+**Authorization update required** and retains the existing account. Explicitly
+choose **Disconnect account**, then **Connect Google Drive** to authorize the
+bundled client. The app never silently moves tokens between clients or connects
+a different account. A failed disconnect leaves the previous record intact.
 
-## What access means in this alpha
+## Storage and scope
 
-Authorization obtains and stores a refresh token and reads the account's display
-name, email and stable Drive identity. Access tokens exist only in application
-memory and are refreshed when needed. No token is exposed to the web frontend,
-project configuration, exported plans or diagnostics.
-
-The requested `drive.file` scope covers files created by or explicitly shared
-with this app, not every existing file in your Drive. Selecting a parent folder
-does not automatically grant access to its existing children. See Google's
-[scope description](https://developers.google.com/workspace/drive/api/guides/api-specific-auth).
-
-This release does not browse cloud files, select a remote root, upload, download,
-overwrite or delete anything in Drive. The Files screen still previews an empty
-simulated destination. Account authorization does not apply a transfer plan or
-start background synchronization. The headless CLI remains an offline preview
-tool and does not implement account authorization.
-
-## Storage and disconnect
+Refresh tokens and account identity are stored in the operating-system vault;
+access tokens exist only in process memory. No token is sent to ledgesync.com,
+stored in project configuration or exposed to the frontend or diagnostics.
+The website/server distributes software and does not mediate authorization.
 
 | System | Credential store |
 |---|---|
@@ -75,25 +47,37 @@ tool and does not implement account authorization.
 | Windows | Credential Manager, current user |
 | Ubuntu desktop | Secret Service over the user's local D-Bus session |
 
-Unlock the normal login credential store if the app reports it unavailable.
 Ubuntu requires a running Secret Service implementation such as GNOME Keyring
-and an unlocked default collection; an SSH/headless session alone does not
-provide this. There is no plaintext file fallback.
+and an unlocked default collection. An SSH/headless session alone does not
+provide this. There is no plaintext fallback. Use one running app instance;
+credential operations are serialized within that process only.
 
-**Disconnect account** removes the local account credentials while preserving the
-imported client configuration for a future connection. It does not delete Drive
-files or revoke Google's permission grant. You can separately revoke that grant
-in [your Google Account connections](https://myaccount.google.com/connections).
-Uninstalling an application does not necessarily remove OS-vault entries;
-disconnect before uninstalling if you want to remove this local account access.
+The requested `https://www.googleapis.com/auth/drive.file` scope covers files
+created by or explicitly made available to the app. It does not grant access
+to every existing Drive file or recursively grant a selected folder's children.
+See Google's [scope description](https://developers.google.com/workspace/drive/api/guides/api-specific-auth).
 
-## Verification boundary
+This release reads account identity but does not browse cloud files, select a
+remote root, upload, download, overwrite or delete Drive files. The Files screen
+still previews an empty simulated destination. The CLI remains offline.
 
-Automated tests use synthetic credentials, a fake token/API server and a local
-loopback callback. Native vault CI uses disposable runner accounts only. No
-personal Google account or existing token was used to develop these tests.
-Real consent/refresh/revocation acceptance remains pending because the owner
-has not yet created a Desktop OAuth client. See
-[OAuth source review](research/OAUTH_SOURCE_REVIEW.md),
-[vault source review](research/OAUTH_VAULT_REVIEW.md) and
-[current evidence](17_AGENT_HANDOFF_AND_STATUS.md).
+**Disconnect account** removes the local account credentials while retaining
+client configuration. It does not revoke Google's grant or delete Drive files.
+You can revoke permission in [Google Account connections](https://myaccount.google.com/connections).
+Disconnect before uninstalling if you want to remove the saved local access.
+
+## Availability and verification
+
+The owner controls the Google OAuth project's testing audience and publication.
+While it is in Testing, only configured test accounts may be able to authorize.
+A Google access-denied or unverified-app message needs owner configuration;
+LedgeSync does not bypass Google's restrictions or ask for broader permissions.
+
+An unconfigured developer build displays an unavailable connection state instead
+of asking users to supply credentials. Maintainers can follow
+[OAuth build configuration](OAUTH_BUILD.md).
+
+Automated tests use synthetic credentials, local fake endpoints and disposable
+CI vaults. They do not establish actual Google consent, refresh or revocation.
+Live acceptance remains pending until the owner completes the browser flow.
+See [current evidence](17_AGENT_HANDOFF_AND_STATUS.md).

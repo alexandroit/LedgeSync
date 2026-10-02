@@ -1,7 +1,7 @@
 # 17 — Agent Handoff and Current Status
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
-**Implementation:** 0.1.0-alpha.2, desktop authorization developer alpha.
+**Implementation:** 0.1.0-alpha.3 in preparation; published release remains alpha.2.
 
 Read [PROJECT_IDENTITY.md](../PROJECT_IDENTITY.md) first. The authoritative name
 is LedgeSync, command `ledgesync`, primary domain `ledgesync.com`. The owner
@@ -9,8 +9,49 @@ requested public Apache-2.0 source, a website and desktop/server platform builds
 After initially deferring DNS activation, the owner explicitly requested
 publication on the existing Ubuntu server hosting HiperMusicas. The canonical
 site is now live there. The owner subsequently requested Google Drive token
-authorization and confirmed that no Desktop OAuth client exists yet. The current
-change implements that setup/consent path; it does not enable cloud transfers.
+authorization, then selected a bundled Desktop client with one-click browser
+consent. The current change does not enable cloud transfers.
+
+## One-click authorization follow-up (alpha.3 in preparation)
+
+The owner selected direct computer-to-Google authorization, with no end-user
+JSON import and no server token store. The supplied path still contained a Web
+client; a sibling downloaded Desktop `installed` client was found and verified
+to belong to the same Google project. No credential values or user tokens were
+printed. The Desktop client is authorized as a build input; the Web client is
+not used. Actual browser consent remains for the owner to complete.
+
+Changed files: core `internal/driveauth/**`, `internal/connections/**`, native
+bridge/main, frontend Connections and tests, build-time injector/CI, packaging
+copy/version and authorization documentation. The native app uses immutable
+bundled client configuration, zero-write initial status, direct PKCE browser
+consent, and a native window activation request only after successful connection.
+The JSON-import and Cloud-setup bindings no longer exist. Existing different
+client grants remain intact and unusable until an explicit disconnect succeeds.
+
+Validation completed locally:
+
+- `go test ./...`, `go test -race ./...`, `go vet ./...`: passed.
+- Frontend `npm run check`, `npm test`, `npm run build`: passed; 22 Playwright
+  tests (18 authorization and four explorer). Production screenshot reviewed.
+- `python3 tools/test_configure_oauth_client.py`: nine synthetic guards passed,
+  including strict parser/redaction, atomic file publication, generated Go
+  compilation and absence of fixture client values in Go build metadata.
+- `python3 tools/test_package_dmg.py`: four passed;
+  `python3 tools/verify_licenses.py`: 44 recorded hashes verified.
+- `.venv/bin/python tools/validate_docs.py`: zero failures/skips.
+- Native macOS ARM64 Wails build passed with macOS 13 minimum. Actual WebView
+  displayed **Not connected**, **Ready to request access in your system browser**,
+  and **Connect Google Drive**, with no import/setup controls. No browser consent
+  was started; no user token written. The smoke app was closed afterward.
+
+The correct Desktop client was configured as the canonical repository Actions
+secret via stdin, with no credential output; only trusted main native builds
+receive it. Its generated source is ignored and desktop cache export disabled.
+Desktop client metadata remains extractable from distributed binaries by OAuth
+public-client design. User tokens are never CI inputs. Native release CI,
+installer/public APT validation and publication of alpha.3 remain pending.
+Alpha.2 evidence below remains historical to that release.
 
 ## Implemented behavior
 

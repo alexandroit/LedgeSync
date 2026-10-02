@@ -19,9 +19,8 @@ type Picker func() (string, error)
 
 // App binds read-only previews and explicit Google Drive account authorization.
 type App struct {
-	google            googleDriveService
-	clientPicker      Picker
-	openGoogleSetup   func() error
+	google            GoogleDriveService
+	showAfterConnect  func()
 	connectionContext context.Context
 	closeConnections  context.CancelFunc
 	service           previewService

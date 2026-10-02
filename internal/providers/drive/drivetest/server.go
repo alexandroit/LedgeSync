@@ -453,7 +453,7 @@ func (s *Server) create(meta createRequest, content []byte) *Object {
 	}
 	delete(s.reserved, id)
 	s.version++
-	o := &Object{ID: id, Name: meta.Name, MimeType: meta.MimeType, Parents: []string{parent}, Content: content, CreatedByApp: true, CanAddChildren: true, Version: s.version}
+	o := &Object{ID: id, Name: meta.Name, MimeType: detectedType(meta.Name, meta.MimeType), Parents: []string{parent}, Content: content, CreatedByApp: true, CanAddChildren: true, Version: s.version}
 	if meta.AppProperties != nil {
 		o.AppProperties = map[string]string{}
 		for k, v := range meta.AppProperties {
@@ -462,6 +462,21 @@ func (s *Server) create(meta createRequest, content []byte) *Object {
 	}
 	s.objects[id] = o
 	return o
+}
+
+// Like Drive, a binary upload is stored with the media type detected from its
+// name (live: README.md became text/markdown).
+var detectedTypes = map[string]string{".md": "text/markdown", ".txt": "text/plain", ".js": "text/javascript", ".json": "application/json", ".png": "image/png", ".html": "text/html"}
+
+func detectedType(name, uploaded string) string {
+	if uploaded == "application/octet-stream" {
+		if i := strings.LastIndexByte(name, '.'); i > 0 {
+			if t, ok := detectedTypes[strings.ToLower(name[i:])]; ok {
+				return t
+			}
+		}
+	}
+	return uploaded
 }
 
 func decodeCreate(r *http.Request) (createRequest, bool) {

@@ -141,6 +141,7 @@ func TestUploadAcceptsGoogleSessionParameters(t *testing.T) {
 func TestUploadEmptyFileAndVerificationFailures(t *testing.T) {
 	for _, tc := range []struct{ name, change, code string }{
 		{"empty", "", ""}, {"checksum", "checksum", "DRIVE_VERIFICATION_FAILED"}, {"size", "size", "DRIVE_VERIFICATION_FAILED"}, {"parent", "parent", "DRIVE_IDENTITY_MISMATCH"}, {"operation", "operation", "DRIVE_IDENTITY_MISMATCH"}, {"trashed", "trashed", "DRIVE_IDENTITY_MISMATCH"},
+		{"detected type", "detected", ""}, {"native document", "native", "DRIVE_IDENTITY_MISMATCH"}, {"folder", "folder", "DRIVE_IDENTITY_MISMATCH"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			complete, puts := false, 0
@@ -178,6 +179,13 @@ func TestUploadEmptyFileAndVerificationFailures(t *testing.T) {
 					o.AppProperties[operationProperty] = "different"
 				case "trashed":
 					o.Trashed = true
+				case "detected":
+					// Drive stores the media type it detects, not the uploaded one.
+					o.MimeType = "text/markdown"
+				case "native":
+					o.MimeType = "application/vnd.google-apps.document"
+				case "folder":
+					o.MimeType = folderMIME
 				}
 				encode(w, o)
 			})

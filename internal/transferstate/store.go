@@ -4,12 +4,14 @@ package transferstate
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/alexandroit/LedgeSync/internal/domain"
 	_ "modernc.org/sqlite"
@@ -45,7 +47,7 @@ func failure() error {
 // Open acquires a kernel-held process lock. Crashes release the lock without
 // stale-PID guesses. One writer for this application also blocks overlapping pairs.
 func Open(dir, source string) (*Store, error) {
-	abs, err := filepath.Abs(dir)
+	abs, err := canonicalDirectory(dir)
 	if err != nil {
 		return nil, failure()
 	}
@@ -61,27 +63,14 @@ func Open(dir, source string) (*Store, error) {
 			return nil, domain.Fail("STATE_INSIDE_SOURCE", "Choose a source outside the LedgeSync settings directory.")
 		}
 	}
-	// Reject symlinks at every existing component before creating private state.
-	for p := abs; ; p = filepath.Dir(p) {
-		info, e := os.Lstat(p)
-		if e == nil && (info.Mode()&os.ModeSymlink != 0 || !info.IsDir()) {
-			return nil, failure()
-		}
-		if e != nil && !errors.Is(e, os.ErrNotExist) {
-			return nil, failure()
-		}
-		if filepath.Dir(p) == p {
-			break
-		}
-	}
-	if os.MkdirAll(abs, 0700) != nil {
+	if prepareStateDirectory(abs) != nil {
 		return nil, failure()
 	}
-	if st, e := os.Lstat(abs); e != nil || !privateMode(st, true) {
+	if st, e := os.Lstat(abs); e != nil || !privateNode(abs, st, true) {
 		return nil, failure()
 	}
 	for _, name := range []string{"writer.lock", "transfers.sqlite", "transfers.sqlite-journal", "transfers.sqlite-wal", "transfers.sqlite-shm"} {
-		if st, e := os.Lstat(filepath.Join(abs, name)); e == nil && (!st.Mode().IsRegular() || !privateMode(st, false)) {
+		if st, e := os.Lstat(filepath.Join(abs, name)); e == nil && !privateNode(filepath.Join(abs, name), st, false) {
 			return nil, failure()
 		} else if e != nil && !errors.Is(e, os.ErrNotExist) {
 			return nil, failure()
@@ -89,6 +78,10 @@ func Open(dir, source string) (*Store, error) {
 	}
 	f, err := os.OpenFile(filepath.Join(abs, "writer.lock"), os.O_CREATE|os.O_RDWR|noFollowFlag, 0600)
 	if err != nil {
+		return nil, failure()
+	}
+	if st, e := f.Stat(); e != nil || !privateNode(f.Name(), st, false) {
+		f.Close()
 		return nil, failure()
 	}
 	if err = lockFile(f); err != nil {
@@ -104,6 +97,11 @@ func Open(dir, source string) (*Store, error) {
 	filename := filepath.Join(abs, "transfers.sqlite")
 	private, e := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|noFollowFlag, 0600)
 	if e != nil {
+		err = failure()
+		return nil, err
+	}
+	if st, e := private.Stat(); e != nil || !privateNode(filename, st, false) {
+		private.Close()
 		err = failure()
 		return nil, err
 	}
@@ -161,6 +159,51 @@ PRAGMA user_version=1;`)
 		}
 	}
 	return s, nil
+}
+
+// Resolve existing ancestry before comparing paths. This expands Windows 8.3
+// names consistently with the source, and macOS's root-owned /var and /tmp
+// aliases. User-controlled state symlinks remain forbidden, including the leaf.
+func canonicalDirectory(dir string) (string, error) {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return "", failure()
+	}
+	nearest := ""
+	var missing []string
+	for p := abs; ; p = filepath.Dir(p) {
+		info, e := os.Lstat(p)
+		if e == nil {
+			if info.Mode()&os.ModeSymlink != 0 {
+				if p == abs || !trustedSystemAlias(p, info) {
+					return "", failure()
+				}
+			} else if !info.IsDir() {
+				return "", failure()
+			}
+			if nearest == "" {
+				nearest = p
+			}
+		} else if !errors.Is(e, os.ErrNotExist) {
+			return "", failure()
+		} else if nearest == "" {
+			missing = append(missing, filepath.Base(p))
+		}
+		if filepath.Dir(p) == p {
+			break
+		}
+	}
+	if nearest == "" {
+		return "", failure()
+	}
+	resolved, err := filepath.EvalSymlinks(nearest)
+	if err != nil {
+		return "", failure()
+	}
+	for i := len(missing) - 1; i >= 0; i-- {
+		resolved = filepath.Join(resolved, missing[i])
+	}
+	return resolved, nil
 }
 
 // ObserveRules preserves the fail-closed rule-source baseline across process
@@ -230,13 +273,8 @@ func (s *Store) Load(key string) (Project, error) {
 		var id string
 		var raw []byte
 		var n Node
-		if rows.Scan(&id, &raw) != nil || len(raw) > 32768 || json.Unmarshal(raw, &n) != nil || n.OperationID != id || n.ID == "" || n.ParentID == "" {
+		if rows.Scan(&id, &raw) != nil || len(raw) > 32768 || json.Unmarshal(raw, &n) != nil || n.OperationID != id || !validNode(n) {
 			return p, failure()
-		}
-		if n.Path != "" {
-			if domain.ValidatePath(n.Path) != nil {
-				return p, failure()
-			}
 		}
 		p.Nodes[id] = n
 		if len(p.Nodes) > 500000 {
@@ -257,15 +295,61 @@ func (s *Store) SaveProject(p Project) error {
 	return nil
 }
 func (s *Store) SaveNode(key string, n Node) error {
+	if !validNode(n) {
+		return failure()
+	}
 	b, err := json.Marshal(n)
 	if err != nil {
 		return failure()
 	}
-	_, err = s.db.Exec("INSERT INTO operations(id,project_id,payload) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload WHERE project_id=excluded.project_id", n.OperationID, key, b)
+	result, err := s.db.Exec("INSERT INTO operations(id,project_id,payload) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload WHERE project_id=excluded.project_id", n.OperationID, key, b)
 	if err != nil {
 		return failure()
 	}
+	if rows, e := result.RowsAffected(); e != nil || rows != 1 {
+		return failure()
+	}
 	return nil
+}
+
+func validNode(n Node) bool {
+	if n.Status != "intent" && n.Status != "acknowledged" && n.Status != "verified" {
+		return false
+	}
+	for _, id := range []string{n.ID, n.ParentID, n.OperationID} {
+		if len(id) == 0 || len(id) > 256 {
+			return false
+		}
+		for _, c := range id {
+			if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_' || c == '-') {
+				return false
+			}
+		}
+	}
+	if len(n.Name) > 1024 || !utf8.ValidString(n.Name) || domain.ValidatePath(n.Name) != nil || strings.Contains(n.Name, "/") {
+		return false
+	}
+	if n.Path != "" && domain.ValidatePath(n.Path) != nil {
+		return false
+	}
+	if n.Kind == "directory" {
+		return n.Size == 0 && n.MD5 == "" && n.SHA256 == ""
+	}
+	if n.Kind != "file" || n.Path == "" || n.Size < 0 {
+		return false
+	}
+	for _, h := range []struct {
+		value string
+		size  int
+	}{{n.SHA256, 64}, {n.MD5, 32}} {
+		if len(h.value) != h.size || strings.ToLower(h.value) != h.value {
+			return false
+		}
+		if _, err := hex.DecodeString(h.value); err != nil {
+			return false
+		}
+	}
+	return true
 }
 func (s *Store) BeginRun(id, key string, plan any) error {
 	b, err := json.Marshal(plan)

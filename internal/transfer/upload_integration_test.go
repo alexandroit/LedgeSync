@@ -616,22 +616,39 @@ func TestDurableRunFinalizationFailureNeverReportsSucceeded(t *testing.T) {
 	f := fixtureFor(t, map[string]string{"a.txt": "approved fixture"})
 	// This is a separate SQLite connection inside the dedicated fake fixture. It
 	// does not bypass the application lock in production or use personal state.
-	uri := url.URL{Scheme: "file", Path: filepath.ToSlash(filepath.Join(f.state, "transfers.sqlite"))}
+	filename := filepath.Join(f.state, "transfers.sqlite")
+	uriPath := filepath.ToSlash(filename)
+	if filepath.VolumeName(filename) != "" && !strings.HasPrefix(uriPath, "/") {
+		uriPath = "/" + uriPath
+	}
+	uri := url.URL{Scheme: "file", Path: uriPath}
 	var journal *sql.DB
 	var blocker *sql.Conn
 	var setupErr error
 	locked := make(chan struct{})
+	setupFailed := make(chan error, 1)
+	reportSetupFailure := func(stage string, err error) error {
+		if err != nil {
+			select {
+			case setupFailed <- fmt.Errorf("%s: %w", stage, err):
+			default:
+			}
+		}
+		return err
+	}
 	local := &finalScanPreviewer{inner: app.NewService(), afterFinal: func() error {
 		if setupErr != nil {
 			return setupErr
 		}
 		var err error
-		blocker, err = journal.Conn(context.Background())
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		blocker, err = journal.Conn(ctx)
 		if err != nil {
-			return err
+			return reportSetupFailure("open finalization blocker", err)
 		}
-		if _, err = blocker.ExecContext(context.Background(), "BEGIN IMMEDIATE"); err != nil {
-			return err
+		if _, err = blocker.ExecContext(ctx, "BEGIN IMMEDIATE"); err != nil {
+			return reportSetupFailure("lock finalization transaction", err)
 		}
 		close(locked)
 		return nil
@@ -647,9 +664,13 @@ func TestDurableRunFinalizationFailureNeverReportsSucceeded(t *testing.T) {
 		}
 		journal, setupErr = sql.Open("sqlite", uri.String())
 		if setupErr != nil {
+			reportSetupFailure("open fixture journal", setupErr)
 			return
 		}
-		_, setupErr = journal.Exec("CREATE TRIGGER reject_final_run_event BEFORE INSERT ON run_events BEGIN SELECT RAISE(ABORT, 'synthetic finalization failure'); END")
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		_, setupErr = journal.ExecContext(ctx, "CREATE TRIGGER reject_final_run_event BEFORE INSERT ON run_events BEGIN SELECT RAISE(ABORT, 'synthetic finalization failure'); END")
+		reportSetupFailure("install finalization failure trigger", setupErr)
 	}
 	defer func() {
 		if blocker != nil {
@@ -666,7 +687,11 @@ func TestDurableRunFinalizationFailureNeverReportsSucceeded(t *testing.T) {
 	}
 	select {
 	case <-locked:
+	case err := <-setupFailed:
+		f.service.CancelAndWait()
+		t.Fatalf("finalization fixture setup failed: %v", err)
 	case <-time.After(5 * time.Second):
+		f.service.CancelAndWait()
 		t.Fatal("executor never reached controlled finalization window")
 	}
 	// A writer lock holds FinishRun long enough to catch optimistic success;

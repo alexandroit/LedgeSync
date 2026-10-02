@@ -26,6 +26,7 @@ type Tree struct {
 	entries     []domain.Entry
 	observed    map[string]os.FileInfo
 	directories []string
+	membership  map[string]string
 	identity    string
 }
 
@@ -56,7 +57,7 @@ func Scan(ctx context.Context, rootPath string) (tree *Tree, err error) {
 	if err != nil {
 		return nil, domain.Fail("SOURCE_UNAVAILABLE", "cannot open source root")
 	}
-	tree = &Tree{root: r, rootPath: rootPath, rootInfo: info, entries: []domain.Entry{}, observed: map[string]os.FileInfo{}}
+	tree = &Tree{root: r, rootPath: rootPath, rootInfo: info, entries: []domain.Entry{}, observed: map[string]os.FileInfo{}, membership: map[string]string{}}
 	defer func() {
 		if err != nil {
 			r.Close()
@@ -102,6 +103,7 @@ func Scan(ctx context.Context, rootPath string) (tree *Tree, err error) {
 			return domain.Fail("SCAN_INCOMPLETE", "cannot finish directory listing: %s", dir)
 		}
 		sort.Slice(children, func(i, j int) bool { return children[i].Name() < children[j].Name() })
+		tree.membership[dir] = membershipDigest(children)
 		for _, child := range children {
 			if err := cancelled(ctx); err != nil {
 				return err

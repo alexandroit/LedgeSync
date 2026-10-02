@@ -65,6 +65,12 @@ func TestUploadReaderRejectsReplacedParentAndNewRules(t *testing.T) {
 	if err = os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("file\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
+	// Model a filesystem whose directory metadata does not reveal new entries.
+	// The pinned membership must independently detect the new policy source.
+	tree.observed["sub"], err = os.Stat(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err = tree.OpenUpload(ctx, "sub/file", digest); err == nil {
 		t.Fatal("new directory policy escaped structure validation")
 	}

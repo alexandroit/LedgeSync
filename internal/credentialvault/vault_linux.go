@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -78,6 +79,42 @@ func unixBusAddress(address string) (string, error) {
 	return path, nil
 }
 
+// dialUserBus checks the kernel's peer identity before any D-Bus authentication
+// or secret-bearing traffic. AuthExternal authenticates us to the bus; it does
+// not establish that a local socket belongs to the current effective user.
+func dialUserBus(ctx context.Context, path string, uid uint32) (net.Conn, error) {
+	socket, err := (&net.Dialer{}).DialContext(ctx, "unix", path)
+	if err != nil {
+		return nil, ErrUnavailable
+	}
+	if err := verifyBusPeer(socket, uid); err != nil {
+		_ = socket.Close()
+		return nil, ErrUnavailable
+	}
+	return socket, nil
+}
+
+func verifyBusPeer(socket net.Conn, uid uint32) error {
+	local, ok := socket.(*net.UnixConn)
+	if !ok {
+		return ErrUnavailable
+	}
+	raw, err := local.SyscallConn()
+	if err != nil {
+		return ErrUnavailable
+	}
+	var peer *unix.Ucred
+	var peerErr error
+	// Control pins the descriptor during this immediate kernel query. It does
+	// not wait for a peer message and cannot be stalled by the socket's owner.
+	if err := raw.Control(func(fd uintptr) {
+		peer, peerErr = unix.GetsockoptUcred(int(fd), unix.SOL_SOCKET, unix.SO_PEERCRED)
+	}); err != nil || peerErr != nil || peer == nil || peer.Uid != uid {
+		return ErrUnavailable
+	}
+	return nil
+}
+
 func connectSecretService() (*secretConnection, error) {
 	address := os.Getenv("DBUS_SESSION_BUS_ADDRESS")
 	if address == "" {
@@ -89,7 +126,7 @@ func connectSecretService() (*secretConnection, error) {
 		return nil, err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), operationTimeout)
-	socket, err := (&net.Dialer{}).DialContext(ctx, "unix", path)
+	socket, err := dialUserBus(ctx, path, uint32(os.Geteuid()))
 	if err != nil {
 		cancel()
 		return nil, ErrUnavailable

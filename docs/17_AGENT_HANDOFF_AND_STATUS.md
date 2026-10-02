@@ -21,6 +21,36 @@ API, and requested real whole-folder uploads inside an existing Drive folder.
 
 ## Approved Drive folder uploads — alpha.4 candidate
 
+### Cross-platform release follow-up
+
+The owner requested the same security standard on every supported system. The
+implementation uses each platform's own credential vault and verifies local
+journal access separately. Linux user-bus connections now check `SO_PEERCRED`
+before any D-Bus authentication bytes. macOS rejects extended ACL grants that
+POSIX mode bits cannot express. Windows creates protected owner-only inheritable
+DACLs and inspects native ownership, ACLs, reparse points and hardlinks.
+Unavailable native protection blocks the operation; no plaintext fallback was
+introduced. iPhone/iPad scope is awaiting clarification; the existing Darwin
+builds target macOS, not iOS.
+
+Build run `36960353039` at `5179dbeb1458caa4169b703a25fdc37e06524184`
+compiled all six native desktop targets but failed core tests on macOS/Windows.
+The follow-up fixes canonicalize trusted macOS `/var` and `/tmp` aliases and
+Windows short names before source/state containment checks, correct a Windows
+SQLite test URI, and revalidate actual directory membership when timestamps do
+not reveal a newly added ignore file. Journal recovery now rejects malformed
+operation status, kind, IDs, paths and checksums. New regression tests accompany
+these fixes. The same commit's native vault run `36960353021` passed all six
+targets; it predates the additional Linux peer-identity check.
+
+After these fixes, local full `go test -race ./...` and `go vet ./...` passed,
+as did `.venv/bin/python tools/validate_docs.py` with zero failures/skips and
+the 63 notice hash checks. New native CI and immutable installers are still
+required before alpha.4 publication. No live Google acceptance was inferred
+from these checks.
+
+### Copy behavior
+
 The Files screen now exposes a real destination, selected through Google's native
 browser Picker or My Drive, followed by a fresh preview and explicit approval.
 The entire included source hierarchy, including empty folders, is copied inside

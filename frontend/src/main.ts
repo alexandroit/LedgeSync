@@ -2,7 +2,7 @@ import './style.css';
 import type { DesktopBridge, DriveConnectionStatus, Entry, Explanation, Operation, Preview } from './types';
 
 type View = 'files' | 'preview' | 'policies' | 'connections';
-type DriveAction = 'status' | 'connect' | 'check' | 'disconnect';
+type DriveAction = 'status' | 'connect' | 'check' | 'disconnect' | 'revoke';
 const state = {
   preview: null as Preview | null, view: 'files' as View, path: '', query: '',
   showExcluded: false, grid: false, selected: '', busy: false, error: '',
@@ -96,13 +96,14 @@ function changeView(view: View) {
   state.view = view; state.query = ''; state.page = 0; render();
   if (view === 'connections' && !state.driveLoaded && !state.driveBusy) void driveAction('status');
 }
-async function driveAction(action: DriveAction) {
+async function driveAction(action: DriveAction, confirmed = false, expectedAccountReference = '') {
+  if (action === 'revoke' && (!confirmed || !expectedAccountReference)) return;
   if (state.driveBusy || state.driveCancelling || state.drive?.state === 'connecting' && action !== 'status') return;
   if (action === 'connect') state.driveCancelIntent = false;
   state.driveBusy = action; state.driveError = ''; render();
   try {
     const methods = { status: 'GoogleDriveStatus', connect: 'ConnectGoogleDrive', check: 'CheckGoogleDrive', disconnect: 'DisconnectGoogleDrive' } as const;
-    const result = await bridge()[methods[action]]();
+    const result = action === 'revoke' ? await bridge().RevokeGoogleDrive(expectedAccountReference, true) : await bridge()[methods[action]]();
     setDriveStatus(result); state.driveError = '';
   } catch {
     // Transport exceptions are not a safe display surface for credentials or provider responses.
@@ -111,6 +112,7 @@ async function driveAction(action: DriveAction) {
       connect: 'Google Drive authorization could not be completed. Try connecting again from the desktop application.',
       check: 'Could not check the Google Drive connection. Check your network connection and try again.',
       disconnect: 'Could not remove the local Google Drive credentials. Check that your system credential vault is available and try again.',
+      revoke: 'Could not confirm revocation and local cleanup. Google may already have removed access. Review the connection status before retrying.',
     };
     state.driveError = messages[action];
     // Wails rejects a Go (status, error) result and drops its status value.
@@ -123,6 +125,43 @@ async function driveAction(action: DriveAction) {
     if (action === 'connect') state.driveCancelIntent = false;
     state.driveLoaded = true; state.driveBusy = ''; render();
   }
+}
+function canRevokeDrive() {
+  return Boolean(state.drive?.account && state.drive.clientConfigured &&
+    (state.drive.state === 'connected' || state.drive.state === 'reconnect_required') &&
+    !state.driveBusy && !state.driveCancelling);
+}
+function confirmDriveRevocation() {
+  if (!canRevokeDrive() || document.getElementById('drive-revoke-dialog')) return;
+  const reference = state.drive!.account!.reference;
+  const revision = state.driveRevision;
+  const dialog = el('dialog', 'revoke-dialog'); dialog.id = 'drive-revoke-dialog';
+  dialog.setAttribute('aria-labelledby', 'drive-revoke-title');
+  dialog.setAttribute('aria-describedby', 'drive-revoke-impact drive-revoke-alternative');
+  const title = el('h2', '', 'Revoke access on Google?'); title.id = 'drive-revoke-title';
+  const account = el('p', 'revoke-account', displayPath(state.drive!.account!.email || state.drive!.account!.displayName || 'This Google account'));
+  const impact = el('p', '', 'This removes this account’s authorization on Google. Other apps whose OAuth clients share the same Google Cloud project may also lose this account’s authorization. Those apps may need you to sign in again.');
+  impact.id = 'drive-revoke-impact';
+  const alternative = el('p', '', 'To remove credentials only from this computer, cancel and choose “Disconnect from this device”. Revocation does not delete Drive files.');
+  alternative.id = 'drive-revoke-alternative';
+  const close = () => {
+    // Remove the closed dialog synchronously before a fast backend result can
+    // rerender the account. No stale account text or controls remain in the DOM.
+    dialog.close(); dialog.remove();
+    const trigger = document.getElementById('drive-revoke') as HTMLButtonElement | null;
+    if (trigger && !trigger.disabled) trigger.focus();
+  };
+  const cancel = button('Cancel', close, 'button subtle'); cancel.autofocus = true;
+  const confirm = button('Revoke access on Google', () => {
+    // Confirmation applies only to the account/status the user reviewed.
+    const unchanged = revision === state.driveRevision && reference === state.drive?.account?.reference;
+    close();
+    if (unchanged && canRevokeDrive()) void driveAction('revoke', true, reference);
+  }, 'button danger');
+  const actions = el('div', 'revoke-actions'); actions.append(cancel, confirm);
+  dialog.append(title, account, impact, alternative, actions);
+  dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
+  document.body.append(dialog); dialog.showModal(); cancel.focus();
 }
 function setDriveStatus(status: DriveConnectionStatus | null) {
   state.drive = status; state.driveRevision++;
@@ -190,7 +229,7 @@ function render() {
     item.disabled = true; item.title = 'Planned for a later release'; item.append(el('small', '', 'Later')); nav.append(item);
   }
   sidebar.append(nav);
-  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', 'Developer alpha · 0.1.0-alpha.3'), el('p', '', state.drive?.state === 'connected' ? 'Google Drive connected. Cloud transfers are not available yet.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
+  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', 'Developer alpha · 0.1.0-alpha.3'), el('p', '', state.driveBusy === 'revoke' || state.driveBusy === 'disconnect' ? 'Updating Google Drive access…' : state.drive?.state === 'revoked_local_cleanup_required' ? 'Google access revoked. Local credential cleanup is required.' : state.drive?.state === 'connected' ? 'Google Drive connected. Cloud transfers are not available yet.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
   sidebar.append(offline); shell.append(sidebar);
 
   const workspace = el('main', 'workspace');
@@ -255,12 +294,12 @@ function renderConnections(container: HTMLElement) {
   const card = el('article', 'connection-card'); card.setAttribute('aria-label', 'Google Drive connection');
   const cardHeading = el('div', 'connection-heading');
   const provider = el('div', 'connection-provider'); provider.append(icon('cloud'), el('h2', '', 'Google Drive'));
-  const labels: Record<DriveConnectionStatus['state'], string> = { setup_required: 'Connection unavailable', disconnected: 'Not connected', connecting: 'Waiting for authorization', connected: 'Connected', reconnect_required: 'Reconnect required', client_changed: 'New authorization required', storage_unavailable: 'Credential vault unavailable' };
-  cardHeading.append(provider, badge(state.driveBusy === 'connect' ? labels.connecting : state.drive ? labels[state.drive.state] : 'Not checked', state.drive?.state === 'connected' ? 'connected' : ''));
+  const labels: Record<DriveConnectionStatus['state'], string> = { setup_required: 'Connection unavailable', disconnected: 'Not connected', connecting: 'Waiting for authorization', connected: 'Connected', reconnect_required: 'Reconnect required', client_changed: 'New authorization required', storage_unavailable: 'Credential vault unavailable', revoked_local_cleanup_required: 'Google access revoked; local cleanup required' };
+  cardHeading.append(provider, badge(state.driveBusy === 'connect' ? labels.connecting : state.driveBusy === 'revoke' ? 'Revoking Google access' : state.driveBusy === 'disconnect' ? 'Removing local access' : state.drive ? labels[state.drive.state] : 'Not checked', state.drive?.state === 'connected' && !state.driveBusy ? 'connected' : ''));
   card.append(cardHeading);
   const status = el('div', 'connection-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.setAttribute('aria-atomic', 'true');
   const pending = state.driveBusy === 'connect' || state.drive?.state === 'connecting';
-  const pendingLabels: Record<DriveAction, string> = { status: 'Reading the saved connection…', connect: 'Complete authorization in your browser, then return to LedgeSync. You can cancel this request here.', check: 'Checking account authorization with Google…', disconnect: 'Removing local account credentials…' };
+  const pendingLabels: Record<DriveAction, string> = { status: 'Reading the saved connection…', connect: 'Complete authorization in your browser, then return to LedgeSync. You can cancel this request here.', check: 'Checking account authorization with Google…', disconnect: 'Removing local account credentials…', revoke: 'Revoking this account’s access on Google, then removing local credentials…' };
   if (state.driveBusy || pending) status.append(el('span', 'spinner'), el('p', '', state.driveCancelling ? 'Cancelling authorization…' : pendingLabels[state.driveBusy || 'connect']));
   else status.append(el('p', '', state.drive?.message || 'Read the saved connection to get started.'));
   card.append(status);
@@ -279,22 +318,29 @@ function renderConnections(container: HTMLElement) {
   } else if (!state.drive || state.drive.state === 'storage_unavailable') {
     actions.append(driveButton('Retry connection status', () => void driveAction('status'), 'status'));
   } else if (state.drive.state === 'connected') {
-    actions.append(driveButton('Check connection', () => void driveAction('check'), 'check'), driveButton('Disconnect account', () => void driveAction('disconnect'), 'disconnect'));
+    actions.append(driveButton('Check connection', () => void driveAction('check'), 'check'), driveButton('Disconnect from this device', () => void driveAction('disconnect'), 'disconnect'));
+  } else if (state.drive.state === 'revoked_local_cleanup_required') {
+    card.append(el('p', 'connection-guidance', 'Google confirmed revocation, but this computer’s credentials could not be removed. Unlock the system credential vault, then disconnect from this device to retry local cleanup. Connecting, checking and another revocation are blocked until cleanup succeeds.'));
+    actions.append(driveButton('Disconnect from this device', () => void driveAction('disconnect'), 'disconnect'));
   } else if (state.drive.state === 'client_changed') {
     card.append(el('p', 'connection-guidance', 'This computer has authorization from an earlier LedgeSync configuration. Disconnect it first, then connect again to authorize this version.'));
-    actions.append(driveButton('Disconnect account', () => void driveAction('disconnect'), 'disconnect'));
+    card.append(el('p', 'connection-guidance', 'This version cannot revoke a grant from a different OAuth client. Review that earlier authorization in your Google Account connections settings if you also want to remove its access on Google.'));
+    actions.append(driveButton('Disconnect from this device', () => void driveAction('disconnect'), 'disconnect'));
   } else if (state.drive.state === 'setup_required') {
     card.append(el('p', 'connection-guidance', 'Google sign-in is not configured in this build. Install the official LedgeSync application from ledgesync.com to connect your account.'));
   } else {
     if (state.drive.clientConfigured) actions.append(driveButton(state.drive.state === 'reconnect_required' ? 'Reconnect Google Drive' : 'Connect Google Drive', () => void driveAction('connect'), 'connect', true));
-    if (state.drive.account) actions.append(driveButton('Disconnect account', () => void driveAction('disconnect'), 'disconnect'));
+    if (state.drive.account) actions.append(driveButton('Disconnect from this device', () => void driveAction('disconnect'), 'disconnect'));
+  }
+  if (state.drive?.account && state.drive.clientConfigured && (state.drive.state === 'connected' || state.drive.state === 'reconnect_required')) {
+    actions.append(driveButton('Revoke access on Google', confirmDriveRevocation, 'revoke'));
   }
   card.append(actions);
   const access = el('div', 'connection-access');
   access.append(el('h3', '', 'Access you authorize'), el('p', '', 'The drive.file permission is limited to files created by, or explicitly opened with, LedgeSync. It does not grant access to every existing file or folder in your Drive. Selecting a folder does not automatically grant access to its existing contents.'));
   access.append(el('code', 'connection-scope', state.drive?.scope || 'https://www.googleapis.com/auth/drive.file'));
   access.append(el('p', '', 'One account is supported in this build. Disconnect before connecting another account.'));
-  if (state.drive?.account) access.append(el('p', 'disconnect-help', 'Disconnect removes this account’s tokens from this computer. It does not delete Drive files or revoke the Google permission grant. You can revoke the grant separately in your Google Account connections settings.'));
+  if (state.drive?.account) access.append(el('p', 'disconnect-help', 'Disconnect from this device removes this account’s tokens only from this computer. It does not delete Drive files or revoke the Google permission grant. Revoke access on Google is a separate action that requires confirmation because other apps in the same Google Cloud project may also lose this account’s authorization.'));
   card.append(access); container.append(card);
 
   container.append(el('p', 'muted', 'Sign in and approve access only on Google’s page in your browser. LedgeSync never asks for your Google password or a pasted access token.'));

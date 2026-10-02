@@ -7,6 +7,12 @@ credentials, import JSON or paste tokens into the app.
 **Release status:** [alpha.3 is published](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3)
 with the bundled Desktop client. The steps below apply to that release.
 
+The current source also contains an unreleased
+[OAuth hardening follow-up](research/OAUTH_SECURITY_HARDENING.md). It renames
+**Disconnect account** to **Disconnect from this device** and adds the separate,
+confirmed remote revocation action described below. Published alpha.3 installers
+do not yet contain those follow-up changes.
+
 ## Connect your account
 
 1. Open **Connections → Google Drive** and choose **Connect Google Drive**.
@@ -65,6 +71,34 @@ still previews an empty simulated destination. The CLI remains offline.
 client configuration. It does not revoke Google's grant or delete Drive files.
 You can revoke permission in [Google Account connections](https://myaccount.google.com/connections).
 Disconnect before uninstalling if you want to remove the saved local access.
+
+## Local disconnection and remote revocation in the updated source
+
+**Disconnect from this device** cancels the active account operation, waits for
+its pending credential writes and removes the local account tokens. It keeps
+Google's grant and the client configuration. If the vault is unavailable or the
+operation cannot finish within its deadline, the app reports failure; it does
+not pretend credentials were removed. No synchronization jobs exist in this
+alpha yet.
+
+**Revoke access on Google** first opens a confirmation dialog for the displayed
+account. **Cancel** is the default. Review the warning before confirming:
+revocation can also remove this account's authorizations for other applications
+whose OAuth clients belong to the same Google Cloud project. The confirmation
+is bound to that account and cannot silently retarget a different saved account.
+Google describes the [shared-project revocation effect](https://developers.google.com/identity/protocols/oauth2/native-app#tokenrevoke).
+
+After Google confirms revocation, the app removes local credentials. If that
+local cleanup fails, unlock the vault and choose **Disconnect from this device**
+to finish; the app blocks further use of that grant in the running process.
+Complete cleanup before closing the app because that failure marker is not
+durable when the vault cannot be written. A network failure may leave the remote
+result unknown; the app retains the local record and never retries revocation
+automatically. Neither action deletes Drive files.
+
+The app refuses remote revocation of an earlier, different OAuth client's saved
+grant. Use local disconnection, or review that earlier grant separately in
+Google Account settings after considering its effect on other applications.
 
 ## Availability and verification
 

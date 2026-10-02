@@ -8,6 +8,8 @@
 **Specification version:** 0.2.1 · **Prepared:** 2026-10-01.
 **Implementation status:** 0.1.0-alpha.3 includes a bundled Desktop OAuth client and one-click Google Drive authorization. Cloud browsing and file transfers are not implemented. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
 
+The source includes a subsequent [OAuth protection review and hardening](docs/research/OAUTH_SECURITY_HARDENING.md): callback expiry/closure, cancellation before local cleanup, and account-bound confirmation for remote revocation. These follow-up changes are not yet in the immutable alpha.3 downloads.
+
 **Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
 [Website](https://ledgesync.com/) ·
 [Download alpha.3](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3) ·

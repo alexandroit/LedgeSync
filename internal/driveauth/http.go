@@ -1,6 +1,7 @@
 package driveauth
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -10,9 +11,13 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"unicode"
 )
 
 func (s *Service) request(ctx context.Context, method, endpoint string, form url.Values, token string) ([]byte, int, error) {
+	if ctx.Err() != nil {
+		return nil, 0, contextError(ctx)
+	}
 	var body io.Reader
 	if form != nil {
 		body = strings.NewReader(form.Encode())
@@ -67,7 +72,9 @@ func (s *Service) exchange(ctx context.Context, client *clientConfig, code, veri
 		var failure struct {
 			Error string `json:"error"`
 		}
-		_ = json.Unmarshal(data, &failure)
+		if decodeProviderJSON(data, &failure) != nil && status == http.StatusBadRequest {
+			return nil, ErrToken
+		}
 		if status == http.StatusBadRequest && (failure.Error == "invalid_grant" || failure.Error == "invalid_client" || failure.Error == "unauthorized_client") {
 			return nil, ErrReconnect
 		}
@@ -83,7 +90,7 @@ func (s *Service) exchange(ctx context.Context, client *clientConfig, code, veri
 		Scope        string `json:"scope"`
 		Expires      int64  `json:"expires_in"`
 	}
-	if json.Unmarshal(data, &response) != nil || !safeSecret(response.AccessToken) || !strings.EqualFold(response.Type, "Bearer") || response.Expires <= 0 || response.Expires > 86400 {
+	if decodeProviderJSON(data, &response) != nil || !safeSecret(response.AccessToken) || !strings.EqualFold(response.Type, "Bearer") || response.Expires <= 0 || response.Expires > 86400 {
 		return nil, ErrToken
 	}
 	// Initial consent must explicitly report its granted scope. A refresh may
@@ -120,7 +127,7 @@ func (s *Service) identity(ctx context.Context, token string) (Account, error) {
 			PermissionID string `json:"permissionId"`
 		} `json:"user"`
 	}
-	if json.Unmarshal(data, &response) != nil || response.User == nil {
+	if decodeProviderJSON(data, &response) != nil || response.User == nil {
 		return Account{}, ErrProvider
 	}
 	u := response.User
@@ -137,4 +144,102 @@ func validAccount(a Account) bool {
 	}
 	_, err := hex.DecodeString(a.Reference[6:])
 	return err == nil
+}
+
+// Provider extensions are allowed, but duplicate keys must not make token,
+// scope or identity interpretation depend on a JSON parser's last-key policy.
+func decodeProviderJSON(data []byte, target any) error {
+	if err := rejectProviderAliases(json.NewDecoder(bytes.NewReader(data)), 0); err != nil {
+		return err
+	}
+	return json.Unmarshal(data, target)
+}
+
+// encoding/json matches struct field aliases case-insensitively. Reject both
+// exact duplicates and case aliases before that decoder can choose a last value.
+func rejectProviderAliases(decoder *json.Decoder, depth int) error {
+	if depth > 16 {
+		return ErrToken
+	}
+	token, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+	delimiter, container := token.(json.Delim)
+	if !container {
+		return nil
+	}
+	switch delimiter {
+	case '{':
+		seen := map[string]bool{}
+		for decoder.More() {
+			key, err := decoder.Token()
+			if err != nil {
+				return err
+			}
+			name, ok := key.(string)
+			if !ok {
+				return ErrToken
+			}
+			folded := providerKey(name)
+			if seen[folded] {
+				return ErrToken
+			}
+			seen[folded] = true
+			if err := rejectProviderAliases(decoder, depth+1); err != nil {
+				return err
+			}
+		}
+	case '[':
+		for decoder.More() {
+			if err := rejectProviderAliases(decoder, depth+1); err != nil {
+				return err
+			}
+		}
+	default:
+		return ErrToken
+	}
+	_, err = decoder.Token()
+	return err
+}
+
+// SimpleFold matches encoding/json's Unicode case-insensitive struct matching,
+// including long-s and Kelvin-sign aliases that strings.ToLower does not merge.
+func providerKey(name string) string {
+	var folded strings.Builder
+	for _, character := range name {
+		representative := character
+		for next := unicode.SimpleFold(character); next != character; next = unicode.SimpleFold(next) {
+			if next < representative {
+				representative = next
+			}
+		}
+		folded.WriteRune(representative)
+	}
+	return folded.String()
+}
+
+func (s *Service) revokeToken(ctx context.Context, refresh string) error {
+	if ctx.Err() != nil {
+		return contextError(ctx)
+	}
+	// The token belongs in the form body only. No token-bearing query, redirect,
+	// URL returned to the frontend, response-body logging or implicit retry.
+	form := url.Values{"token": {refresh}}
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, s.revokeURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return ErrRevokeFailed
+	}
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	response, err := s.http.Do(request)
+	if err != nil {
+		return ErrRevokeFailed
+	}
+	defer response.Body.Close()
+	// The status is the protocol acknowledgement. Do not wait for an irrelevant
+	// body after a confirmed success, or return provider-controlled error text.
+	if response.StatusCode != http.StatusOK {
+		return ErrRevokeFailed
+	}
+	return nil
 }

@@ -349,7 +349,7 @@ func TestInvalidTokenResponsesAreRedacted(t *testing.T) {
 }
 func TestCallbackValidationAndSingleUse(t *testing.T) {
 	results := make(chan callbackResult, 1)
-	handler := newCallback("fake-state", "127.0.0.1:1234", results)
+	handler := newCallback(context.Background(), "fake-state", "127.0.0.1:1234", results)
 	for _, tc := range []struct {
 		method, path, host string
 		status             int
@@ -391,7 +391,7 @@ func TestCallbackValidationAndSingleUse(t *testing.T) {
 func TestDeniedAndMalformedTrustedCallback(t *testing.T) {
 	for query, want := range map[string]error{"error=access_denied&error_description=secret": ErrDenied, "code=one&code=two": ErrCallback, "code=one&error=denied": ErrCallback, "": ErrCallback} {
 		results := make(chan callbackResult, 1)
-		handler := newCallback("state", "127.0.0.1:1234", results)
+		handler := newCallback(context.Background(), "state", "127.0.0.1:1234", results)
 		r := httptest.NewRequest("GET", "/?state=state&"+query, nil)
 		r.Host = "127.0.0.1:1234"
 		w := httptest.NewRecorder()

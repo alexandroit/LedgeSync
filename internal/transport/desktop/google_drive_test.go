@@ -11,11 +11,13 @@ import (
 )
 
 type fakeGoogleDrive struct {
-	status    driveauth.Status
-	err       error
-	ctx       context.Context
-	calls     []string
-	cancelled bool
+	status                   driveauth.Status
+	err                      error
+	ctx                      context.Context
+	calls                    []string
+	cancelled                bool
+	confirmed                bool
+	expectedAccountReference string
 }
 
 func (g *fakeGoogleDrive) result(ctx context.Context, method string) (driveauth.Status, error) {
@@ -35,6 +37,11 @@ func (g *fakeGoogleDrive) Check(ctx context.Context) (driveauth.Status, error) {
 func (g *fakeGoogleDrive) Disconnect(ctx context.Context) (driveauth.Status, error) {
 	return g.result(ctx, "disconnect")
 }
+func (g *fakeGoogleDrive) Revoke(ctx context.Context, expectedAccountReference string, confirmed bool) (driveauth.Status, error) {
+	g.confirmed = confirmed
+	g.expectedAccountReference = expectedAccountReference
+	return g.result(ctx, "revoke")
+}
 func (g *fakeGoogleDrive) Cancel() { g.cancelled = true }
 
 func TestGoogleBridgeOffersNoClientImport(t *testing.T) {
@@ -51,6 +58,50 @@ func TestGoogleBridgeOffersNoClientImport(t *testing.T) {
 	}
 	if _, err = b.ConnectGoogleDrive(); !errors.Is(err, errGoogleUnavailable) {
 		t.Fatal("unconfigured build accepted connect")
+	}
+	if _, err = b.RevokeGoogleDrive("google-drive:fixture-account", true); !errors.Is(err, errGoogleUnavailable) {
+		t.Fatal("unconfigured build accepted revocation")
+	}
+}
+
+func TestGoogleBridgeRequiresExplicitRevocationConfirmation(t *testing.T) {
+	g := &fakeGoogleDrive{status: driveauth.Status{State: "disconnected", Scope: driveauth.Scope}}
+	b := NewWithGoogleDrive(nil, nil, nil, g, func() { t.Fatal("revocation activated the window") })
+	if _, err := b.RevokeGoogleDrive("google-drive:fixture-account", false); !errors.Is(err, driveauth.ErrRevokeConfirmation) {
+		t.Fatal("missing explicit confirmation was accepted")
+	}
+	if len(g.calls) != 0 || g.cancelled {
+		t.Fatal("unconfirmed revocation reached the service")
+	}
+	status, err := b.RevokeGoogleDrive("google-drive:fixture-account", true)
+	if err != nil || status.State != "disconnected" || !g.confirmed || g.expectedAccountReference != "google-drive:fixture-account" || strings.Join(g.calls, ",") != "revoke" {
+		t.Fatal("confirmed revocation was not routed safely")
+	}
+	if g.ctx == nil || g.ctx.Err() != nil {
+		t.Fatal("revocation did not receive the app lifecycle context")
+	}
+	b.Shutdown()
+	if !errors.Is(g.ctx.Err(), context.Canceled) {
+		t.Fatal("shutdown did not cancel revocation context")
+	}
+}
+
+func TestGoogleBridgePreservesRevocationCleanupState(t *testing.T) {
+	g := &fakeGoogleDrive{
+		status: driveauth.Status{State: "revoked_local_cleanup_required", Scope: driveauth.Scope},
+		err:    driveauth.ErrRevokedCleanup,
+	}
+	b := NewWithGoogleDrive(nil, nil, nil, g, nil)
+	status, err := b.RevokeGoogleDrive("google-drive:fixture-account", true)
+	if !errors.Is(err, driveauth.ErrRevokedCleanup) || status.State != "revoked_local_cleanup_required" {
+		t.Fatal("revoked access with failed local cleanup was misrepresented")
+	}
+	// The frontend reconciles through this safe DTO after Wails drops a rejected
+	// mutation result. A persisted cleanup state must not become Connected.
+	g.err = nil
+	status, err = b.GoogleDriveStatus()
+	if err != nil || status.State != "revoked_local_cleanup_required" {
+		t.Fatal("cleanup state was lost during status reconciliation")
 	}
 }
 

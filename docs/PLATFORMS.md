@@ -11,10 +11,39 @@ enables deletion. Connecting requires an explicit click and browser consent.
 Evidence for this release and the previous alpha.1/alpha.2 releases is recorded
 separately below.
 
-The current source includes an unreleased
-[OAuth hardening follow-up](research/OAUTH_SECURITY_HARDENING.md). Its new
-revocation confirmation and lifecycle changes are not included in the alpha.3
-download links below. Existing release bytes and tags are unchanged.
+The current **alpha.4 source/local candidate** adds manual folder uploads,
+native Google folder selection and [OAuth hardening](research/OAUTH_SECURITY_HARDENING.md).
+It is not yet published. The alpha.3 download links and historical validation
+below do not establish those new capabilities; existing release bytes and tags
+are unchanged. See the [candidate acceptance checklist](research/DRIVE_UPLOAD_ACCEPTANCE.md).
+
+## Alpha.4 candidate behavior and release boundary
+
+The desktop candidate connects through the same publisher Desktop client and
+exact `drive.file` scope. It can select My Drive or an existing parent using
+Google's system-browser Picker, preview the local folder and upload only after
+the user approves the exact plan. The local root becomes a managed child folder;
+included empty directories and nested files retain their structure. Verified
+copies are reused, changed files keep both versions, and existing cloud objects
+are not overwritten or deleted. Source files are read-only.
+
+Transfer history and observed rule sources use a private per-user SQLite journal
+outside source roots, without tokens or upload-session URLs. Missing previously
+observed rules block uploads across restarts. Cancellation preserves completed
+files; a fresh preview reconciles known IDs before resuming. Session URLs remain
+in memory, so an unfinished file may restart after the process exits. The native
+close prompt defaults to **Keep Open** during a transfer.
+
+No scheduler, file watcher, background service, shared-drive upload, download,
+mirror deletion or bidirectional synchronization is enabled. CLI previews remain
+offline; the source adds read-only `ledgesync auth status` for configured native
+builds, but no CLI copy/apply command. The current public CLI packages remain
+the alpha.3 artifacts described below.
+
+The owner reports Production OAuth, enabled Picker API and successful account
+connection. New live Picker/upload acceptance, candidate native installer checks,
+and publication are separate gates. A local build or mock test does not satisfy
+them; use the current handoff for evidence as it becomes available.
 
 ## Target matrix
 
@@ -51,8 +80,9 @@ The `ledgesync-cli` package does not require a keyring or connect to Google.
 Local synthetic OAuth and frontend tests do not establish real Google consent,
 refresh or revocation. Native credential storage was separately tested on
 disposable runner accounts as recorded below.
-The owner supplied a Desktop client for alpha.3. Real Google account acceptance
-remains pending; no personal account was used in automated tests.
+The owner supplied a Desktop client for alpha.3 and subsequently reported a
+successful real account connection. No personal account was used in automated
+tests; the new candidate's Picker/upload workflow still needs live acceptance.
 
 ## Observed alpha.3 release results
 
@@ -87,7 +117,7 @@ signing key and all 24 previous pool/by-hash files are preserved.
 
 All 37 alpha.3 assets passed anonymous download, size and SHA-256 verification.
 The 24 initial alpha.3 assets and all 69 alpha.1/alpha.2 assets remain unchanged.
-Canonical Ubuntu and secondary Pages HTML/CSS match website source
+At that release verification, canonical Ubuntu and secondary Pages HTML/CSS matched website source
 `5c702076b39a8170f2065c3262f5060d7b65698f`.
 
 Detailed evidence: [application archives/DMGs](research/OAUTH_ONECLICK_RELEASE.json),
@@ -263,7 +293,7 @@ sudo apt-get install ledgesync-cli
 ledgesync --version
 ```
 
-The CLI package has no graphical-library dependencies and no OAuth commands.
+The published alpha.3 CLI package has no graphical-library dependencies and no OAuth commands.
 The published alpha.3 Debian version is `0.1.0~alpha.3-1`; the application reports
 `0.1.0-alpha.3`. The previous alpha.1 and alpha.2 packages, binaries and notices
 remain in their archived releases and repository snapshots. GitHub normalizes
@@ -289,7 +319,8 @@ Microsoft Edge WebView2 Runtime. The macOS app uses the system WebKit.
 Ubuntu OAuth additionally requires the user's D-Bus session and an unlocked
 Secret Service store such as GNOME Keyring. Windows uses the current user's
 Credential Manager, and macOS uses Keychain. These stores are only accessed
-when an account action is requested; headless CLI previews remain offline.
+when account or authorized upload actions require them; headless CLI previews
+remain offline. Candidate `auth status` explicitly reads local vault metadata.
 
 Desktop archives are developer builds: **no trusted publisher signature or notarization**.
 The macOS build uses an ad-hoc local signature. No claim
@@ -308,12 +339,13 @@ required.
 ```sh
 go test ./...
 go build -trimpath -o build/cli/ ./cmd/ledgesync
-python3 tools/package_cli.py --version 0.1.0-alpha.3
+python3 tools/package_cli.py --version 0.1.0-alpha.4
 ```
 
 For desktop OAuth, first follow [maintainer build configuration](OAUTH_BUILD.md).
 Without that optional build input, the local explorer works and account connection
-is explicitly unavailable. Run `npm ci` in `frontend`, then from
+and uploads are explicitly unavailable. These commands build the local alpha.4
+candidate; they do not publish or replace alpha.3. Run `npm ci` in `frontend`, then from
 `cmd/ledgesync-desktop`:
 
 ```sh
@@ -332,7 +364,7 @@ bundle identifier is `com.ledgesync.app`; the minimum macOS version is 13.0.
 To create the macOS disk image from an existing native app:
 
 ```sh
-python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch arm64 --version 0.1.0-alpha.3 --output build/packages
+python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch arm64 --version 0.1.0-alpha.4 --output build/packages
 ```
 
 Use `--arch amd64` for an Intel build. The script requires macOS, verifies the
@@ -341,6 +373,8 @@ existing output. It verifies the image and its read-only mounted contents.
 Use `--notices-root <extracted-release-directory>` when packaging an existing
 release so the notices come from that same artifact. Creating a DMG does not
 sign or notarize the app.
+For historical artifact work, use packaging code from the matching release;
+current candidate installation text describes the new manual upload workflow.
 
 ## CI artifacts and checksums
 

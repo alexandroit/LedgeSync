@@ -1,10 +1,13 @@
 # 17 — Agent Handoff and Current Status
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
-**Implementation:** 0.1.0-alpha.3, published one-click authorization developer alpha.
+**Implementation:** 0.1.0-alpha.4 candidate implements explicitly approved Drive
+folder uploads. The published download baseline is still alpha.3 until the
+release evidence below is updated.
 
-**Source follow-up:** OAuth protection hardening is implemented after alpha.3;
-the published installers, APT packages, website and release tag are unchanged.
+**Source follow-up:** OAuth hardening, native destination Picker, durable copy
+journal, resumable binary uploads and desktop approval/progress are implemented.
+Public alpha.3 assets remain immutable.
 
 Read [PROJECT_IDENTITY.md](../PROJECT_IDENTITY.md) first. The authoritative name
 is LedgeSync, command `ledgesync`, primary domain `ledgesync.com`. The owner
@@ -13,7 +16,70 @@ After initially deferring DNS activation, the owner explicitly requested
 publication on the existing Ubuntu server hosting HiperMusicas. The canonical
 site is now live there. The owner subsequently requested Google Drive token
 authorization, then selected a bundled Desktop client with one-click browser
-consent. The current change does not enable cloud transfers.
+consent. The owner then confirmed a working connected account and enabled Picker
+API, and requested real whole-folder uploads inside an existing Drive folder.
+
+## Approved Drive folder uploads — alpha.4 candidate
+
+The Files screen now exposes a real destination, selected through Google's native
+browser Picker or My Drive, followed by a fresh preview and explicit approval.
+The entire included source hierarchy, including empty folders, is copied inside
+a new app-managed child folder on the first run. Active ignore rules apply.
+Later runs reuse that managed hierarchy, verify and skip unchanged content, and
+create a separate suffixed copy for changed files. No overwrite, deletion,
+automatic watcher, background scheduler or shared-drive support was added.
+The CLI retains local previews and configured native read-only auth status;
+there is no separate headless upload implementation.
+
+The backend binds approvals to source/rules/configuration, account, destination,
+remote observations and journal state; unstarted previews expire after 15 minutes.
+SQLite records generated IDs and operation markers before remote creation,
+acknowledgements before final verification and durable terminal run events before
+the UI reports success. Interrupted copies require a fresh preview and reconcile
+their recorded IDs. A kernel process lock serializes overlapping local writers.
+Known rule-source disappearance remains blocked after restart and destination
+changes. Journals contain identifiers, paths and checksums, never tokens or
+resumable session URLs. Transfer cancellation drains before account cleanup.
+
+Source decisions and dependencies: [Drive provider/executor review](research/DRIVE_PROVIDER_REVIEW.md),
+[native Picker/auth request review](research/NATIVE_PICKER_REVIEW.md), and
+[SQLite runtime review](research/TRANSFER_STATE_REVIEW.md). The original pinned
+rclone source was inspected; its update/delete/live-sync loop was not imported.
+
+Local validation completed for this candidate:
+
+- Go unit/integration run: 484 passing test/subtest events, 3 explicit skips
+  (native vault opt-in, case-alias test on the case-sensitive SSD and external
+  rclone reference). The separate pinned-rclone differential run passed.
+- Full Go race and vet checks passed. `govulncheck v1.8.0 -tags desktop` found
+  no known vulnerabilities in the checked application graph.
+- Frontend: 45 interaction tests passed; the production bundle's 900 by 620
+  approval/cancel flow passed keyboard checks and screenshot inspection.
+- Nine OAuth build-helper tests passed. Runtime notices cover 29 modules and
+  63 verified license-file hashes. Windows AMD64 SQLite tests cross-compiled;
+  that check does not establish Windows runtime behavior.
+- A native macOS ARM64 graphical build with the already-authorized publisher
+  Desktop client succeeded. Generated client source was removed afterward.
+  Packaging, public release and other native platform results are tracked below
+  as they become available; they are not inferred from the local build.
+
+Changed application areas: `internal/{transfer,transferstate,discovery,driveauth}`,
+`internal/providers/drive`, desktop transport/main, frontend Files/Connections,
+package descriptions, dependency notices and the linked guides. Prior uncommitted
+OAuth hardening and read-only CLI status work were retained in this candidate.
+Tests use synthetic contents, local fake endpoints and disposable journals.
+No personal vault was read or real Google upload performed by these checks.
+The owner reported production consent and successful connection; native Picker,
+upload and restart acceptance remain pending the [manual fixture checklist](research/DRIVE_UPLOAD_ACCEPTANCE.md).
+
+Implementation limits: uploads are serial, file metadata/content and ignore
+sources are rechecked, and success includes a final full scan. Uncooperative
+network/FUSE filesystem reads can still delay cancellation. Power-loss durability
+depends on the operating system/filesystem honoring SQLite flushes. The first
+copy schema embeds approved configuration/rule/inventory identities in the run
+record and stores operation/object mappings together; destructive recovery and
+future schema migrations remain separate work. Do not call this production-ready
+or claim real Google acceptance from fake-provider tests.
 
 ## Public privacy, terms and branding publication
 
@@ -43,6 +109,23 @@ impact before saving project-wide changes.
 
 ## OAuth protection verification and hardening (unreleased source)
 
+**Latest local follow-up:** [OAuth local review](research/OAUTH_LOCAL_REVIEW.md)
+records the new request, retained protections, code changes, exact checks and
+remaining integration limits. The build helper now excludes unused development
+metadata, explicit API scope loss requires reconnection, and `auth status` uses
+the shared authentication service without browser/network/token mutations.
+These working-tree changes have not been published in installers or deployed.
+
+Local follow-up checks: 333 Go test/subtest pass events, 2 explicit integration
+skips; race/vet checks, 9 synthetic build-helper tests and 30 frontend tests
+passed. Native macOS GUI/CLI and Linux/Windows AMD64/ARM64 CLI compilation passed.
+The first Windows ARM64 build failed for system-volume disk exhaustion; the
+SSD-isolated retry passed. Documentation validation passed with zero failures.
+No live Google or personal-vault validation was performed. Exact commands,
+changed files, limitations and authorization boundaries are in the linked report.
+Next safe step: review the local diff; plan an isolated, explicitly authorized
+native-vault/Google acceptance run before preparing a new immutable release.
+
 The owner requested verification of existing protections and code fixes for
 missing controls. Read [the requirement-by-requirement evidence and limits](research/OAUTH_SECURITY_HARDENING.md).
 Existing PKCE/state generation, system browser, native vaults, backend-only
@@ -53,9 +136,9 @@ Corrections: callback attempt context and closure before exchange; canonical
 route/parameter checks; duplicate/case-aliased provider JSON rejection; cancel and
 drain before local credential removal; separate confirmed remote revocation
 bound to the reviewed account; explicit shared-project warning, default Cancel,
-and local-cleanup recovery after confirmed revocation. The CLI remains offline
-and its help now correctly describes the bundled client. No alternate CLI
-credential store or authorization flow was introduced.
+and local-cleanup recovery after confirmed revocation. CLI previews remain
+offline; the subsequent local follow-up adds read-only account status. No
+alternate CLI credential store or authorization flow was introduced.
 
 Changed files: `internal/driveauth/{oauth,service,http,types}.go`, new callback,
 lifecycle and diagnostic tests, two callback test constructor calls, desktop

@@ -54,6 +54,13 @@ func (s *Service) request(ctx context.Context, method, endpoint string, form url
 	return data, resp.StatusCode, nil
 }
 func (s *Service) exchange(ctx context.Context, client *clientConfig, code, verifier, redirect, refresh string) (*credential, error) {
+	return s.exchangeWithFallback(ctx, client, code, verifier, redirect, refresh, "")
+}
+
+// A Picker authorization-code exchange may omit a new refresh token. Its
+// caller may retain an existing token only after validating the same client and
+// account. This fallback never changes the grant type or allows omitted scope.
+func (s *Service) exchangeWithFallback(ctx context.Context, client *clientConfig, code, verifier, redirect, refresh, retainedRefresh string) (*credential, error) {
 	form := url.Values{"client_id": {client.ID}, "client_secret": {client.Secret}}
 	if refresh != "" {
 		form.Set("grant_type", "refresh_token")
@@ -100,6 +107,9 @@ func (s *Service) exchange(ctx context.Context, client *clientConfig, code, veri
 	}
 	if response.RefreshToken == "" {
 		response.RefreshToken = refresh
+		if response.RefreshToken == "" {
+			response.RefreshToken = retainedRefresh
+		}
 	}
 	if !safeSecret(response.RefreshToken) {
 		return nil, ErrToken
@@ -113,6 +123,9 @@ func (s *Service) identity(ctx context.Context, token string) (Account, error) {
 	}
 	if status == http.StatusUnauthorized {
 		return Account{}, ErrReconnect
+	}
+	if status == http.StatusForbidden && insufficientScope(data) {
+		return Account{}, ErrScope
 	}
 	if status == http.StatusTooManyRequests || status >= 500 {
 		return Account{}, ErrNetwork
@@ -137,6 +150,39 @@ func (s *Service) identity(ctx context.Context, token string) (Account, error) {
 	hash := sha256.Sum256([]byte("LedgeSync:google-drive-account:v1:" + u.PermissionID))
 	account := Account{Reference: "drive_" + hex.EncodeToString(hash[:]), DisplayName: u.Name, Email: u.Email}
 	return account, nil
+}
+
+// Only an explicit authentication-scope failure invalidates the grant. A file
+// ACL denial, disabled API or quota failure must not start a consent loop.
+// Provider text is never returned; the existing bounded parser rejects aliases.
+func insufficientScope(data []byte) bool {
+	var response struct {
+		Error struct {
+			Errors []struct {
+				Domain string `json:"domain"`
+				Reason string `json:"reason"`
+			} `json:"errors"`
+			Details []struct {
+				Type   string `json:"@type"`
+				Domain string `json:"domain"`
+				Reason string `json:"reason"`
+			} `json:"details"`
+		} `json:"error"`
+	}
+	if decodeProviderJSON(data, &response) != nil {
+		return false
+	}
+	for _, item := range response.Error.Errors {
+		if item.Domain == "global" && item.Reason == "insufficientPermissions" {
+			return true
+		}
+	}
+	for _, item := range response.Error.Details {
+		if item.Type == "type.googleapis.com/google.rpc.ErrorInfo" && item.Domain == "googleapis.com" && item.Reason == "ACCESS_TOKEN_SCOPE_INSUFFICIENT" {
+			return true
+		}
+	}
+	return false
 }
 func validAccount(a Account) bool {
 	if !strings.HasPrefix(a.Reference, "drive_") || len(a.Reference) != 70 || !safeDisplay(a.DisplayName) || !safeDisplay(a.Email) {

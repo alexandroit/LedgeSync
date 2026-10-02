@@ -45,7 +45,14 @@ func (a *App) ConnectGoogleDrive() (driveauth.Status, error) {
 	if a.google == nil {
 		return driveauth.Status{}, errGoogleUnavailable
 	}
+	if _, err := a.begin(); err != nil {
+		return driveauth.Status{}, err
+	}
+	defer a.finish()
 	status, err := a.google.Connect(a.connectionContext)
+	if err == nil {
+		a.invalidateTransfer()
+	}
 	if err == nil && status.State == "connected" && a.connectionContext.Err() == nil && a.showAfterConnect != nil {
 		a.showAfterConnect()
 	}
@@ -55,12 +62,25 @@ func (a *App) CheckGoogleDrive() (driveauth.Status, error) {
 	if a.google == nil {
 		return driveauth.Status{}, errGoogleUnavailable
 	}
-	return a.google.Check(a.connectionContext)
+	if _, err := a.begin(); err != nil {
+		return driveauth.Status{}, err
+	}
+	defer a.finish()
+	status, err := a.google.Check(a.connectionContext)
+	if status.State != "connected" {
+		a.invalidateTransfer()
+	}
+	return status, err
 }
 func (a *App) DisconnectGoogleDrive() (driveauth.Status, error) {
 	if a.google == nil {
 		return driveauth.Status{}, errGoogleUnavailable
 	}
+	done, err := a.beginLifecycle()
+	if err != nil {
+		return driveauth.Status{}, err
+	}
+	defer done()
 	return a.google.Disconnect(a.connectionContext)
 }
 func (a *App) RevokeGoogleDrive(expectedAccountReference string, confirmed bool) (driveauth.Status, error) {
@@ -72,17 +92,36 @@ func (a *App) RevokeGoogleDrive(expectedAccountReference string, confirmed bool)
 	if a.google == nil {
 		return driveauth.Status{}, errGoogleUnavailable
 	}
+	done, err := a.beginLifecycle()
+	if err != nil {
+		return driveauth.Status{}, err
+	}
+	defer done()
 	return a.google.Revoke(a.connectionContext, expectedAccountReference, true)
 }
 func (a *App) CancelGoogleDrive() {
+	a.Cancel()
 	if a.google != nil {
 		a.google.Cancel()
 	}
 }
 func (a *App) Shutdown() {
-	a.Cancel()
+	a.mu.Lock()
+	a.lifecycle = true
+	if a.cancel != nil {
+		a.cancel()
+	}
+	pending := a.actionDone
+	a.mu.Unlock()
 	if a.closeConnections != nil {
 		a.closeConnections()
 	}
 	a.CancelGoogleDrive()
+	if a.transfer != nil {
+		a.transfer.CancelAndWait()
+		a.transfer.Invalidate()
+	}
+	if pending != nil {
+		<-pending
+	}
 }

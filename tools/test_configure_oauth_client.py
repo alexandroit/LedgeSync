@@ -37,7 +37,10 @@ class OAuthBuildClientGuards(unittest.TestCase):
         return Path(directory.name).resolve()
 
     def test_valid_client_and_fixed_google_endpoints(self):
-        self.assertEqual(json.loads(tool.validate_client(data())), CLIENT)
+        packaged = json.loads(tool.validate_client(data()))['installed']
+        self.assertEqual(set(packaged), {'client_id', 'client_secret', 'auth_uri', 'token_uri', 'redirect_uris'})
+        for key, value in packaged.items():
+            self.assertEqual(value, CLIENT['installed'][key])
         for endpoint in ('https://accounts.google.com/o/oauth2/auth', 'https://accounts.google.com/o/oauth2/v2/auth'):
             changed = json.loads(data())
             changed['installed']['auth_uri'] = endpoint
@@ -87,6 +90,8 @@ class OAuthBuildClientGuards(unittest.TestCase):
         self.assertTrue(destination.read_bytes().startswith(tool.MARKER))
         self.assertIn(b'//go:build desktop', destination.read_bytes())
         original = destination.read_bytes()
+        for excluded in (b'synthetic-project', b'project_id', b'auth_provider_x509_cert_url', b'oauth2/v1/certs'):
+            self.assertNotIn(excluded, original)
         with self.assertRaises(tool.ConfigurationError): tool.generate(data(), destination)
         self.assertEqual(destination.read_bytes(), original)
         self.assertEqual(list(root.iterdir()), [destination])
@@ -142,8 +147,11 @@ class OAuthBuildClientGuards(unittest.TestCase):
         (root/'client_test.go').write_text('package connections\nimport "testing"\nfunc TestClient(t *testing.T) { if bundledClientJSON == "" { t.Fatal("client missing") } }\n')
         executable = root/('synthetic.test.exe' if os.name=='nt' else 'synthetic.test')
         env = dict(os.environ); env.pop(tool.ENVIRONMENT_KEY, None)
-        subprocess.run(['go','test','-c','-tags','desktop','-o',str(executable)],cwd=root,env=env,check=True,capture_output=True,timeout=120)
-        subprocess.run([str(executable)],cwd=root,env=env,check=True,capture_output=True,timeout=30)
+        for tag in ('desktop', 'oauth'):
+            subprocess.run(['go','test','-c','-tags',tag,'-o',str(executable)],cwd=root,env=env,check=True,capture_output=True,timeout=120)
+            subprocess.run([str(executable)],cwd=root,env=env,check=True,capture_output=True,timeout=30)
+            for excluded in (b'synthetic-project', b'auth_provider_x509_cert_url'):
+                self.assertNotIn(excluded, executable.read_bytes())
         metadata = subprocess.run(['go','version','-m',str(executable)],cwd=root,env=env,check=True,capture_output=True,timeout=30).stdout
         for value in ('synthetic-client-secret', '123-synthetic', 'installed'):
             self.assertNotIn(value.encode(),metadata)

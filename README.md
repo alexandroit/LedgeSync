@@ -6,9 +6,9 @@
 **CLI command:** `ledgesync`.
 **Primary website/domain:** `ledgesync.com`.
 **Specification version:** 0.2.1 · **Prepared:** 2026-10-01.
-**Implementation status:** 0.1.0-alpha.3 includes a bundled Desktop OAuth client and one-click Google Drive authorization. Cloud browsing and file transfers are not implemented. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
+**Source status:** the **0.1.0-alpha.4 candidate** adds manual Google Drive folder uploads, destination selection in Google's browser Picker, and verified transfer recovery. **Published downloads remain 0.1.0-alpha.3**, which connects an account but does not transfer files. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
 
-The source includes a subsequent [OAuth protection review and hardening](docs/research/OAUTH_SECURITY_HARDENING.md): callback expiry/closure, cancellation before local cleanup, and account-bound confirmation for remote revocation. These follow-up changes are not yet in the immutable alpha.3 downloads.
+The candidate also contains [OAuth hardening](docs/research/OAUTH_SECURITY_HARDENING.md), account-bound revocation confirmation and [native Picker integration](docs/research/NATIVE_PICKER_REVIEW.md). These source changes are not present in the immutable alpha.3 downloads. New live Picker/upload acceptance remains pending; the owner has reported successful account connection and production OAuth/Picker configuration.
 
 **Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
 [Website](https://ledgesync.com/) ·
@@ -18,7 +18,7 @@ The source includes a subsequent [OAuth protection review and hardening](docs/re
 The website is live on the owner's Ubuntu server with HTTPS. See
 [deployment and renewal details](docs/WEBSITE.md).
 
-## Try the desktop authorization alpha
+## Published downloads: alpha.3 authorization only
 
 **Alpha.3 is published** for macOS, Windows and Ubuntu. Native builds, credential
 vaults, installers and public APT installation passed their respective checks.
@@ -51,17 +51,14 @@ setup or JSON import is required. The application communicates directly with
 Google and stores the connected account's refresh token in the OS vault; access
 tokens remain in memory. Check, reconnect, cancel and disconnect are available.
 See [account connection](docs/GOOGLE_DRIVE_AUTH.md) and
-[maintainer build configuration](docs/OAUTH_BUILD.md). Live consent still needs
-owner acceptance; Google project publication controls eligible accounts.
+[maintainer build configuration](docs/OAUTH_BUILD.md). The owner has reported
+successful live connection. That report does not validate the new upload flow.
 
-The first implementation browses local folders, explains policy decisions and
-creates plans against an explicitly simulated, empty destination. Plans are
-deterministic for the same snapshots and creation time.
-Connecting an account does not change the simulated destination or apply a plan.
-There is no transfer executor, cloud browser or scheduler. The headless CLI
-remains an offline preview tool and does not import credentials or authorize accounts.
-Source files are read-only. Additional VCS adapters are reported as unavailable
-and required unsupported sources stop preview rather than being skipped.
+Published alpha.3 browses local folders and previews an explicitly simulated,
+empty destination. Connecting does not upload files in that version. The source
+candidate's real upload workflow is described below. Source files remain
+read-only; required unsupported policy adapters stop preview instead of being
+silently skipped.
 
 The desktop is the primary interface. Build instructions for macOS, Ubuntu,
 Windows 11 and headless servers are in [PLATFORMS.md](docs/PLATFORMS.md).
@@ -75,7 +72,40 @@ passed. The previous alpha.1 and alpha.2 assets remain unchanged.
 Open a folder in the app to explore it with the default `.gitignore` policy,
 or open a project JSON configuration to select multiple rule sources.
 
-The CLI calls the same application service:
+## Manual folder uploads in the alpha.4 source candidate
+
+1. Open a local folder or project configuration and connect Google Drive.
+2. Choose **Use My Drive** or **Choose existing Drive folder**. The latter opens
+   Google's Picker in your system browser and returns the selected parent to
+   LedgeSync. Selecting a destination does not upload anything.
+3. Choose **Preview folder upload**. Review the connected account, destination
+   ID, included/excluded entries and copy actions, then choose **Upload folder**.
+4. Keep the app open until **Folder upload verified** appears. Use **Open
+   destination folder on Google Drive** to inspect the result in your browser.
+
+LedgeSync creates a managed child folder named after the local root inside the
+chosen parent, retaining the included hierarchy and empty folders. Active ignore
+rules apply. Verified existing copies are checked and skipped; changed local
+files keep both versions using a stable `.ledgesync-` suffix. Nothing is overwritten
+or deleted. Canceling preserves completed files; a fresh preview reconciles the
+same recorded object IDs before continuing. An interrupted file may restart its
+upload after the app restarts; session URLs are kept only in memory.
+
+A per-user SQLite journal outside source roots stores operation IDs, checksums,
+approved plans and rule-source history, without OAuth tokens or upload-session
+URLs. A previously observed rule source that disappears blocks upload even after
+a restart. The source folder is never modified. Closing during a transfer asks
+whether to stop, with **Keep Open** as the default.
+
+This is an explicit manual copy workflow. Automatic watching/scheduling,
+bidirectional synchronization, shared-drive transfers, downloading, overwriting
+and deletion remain unavailable. `drive.file` does not reveal all pre-existing
+Drive contents or recursively authorize an existing parent. Read the [workflow
+and acceptance checklist](docs/research/DRIVE_UPLOAD_ACCEPTANCE.md) before testing
+the candidate with a disposable folder.
+
+The secondary CLI uses the same local preview service; it has no copy/apply
+command yet:
 
 ```sh
 go run ./cmd/ledgesync --help
@@ -85,12 +115,14 @@ go run ./cmd/ledgesync explain --config project.json --path src/main.go --json
 go run ./cmd/ledgesync plan --config project.json --output /outside/source/plan.json
 go run ./cmd/ledgesync plan inspect --plan /outside/source/plan.json
 go run ./cmd/ledgesync capabilities
+go run ./cmd/ledgesync auth status
 ```
 
-Configuration examples describe the complete contract, including future Drive
-destinations. In this alpha every preview uses a fake destination. A plan can
-be inspected but cannot be applied. JSON output contains paths from the selected
-folder; review it before sharing diagnostics.
+CLI previews still use a fake destination and cannot be applied. `auth status`
+reads safe local connection metadata only in a configured native build; it does
+not verify Google access online or open a browser. Configuration examples include
+future contract fields that the current copy workflow does not enable. JSON
+output and the local journal contain paths; review them before sharing diagnostics.
 
 ## Product in one sentence
 
@@ -126,7 +158,8 @@ All repository work should be in English: code, identifiers, comments, documenta
 | [04 · Filter specification](docs/04_FILTER_ENGINE_SPEC.md) | Dialects, discovery, hierarchy, precedence, traversal, and explanations |
 | [05 · Sync safety](docs/05_SYNC_SAFETY_AND_STATE.md) | Planning, application, ownership, conflicts, deletion, and recovery |
 | [06 · Google Drive](docs/06_GOOGLE_DRIVE_PROVIDER.md) | OAuth, permissions, file IDs, uploads, integrity, quotas, and API limitations |
-| [Google Drive authorization setup](docs/GOOGLE_DRIVE_AUTH.md) | Create your Desktop app client, authorize an account, and understand scope and credential storage |
+| [Google Drive connection](docs/GOOGLE_DRIVE_AUTH.md) | Connect in the browser, select a destination, and understand scope and credential storage |
+| [Drive upload acceptance](docs/research/DRIVE_UPLOAD_ACCEPTANCE.md) | Manual folder-copy behavior, candidate limitations and live acceptance checklist |
 | [07 · Configuration and contracts](docs/07_CONFIGURATION_AND_CONTRACTS.md) | Schemas, types, commands, errors, and migrations |
 | [08 · Desktop, CLI, automation](docs/08_DESKTOP_CLI_AND_AUTOMATION.md) | Screens, workflows, scheduling, headless use, and accessibility |
 | [09 · Security and privacy](docs/09_SECURITY_AND_PRIVACY.md) | Threat model, secret handling, path safety, and trust boundaries |

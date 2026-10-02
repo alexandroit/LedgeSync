@@ -17,11 +17,10 @@ downloads remain immutable; this follow-up describes the updated source.
 | Refresh and provider failures | Refresh is bounded to one attempt per check, omitted refresh tokens retain the previous token, and rotation is saved before account lookup. Revoked grants, identity changes and scope failures require reconnection. Provider response bodies are not returned as diagnostics. |
 | Client configuration and distribution | The existing Desktop client is injected only into trusted publisher builds. Raw development JSON/generated source are excluded from Git; the strict helper rejects user-token fields. Desktop client metadata is recoverable from the application by design. No personal token is a build input. |
 
-The CLI remains an offline surface over the shared preview service. It does not
-authorize accounts, read a vault or implement an alternate credential store.
-`internal/driveauth` and `internal/connections` remain the shared backend boundary
-for account operations; CLI cloud authorization and an approved secure headless
-workflow are not implemented in this slice.
+The subsequent [local audit follow-up](OAUTH_LOCAL_REVIEW.md) adds read-only CLI
+connection status through the same `internal/driveauth` and `internal/connections`
+backend. CLI preview stays offline; interactive authentication and credential
+mutations remain GUI actions. No alternate credential store was introduced.
 
 ## Corrections in this follow-up
 

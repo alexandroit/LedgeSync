@@ -6,7 +6,9 @@ This file describes build configuration, not an end-user onboarding requirement.
 
 ## Google project
 
-Enable the Google Drive API. In Google Auth Platform, configure Branding,
+Enable the Google Drive API and Google Picker API in the same project. The
+native folder picker uses the existing Desktop OAuth client; no web client,
+browser-visible access token or API key is required. In Google Auth Platform, configure Branding,
 Audience and the exact `https://www.googleapis.com/auth/drive.file` scope.
 Create a client of type **Desktop app**, then download its `installed` JSON.
 Web and service-account credentials are not accepted. Testing requires the
@@ -30,6 +32,18 @@ It refuses invalid credentials and existing output. It never prints the client
 contents. Run `python3 tools/configure_oauth_client.py --clean` after building;
 do not commit the generated file or the original JSON. Build without it to test an explicitly unconfigured developer
 app. Normal tests use synthetic configuration and access no personal vault.
+
+The helper packages only the five fields required by the strict runtime client
+parser: client ID, client secret, authorization/token endpoints and loopback
+redirect list. The source project's `project_id` and certificate URL are validated
+but omitted from generated source and binaries. It does not copy the raw JSON.
+
+For a native CLI with read-only connection status, use the same generated source
+and `go build -tags oauth -o build/ledgesync ./cmd/ledgesync`, then clean it.
+macOS requires CGO for Keychain. `ledgesync auth status` reads the same service and
+vault as the GUI; it does not verify the grant online or open a browser. Existing
+portable CLI CI packages remain unconfigured (and CGO-free), so they fail closed
+for this command. No publisher secret was added to those packaging jobs.
 
 ## Official CI builds
 

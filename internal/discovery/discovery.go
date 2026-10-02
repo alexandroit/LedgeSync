@@ -20,12 +20,13 @@ const MaxDepth = 512
 const MaxEntries = 250000
 
 type Tree struct {
-	root     *os.Root
-	rootPath string
-	rootInfo os.FileInfo
-	entries  []domain.Entry
-	observed map[string]os.FileInfo
-	identity string
+	root        *os.Root
+	rootPath    string
+	rootInfo    os.FileInfo
+	entries     []domain.Entry
+	observed    map[string]os.FileInfo
+	directories []string
+	identity    string
 }
 
 func (t *Tree) Close() error            { return t.root.Close() }
@@ -86,7 +87,7 @@ func Scan(ctx context.Context, rootPath string) (tree *Tree, err error) {
 		if e != nil || !before.IsDir() || before.Mode()&os.ModeSymlink != 0 {
 			return domain.Fail("SCAN_INCOMPLETE", "directory changed or is unreadable: %s", dir)
 		}
-		f, e := r.Open(dir)
+		f, e := r.OpenFile(dir, os.O_RDONLY|safeReadFlags, 0)
 		if e != nil {
 			return domain.Fail("SCAN_INCOMPLETE", "cannot read directory: %s", dir)
 		}
@@ -130,6 +131,7 @@ func Scan(ctx context.Context, rootPath string) (tree *Tree, err error) {
 			tree.observed[p] = stat
 			tree.entries = append(tree.entries, domain.Entry{Path: p, Name: path.Base(p), Kind: kind, Size: size, ModifiedAt: stat.ModTime().UTC().Format(time.RFC3339Nano)})
 			if kind == "directory" {
+				tree.directories = append(tree.directories, p)
 				if err := walk(p, depth+1); err != nil {
 					return err
 				}
@@ -200,7 +202,7 @@ func (t *Tree) read(ctx context.Context, p string, limit int64, w io.Writer) err
 	if limit > 0 && before.Size() > limit {
 		return domain.Fail("RULE_PARSE_ERROR", "rule source exceeds %d bytes: %s", limit, p)
 	}
-	f, err := t.root.Open(p)
+	f, err := t.root.OpenFile(p, os.O_RDONLY|safeReadFlags, 0)
 	if err != nil {
 		return domain.Fail("SCAN_INCOMPLETE", "cannot open %s", p)
 	}

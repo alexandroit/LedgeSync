@@ -74,7 +74,7 @@ test('an unconfigured build directs users to the official app without exposing d
   await expect(page.getByRole('button', { name: /Connect Google Drive|OAuth|JSON|Cloud setup/ })).toHaveCount(0);
   await expect(page.locator('body')).not.toContainText('Google Cloud');
   await expect(page.locator('input:not([type="search"]), textarea')).toHaveCount(0);
-  await expect(page.getByText('Cloud browsing and file transfers are not implemented yet.', { exact: false })).toBeVisible();
+  await expect(page.getByText('In Files, choose a local folder and a Drive destination', { exact: false })).toBeVisible();
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
 });
 
@@ -89,7 +89,7 @@ test('legacy authorization retains identity until explicit disconnect then offer
   await expect(card.getByRole('button', { name: 'Disconnect from this device', exact: true })).toBeEnabled();
   await expect(card.getByRole('button', { name: 'Revoke access on Google', exact: true })).toHaveCount(0);
   await expect(card.getByText('This version cannot revoke a grant from a different OAuth client.', { exact: false })).toBeVisible();
-  await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Google Drive connected. Choose a destination and preview your folder upload.', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
   await card.getByRole('button', { name: 'Disconnect from this device', exact: true }).click();
   await expect(card.getByText('fixture@example.invalid', { exact: true })).toHaveCount(0);
@@ -131,7 +131,7 @@ test('browser authorization shows pending cancellation then connected identity a
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
   await expect(page.getByRole('button', { name: 'Check connection', exact: true })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Disconnect from this device', exact: true })).toBeEnabled();
-  await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Google Drive connected. Choose a destination and preview your folder upload.', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -177,8 +177,8 @@ test('a connected account does not turn the local simulated plan into a Drive pl
   await page.getByRole('button', { name: 'Sync pairs', exact: true }).click();
   await expect(page.getByText('This preview uses a simulated destination and cannot be applied', { exact: false })).toBeVisible();
   await expect(page.locator('body')).not.toContainText('Google Drive is not connected');
-  await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toBeVisible();
-  await expect(page.getByText('Developer alpha · 0.1.0-alpha.3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Google Drive connected. Choose a destination and preview your folder upload.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Developer alpha · 0.1.0-alpha.4', { exact: true })).toBeVisible();
 });
 
 test('account check reports reconnection and disconnect removes displayed account without cloud deletion claims', async ({ page }) => {
@@ -378,7 +378,7 @@ test('revocation in flight disables competing account operations without reporti
     await expect(page.getByRole('button', { name, exact: true })).toBeDisabled();
   }
   await expect(page.getByText('Connected', { exact: true })).toHaveCount(0);
-  await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Google Drive connected. Choose a destination and preview your folder upload.', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'revoke']);
   await page.evaluate(result => window.driveHarness.complete(result), disconnected);
   await expect(page.getByText('Not connected', { exact: true })).toBeVisible();
@@ -423,7 +423,7 @@ test('Google success with failed vault cleanup permits only local cleanup and ne
   for (const name of ['Check connection', 'Connect Google Drive', 'Reconnect Google Drive', 'Revoke access on Google']) {
     await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
   }
-  await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Google Drive connected. Choose a destination and preview your folder upload.', { exact: true })).toHaveCount(0);
   await expect(page.locator('body')).not.toContainText('synthetic-private-cleanup-error');
   await page.getByRole('button', { name: 'Disconnect from this device', exact: true }).click();
   await expect(page.getByText('Not connected', { exact: true })).toBeVisible();

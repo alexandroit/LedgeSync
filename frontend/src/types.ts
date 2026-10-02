@@ -40,6 +40,20 @@ export interface DriveConnectionStatus {
   message: string;
   scope: string;
 }
+export interface DriveDestination {
+  id: string; name: string; accountReference: string; parents?: string[];
+}
+export interface DriveUploadPlan {
+  planDigest: string; sourceName: string; destinationName: string; destinationId: string; accountReference: string;
+  fileCount: number; folderCount: number; totalBytes: number; excludedCount: number;
+  entries: { relativePath: string; kind: string; size: number; action?: string }[];
+  expiresAt: string; warnings: string[];
+}
+export interface DriveTransferStatus {
+  state: 'idle' | 'planning' | 'awaiting_approval' | 'uploading' | 'verifying' | 'succeeded' | 'failed' | 'cancelled' | 'needs_review';
+  planDigest?: string; totalFiles: number; completedFiles: number; totalBytes: number; uploadedBytes: number;
+  currentPath?: string; message: string; remoteFolderId?: string;
+}
 export interface DesktopBridge {
   OpenFolder(): Promise<Preview | null>;
   OpenConfiguration(): Promise<Preview | null>;
@@ -51,5 +65,13 @@ export interface DesktopBridge {
   DisconnectGoogleDrive(): Promise<DriveConnectionStatus>;
   RevokeGoogleDrive(expectedAccountReference: string, confirmed: boolean): Promise<DriveConnectionStatus>;
   CancelGoogleDrive(): Promise<void>;
+  ChooseDriveDestination(): Promise<DriveDestination | null>;
+  UseMyDrive(): Promise<DriveDestination>;
+  CurrentDriveDestination(): Promise<DriveDestination | null>;
+  PreviewDriveUpload(): Promise<DriveUploadPlan>;
+  StartDriveUpload(planDigest: string): Promise<DriveTransferStatus>;
+  DriveTransferStatus(): Promise<DriveTransferStatus>;
+  CancelDriveUpload(): Promise<void>;
+  OpenUploadedDriveFolder(): Promise<void>;
 }
 declare global { interface Window { go?: { desktop?: { App?: DesktopBridge } } } }

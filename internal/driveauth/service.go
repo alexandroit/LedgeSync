@@ -34,7 +34,7 @@ func (s *Service) publish(r *record, err error) (Status, error) {
 			a := r.Credential.Account
 			st.Account = &a
 			st.State = "connected"
-			st.Message = "Google Drive account connected. File synchronization is not enabled."
+			st.Message = "Google Drive account connected."
 			if r.Credential.Reconnect {
 				st.State = "reconnect_required"
 				st.Message = ErrReconnect.Error()

@@ -1,5 +1,5 @@
 import './style.css';
-import type { DesktopBridge, DriveConnectionStatus, Entry, Explanation, Operation, Preview } from './types';
+import type { DesktopBridge, DriveConnectionStatus, DriveDestination, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, Preview } from './types';
 
 type View = 'files' | 'preview' | 'policies' | 'connections';
 type DriveAction = 'status' | 'connect' | 'check' | 'disconnect' | 'revoke';
@@ -12,9 +12,22 @@ const state = {
   driveLoaded: false,
   driveRevision: 0,
   driveCancelIntent: false,
+  destination: null as DriveDestination | null,
+  uploadPlan: null as DriveUploadPlan | null,
+  transfer: null as DriveTransferStatus | null,
+  uploadBusy: '' as '' | 'destination' | 'preview' | 'start' | 'cancel',
+  uploadError: '',
+  uploadRevision: 0,
+  transferPoll: 0,
+  uploadPage: 0,
+  destinationCancelling: false,
+  destinationCancelIntent: false,
+  unconfirmedUploadDigest: '',
+  transferRevision: 0,
 };
 const pageSize = 100;
 const root = document.querySelector<HTMLDivElement>('#app')!;
+let renderedLocation = '';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag);
@@ -60,7 +73,8 @@ function bridge(): DesktopBridge {
   return api;
 }
 async function scan(method: 'OpenFolder' | 'OpenConfiguration' | 'Refresh') {
-  if (state.busy) return;
+  if (state.busy || uploadLocked()) return;
+  invalidateUploadPlan(); state.transfer = null;
   state.busy = true; state.error = ''; render();
   try {
     const preview = await bridge()[method]();
@@ -98,7 +112,7 @@ function changeView(view: View) {
 }
 async function driveAction(action: DriveAction, confirmed = false, expectedAccountReference = '') {
   if (action === 'revoke' && (!confirmed || !expectedAccountReference)) return;
-  if (state.driveBusy || state.driveCancelling || state.drive?.state === 'connecting' && action !== 'status') return;
+  if (state.driveBusy || state.driveCancelling || uploadLocked() || state.drive?.state === 'connecting' && action !== 'status') return;
   if (action === 'connect') state.driveCancelIntent = false;
   state.driveBusy = action; state.driveError = ''; render();
   try {
@@ -124,12 +138,13 @@ async function driveAction(action: DriveAction, confirmed = false, expectedAccou
   } finally {
     if (action === 'connect') state.driveCancelIntent = false;
     state.driveLoaded = true; state.driveBusy = ''; render();
+    if (state.drive?.state === 'connected' && !state.destination) void loadDriveDestination();
   }
 }
 function canRevokeDrive() {
   return Boolean(state.drive?.account && state.drive.clientConfigured &&
     (state.drive.state === 'connected' || state.drive.state === 'reconnect_required') &&
-    !state.driveBusy && !state.driveCancelling);
+    !state.driveBusy && !state.driveCancelling && !uploadLocked());
 }
 function confirmDriveRevocation() {
   if (!canRevokeDrive() || document.getElementById('drive-revoke-dialog')) return;
@@ -164,6 +179,10 @@ function confirmDriveRevocation() {
   document.body.append(dialog); dialog.showModal(); cancel.focus();
 }
 function setDriveStatus(status: DriveConnectionStatus | null) {
+  if (status?.state === 'disconnected' || status?.state === 'connected' && state.drive?.account?.reference !== status.account?.reference) state.transfer = null;
+  if (status?.state !== 'connected' || state.drive?.account?.reference !== status.account?.reference) {
+    invalidateUploadPlan(); state.destination = null;
+  }
   state.drive = status; state.driveRevision++;
 }
 async function reconcileDriveStatus(): Promise<boolean> {
@@ -206,10 +225,236 @@ function date(value: string) {
 function displayPath(path: string) { return path.replace(/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, c => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`); }
 function badge(text: string, kind = '') { return el('span', `badge ${kind}`, text); }
 
+function activeTransfer() { return Boolean(state.unconfirmedUploadDigest) || state.transfer?.state === 'uploading' || state.transfer?.state === 'verifying' || state.transfer?.state === 'planning'; }
+function uploadLocked() { return Boolean(state.uploadBusy || activeTransfer()); }
+function uploadAvailable() {
+  return state.drive?.state === 'connected' && Boolean(state.drive.account) && !state.driveBusy && !state.driveCancelling && !state.busy;
+}
+function invalidateUploadPlan() {
+  state.uploadPlan = null; state.uploadRevision++; state.uploadPage = 0; state.uploadError = '';
+}
+function matchingDestination(destination: DriveDestination) {
+  return state.drive?.state === 'connected' && destination.accountReference === state.drive.account?.reference;
+}
+async function loadDriveDestination() {
+  const api = window.go?.desktop?.App;
+  if (typeof api?.CurrentDriveDestination !== 'function') return;
+  const revision = state.uploadRevision;
+  try {
+    const destination = await api.CurrentDriveDestination();
+    if (revision !== state.uploadRevision || uploadLocked()) return;
+    state.destination = destination && matchingDestination(destination) ? destination : null;
+    render();
+  } catch {
+    if (revision !== state.uploadRevision) return;
+    state.uploadError = 'Could not read the saved destination. Choose a destination again before preparing an upload.'; render();
+  }
+}
+async function chooseDestination(method: 'ChooseDriveDestination' | 'UseMyDrive') {
+  if (!uploadAvailable() || uploadLocked()) return;
+  // Even a canceled destination dialog requires a new preview before mutation.
+  invalidateUploadPlan(); state.uploadBusy = 'destination'; state.destinationCancelIntent = false; render();
+  const revision = state.uploadRevision;
+  try {
+    const destination = await bridge()[method]();
+    if (revision !== state.uploadRevision) return;
+    if (destination && !matchingDestination(destination)) throw new Error('Account changed');
+    if (destination) { state.destination = destination; state.transfer = null; }
+  } catch {
+    state.uploadError = state.destinationCancelIntent ? '' : 'Could not select this Drive destination. Check your connection and authorize the folder in the browser, then try again.';
+    if (!await reconcileDriveStatus()) state.uploadError = 'The saved connection status could not be read. Open Connections before choosing a destination again.';
+  } finally { state.uploadBusy = ''; state.destinationCancelIntent = false; render(); }
+}
+async function cancelDestination() {
+  if (state.uploadBusy !== 'destination' || state.destinationCancelling) return;
+  state.destinationCancelIntent = true; state.destinationCancelling = true; render();
+  try { await bridge().CancelGoogleDrive(); }
+  catch { state.destinationCancelIntent = false; state.uploadError = 'Could not cancel folder selection. Close the browser page; the pending request will time out.'; }
+  finally { state.destinationCancelling = false; render(); }
+}
+function validUploadPlan(plan: DriveUploadPlan) {
+  return Boolean(plan.planDigest && state.preview && state.destination && matchingDestination(state.destination) &&
+    plan.accountReference === state.destination.accountReference && plan.destinationId === state.destination.id &&
+    Number.isFinite(Date.parse(plan.expiresAt)) && Date.parse(plan.expiresAt) > Date.now());
+}
+async function previewDriveUpload() {
+  if (!state.preview || !state.destination || !uploadAvailable() || uploadLocked()) return;
+  invalidateUploadPlan(); state.transfer = null; state.uploadBusy = 'preview'; render();
+  const revision = state.uploadRevision;
+  try {
+    const plan = await bridge().PreviewDriveUpload();
+    if (revision !== state.uploadRevision) return;
+    if (!validUploadPlan(plan)) throw new Error('Stale plan');
+    state.uploadPlan = plan; state.view = 'preview'; state.query = ''; state.page = 0;
+  } catch {
+    state.uploadPlan = null;
+    state.uploadError = 'Could not prepare a current upload plan. Check the selected folder, Drive destination and connection, then preview again. Nothing has been approved.';
+    await reconcileDriveStatus();
+  } finally { state.uploadBusy = ''; render(); }
+}
+function applyTransferStatus(status: DriveTransferStatus, expectedDigest?: string) {
+  if (state.unconfirmedUploadDigest && status.state === 'idle') { state.unconfirmedUploadDigest = ''; state.transfer = null; state.transferRevision++; return true; }
+  if (expectedDigest && status.planDigest !== expectedDigest) return false;
+  state.transferRevision++;
+  state.unconfirmedUploadDigest = '';
+  state.transfer = status;
+  if (['succeeded', 'failed', 'cancelled', 'needs_review'].includes(status.state)) state.uploadPlan = null;
+  return true;
+}
+function scheduleTransferPoll() {
+  window.clearTimeout(state.transferPoll);
+  if (activeTransfer()) state.transferPoll = window.setTimeout(() => void pollDriveTransfer(), 1000);
+}
+async function pollDriveTransfer() {
+  const digest = state.unconfirmedUploadDigest || state.transfer?.planDigest;
+  const revision = state.transferRevision;
+  try {
+    const status = await bridge().DriveTransferStatus();
+    if (revision !== state.transferRevision) return;
+    if (!applyTransferStatus(status, digest)) throw new Error('Transfer changed');
+    state.uploadError = '';
+    if (status.state === 'needs_review' || status.state === 'failed') await reconcileDriveStatus();
+  } catch {
+    state.uploadError = 'Could not read transfer progress. Completion is unconfirmed; do not start another upload. Check your connection or cancel the transfer.';
+  } finally { render(); scheduleTransferPoll(); }
+}
+async function startDriveUpload() {
+  if (!state.uploadPlan || !uploadAvailable() || uploadLocked()) return;
+  const plan = state.uploadPlan;
+  if (!validUploadPlan(plan)) { invalidateUploadPlan(); state.uploadError = 'This plan has expired or its destination changed. Preview the folder again before uploading.'; render(); return; }
+  state.uploadBusy = 'start'; state.uploadError = ''; render();
+  try {
+    const status = await bridge().StartDriveUpload(plan.planDigest);
+    if (!applyTransferStatus(status, plan.planDigest)) throw new Error('Transfer changed');
+  } catch {
+    state.uploadPlan = null;
+    // A rejected Wails call can discard a status DTO. Only this exact digest
+    // may reconcile the attempt; an older successful run is not evidence.
+    let reconciled = false;
+    try { reconciled = applyTransferStatus(await bridge().DriveTransferStatus(), plan.planDigest); }
+    catch { state.unconfirmedUploadDigest = plan.planDigest; }
+    if (!reconciled) state.transfer = null;
+    state.uploadError = 'The approved upload could not be confirmed. Review the transfer status and preview again before retrying; existing Drive files are never overwritten.';
+    await reconcileDriveStatus();
+  } finally { state.uploadBusy = ''; render(); scheduleTransferPoll(); }
+}
+async function cancelDriveUpload() {
+  if (!activeTransfer() || state.uploadBusy) return;
+  state.uploadBusy = 'cancel'; state.uploadError = ''; render();
+  try {
+    await bridge().CancelDriveUpload();
+    const revision = state.transferRevision;
+    const status = await bridge().DriveTransferStatus();
+    if (revision !== state.transferRevision) return;
+    if (!applyTransferStatus(status, state.unconfirmedUploadDigest || state.transfer?.planDigest)) throw new Error('Transfer changed');
+  } catch {
+    state.uploadError = 'Cancellation is not confirmed. The transfer may still be running. Check its status before starting another upload.';
+  } finally { state.uploadBusy = ''; render(); scheduleTransferPoll(); }
+}
+async function openUploadedDriveFolder() {
+  if (state.transfer?.state !== 'succeeded') return;
+  try { await bridge().OpenUploadedDriveFolder(); }
+  catch { state.uploadError = 'Could not open the verified destination in your browser. Your completed upload is unchanged.'; render(); }
+}
+function uploadButton(label: string, action: () => void, id: string, primary = false) {
+  const control = button(label, action, `button ${primary ? 'primary' : 'subtle'}`);
+  control.id = `upload-${id}`; control.disabled = !uploadAvailable() || uploadLocked(); return control;
+}
+function renderDriveDestination(container: HTMLElement) {
+  const section = el('section', 'drive-destination'); section.setAttribute('aria-labelledby', 'upload-heading');
+  const title = el('h2', '', 'Upload this folder to Google Drive'); title.id = 'upload-heading'; title.tabIndex = -1;
+  section.append(title);
+  if (state.drive?.state !== 'connected') {
+    section.append(el('p', '', 'This is a local preview. Connect Google Drive, then choose where to upload the complete folder.'));
+    section.append(button('Open Connections', () => changeView('connections'), 'button subtle', 'cloud'));
+  } else {
+    const destination = state.destination;
+    const target = el('p', 'destination-name');
+    target.append(el('span', '', 'Destination: '), el('strong', '', destination ? displayPath(destination.name) : 'Not selected'));
+    section.append(target);
+    section.append(el('p', 'muted', destination ? `Your folder structure is preserved inside a LedgeSync-managed folder in ${displayPath(destination.name)}. Later uploads verify existing copies and keep both versions of changed files.` : 'Choose My Drive or select an existing folder in your browser. Choosing a folder does not upload anything.'));
+    const actions = el('div', 'upload-actions');
+    actions.append(uploadButton('Choose existing Drive folder', () => void chooseDestination('ChooseDriveDestination'), 'destination'), uploadButton('Use My Drive', () => void chooseDestination('UseMyDrive'), 'root'));
+    const preview = uploadButton('Preview folder upload', () => void previewDriveUpload(), 'preview', true);
+    preview.disabled ||= !state.preview || !destination;
+    actions.append(preview); section.append(actions);
+    if (state.uploadBusy === 'destination' || state.uploadBusy === 'preview') {
+      const pending = el('p', 'upload-pending', state.uploadBusy === 'destination' ? 'Complete the folder selection in your browser, then return here.' : 'Reading source files and checking the Drive destination…');
+      pending.setAttribute('role', 'status'); section.append(pending);
+      if (state.uploadBusy === 'destination') {
+        const cancel = button(state.destinationCancelling ? 'Cancelling selection…' : 'Cancel folder selection', () => void cancelDestination(), 'button subtle'); cancel.id = 'upload-cancel-destination'; cancel.disabled = state.destinationCancelling; section.append(cancel);
+      }
+    }
+  }
+  if (state.uploadError) { const error = el('div', 'error', state.uploadError); error.setAttribute('role', 'alert'); section.append(error); }
+  container.append(section);
+  renderDriveTransfer(container);
+}
+function renderDriveTransfer(container: HTMLElement) {
+  const transfer = state.transfer;
+  if (state.unconfirmedUploadDigest) {
+    const pending = el('section', 'transfer-card'); pending.setAttribute('aria-label', 'Folder transfer');
+    const status = el('p', '', 'Upload status is unavailable. The approved request may still be running. Checking its status before allowing another upload…'); status.setAttribute('role', 'status'); pending.append(status);
+    const cancel = button(state.uploadBusy === 'cancel' ? 'Cancelling upload…' : 'Cancel upload', () => void cancelDriveUpload(), 'button subtle'); cancel.id = 'upload-cancel'; cancel.disabled = Boolean(state.uploadBusy); pending.append(cancel); container.append(pending); return;
+  }
+  if (!transfer || transfer.state === 'idle' || transfer.state === 'awaiting_approval') return;
+  const card = el('section', `transfer-card transfer-${transfer.state}`); card.setAttribute('aria-label', 'Folder transfer');
+  const labels: Record<DriveTransferStatus['state'], string> = { idle: 'No transfer', planning: 'Preparing upload', awaiting_approval: 'Waiting for approval', uploading: 'Uploading folder', verifying: 'Verifying uploaded files', succeeded: 'Folder upload verified', failed: 'Upload failed', cancelled: 'Upload cancelled', needs_review: 'Upload needs review' };
+  const status = el('div', 'transfer-announcement'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+  status.append(el('h2', '', labels[transfer.state]), el('p', '', displayPath(transfer.message))); card.append(status);
+  const progress = el('progress'); progress.max = Math.max(transfer.totalBytes, 1); progress.value = Math.min(Math.max(transfer.uploadedBytes, 0), progress.max); progress.setAttribute('aria-label', 'Verified content bytes'); card.append(progress);
+  card.append(el('p', 'transfer-counts', `${transfer.completedFiles} of ${transfer.totalFiles} files verified · ${bytes(transfer.uploadedBytes)} of ${bytes(transfer.totalBytes)} verified`));
+  card.append(el('p', 'muted', 'Verified totals include unchanged files already on Drive. They are not uploaded again.'));
+  if (transfer.currentPath) card.append(el('p', 'transfer-path', displayPath(transfer.currentPath)));
+  if (activeTransfer()) {
+    const cancel = button(state.uploadBusy === 'cancel' ? 'Cancelling upload…' : 'Cancel upload', () => void cancelDriveUpload(), 'button subtle'); cancel.id = 'upload-cancel'; cancel.disabled = Boolean(state.uploadBusy); card.append(cancel);
+    card.append(el('p', 'muted', 'Keep LedgeSync open until the transfer finishes. Cancellation leaves any files already created on Drive; it does not delete them.'));
+  } else if (transfer.state !== 'succeeded') {
+    card.append(el('p', 'muted', 'Files already created on Drive are preserved. Create a fresh preview to reconcile existing copies and continue safely.'));
+  }
+  if (transfer.state === 'succeeded' && transfer.remoteFolderId && /^[A-Za-z0-9_-]{1,200}$/.test(transfer.remoteFolderId)) {
+    const open = button('Open destination folder on Google Drive', () => void openUploadedDriveFolder(), 'button subtle'); open.id = 'upload-open'; card.append(open);
+  }
+  container.append(card);
+}
+function renderDriveUploadPlan(container: HTMLElement) {
+  const plan = state.uploadPlan!;
+  const approval = el('section', 'upload-approval'); approval.setAttribute('aria-label', 'Review folder upload');
+  const rootAction = plan.entries.find(entry => entry.relativePath === '' || entry.relativePath === plan.sourceName)?.action;
+  approval.append(el('h2', '', 'Review and upload'), el('p', '', rootAction === 'skip' ? `Update the approved copy of ${displayPath(plan.sourceName)} in ${displayPath(plan.destinationName)}. Verified copies are reused; changed files keep both versions.` : `Copy ${displayPath(plan.sourceName)} into a LedgeSync-managed folder in ${displayPath(plan.destinationName)}.`));
+  const stats = el('div', 'stats');
+  for (const [value, label] of [[String(plan.fileCount), 'files in plan'], [String(plan.folderCount), 'folders in plan'], [bytes(plan.totalBytes), 'content to verify'], [String(plan.excludedCount), 'excluded items']]) {
+    const stat = el('div'); stat.append(el('strong', '', value), el('span', '', label)); stats.append(stat);
+  }
+  approval.append(stats, el('p', 'upload-policy', 'Folder structure and included empty folders are preserved. Active ignore rules still apply; excluded items are skipped. Verified copies are reused. Changed files get a .ledgesync- suffix with a stable identifier; both versions remain. No existing file is overwritten or deleted.'));
+  for (const warning of plan.warnings ?? []) approval.append(el('p', 'preserved-note', displayPath(warning)));
+  const identity = el('dl', 'details upload-identity');
+  field(identity, 'Google account', displayPath(state.drive?.account?.email || plan.accountReference)); field(identity, 'Destination ID', displayPath(plan.destinationId)); field(identity, 'Plan expires', new Date(plan.expiresAt).toLocaleString()); approval.append(identity);
+  const submit = uploadButton(state.uploadBusy === 'start' ? 'Starting upload…' : 'Upload folder', () => void startDriveUpload(), 'start', true); submit.disabled ||= !validUploadPlan(plan); approval.append(submit);
+  const entries = plan.entries.filter(entry => !state.query || entry.relativePath.toLocaleLowerCase().includes(state.query.toLocaleLowerCase()));
+  const list = el('div', 'operations upload-entries'); list.setAttribute('aria-label', 'Approved folder contents');
+  for (const entry of entries.slice(state.uploadPage * pageSize, (state.uploadPage + 1) * pageSize)) {
+    const actionLabels: Record<string, string> = { skip: 'Verify existing copy', resume: 'Resume reserved copy', 'keep-both': 'Keep both versions', create: 'Create folder', upload: 'Copy new file' };
+    const row = el('div', 'operation'); row.append(el('span', 'operation-path', displayPath(entry.relativePath || plan.sourceName)), el('span', 'operation-type', actionLabels[entry.action || ''] || (entry.kind === 'directory' || entry.kind === 'folder' ? 'Create folder' : 'Copy new file')), el('span', 'muted', entry.kind === 'directory' || entry.kind === 'folder' ? '—' : bytes(entry.size))); list.append(row);
+  }
+  approval.append(list);
+  if (entries.length > pageSize) {
+    const pagination = el('div', 'pagination'); pagination.append(el('span', 'muted', `${entries.length} items · page ${state.uploadPage + 1} of ${Math.ceil(entries.length / pageSize)}`));
+    const previous = button('Previous contents', () => { state.uploadPage--; render(); }, 'button subtle'); previous.disabled = state.uploadPage === 0;
+    const next = button('Next contents', () => { state.uploadPage++; render(); }, 'button subtle'); next.disabled = (state.uploadPage + 1) * pageSize >= entries.length; pagination.append(previous, next); approval.append(pagination);
+  }
+  const detail = el('details', 'plan-details'); detail.append(el('summary', '', 'Approved plan identity'), el('p', 'transfer-path', plan.planDigest)); approval.append(detail);
+  container.append(approval);
+}
+
 function render() {
+  const location = `${state.view}:${state.preview?.sourceRoot || ''}:${state.path}`;
+  const contentScroll = renderedLocation === location ? document.querySelector('.content')?.scrollTop || 0 : 0;
+  const inspectorScroll = renderedLocation === location ? document.querySelector('.inspector')?.scrollTop || 0 : 0;
+  renderedLocation = location;
   const focused = document.activeElement as HTMLInputElement | null;
   const restoreSearch = focused?.id === 'search';
-  const restoreDrive = focused?.id.startsWith('drive-') ? focused.id : '';
+  const restoreDrive = focused?.id.startsWith('drive-') || focused?.id.startsWith('upload-') ? focused.id : '';
   const cursor = focused?.selectionStart ?? 0;
   root.replaceChildren();
   const shell = el('div', 'shell');
@@ -217,7 +462,7 @@ function render() {
   const brand = el('div', 'brand'); brand.append(icon('check', 'brand-mark'), el('span', '', 'LedgeSync'));
   sidebar.append(brand);
   const choose = button('Choose folder', () => void scan('OpenFolder'), 'button primary choose-folder', 'folder');
-  choose.disabled = state.busy; sidebar.append(choose);
+  choose.disabled = state.busy || uploadLocked(); sidebar.append(choose);
   const nav = el('nav', 'nav'); nav.setAttribute('aria-label', 'Main navigation');
   for (const [view, title, symbol] of [['files', 'Files', 'folder'], ['preview', 'Sync pairs', 'arrow'], ['policies', 'Policies', 'shield'], ['connections', 'Connections', 'cloud']] as const) {
     const item = button(title, () => changeView(view), `nav-item ${state.view === view ? 'active' : ''}`, symbol);
@@ -229,7 +474,7 @@ function render() {
     item.disabled = true; item.title = 'Planned for a later release'; item.append(el('small', '', 'Later')); nav.append(item);
   }
   sidebar.append(nav);
-  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', 'Developer alpha · 0.1.0-alpha.3'), el('p', '', state.driveBusy === 'revoke' || state.driveBusy === 'disconnect' ? 'Updating Google Drive access…' : state.drive?.state === 'revoked_local_cleanup_required' ? 'Google access revoked. Local credential cleanup is required.' : state.drive?.state === 'connected' ? 'Google Drive connected. Cloud transfers are not available yet.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
+  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', 'Developer alpha · 0.1.0-alpha.4'), el('p', '', state.driveBusy === 'revoke' || state.driveBusy === 'disconnect' ? 'Updating Google Drive access…' : state.drive?.state === 'revoked_local_cleanup_required' ? 'Google access revoked. Local credential cleanup is required.' : state.drive?.state === 'connected' ? 'Google Drive connected. Choose a destination and preview your folder upload.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
   sidebar.append(offline); shell.append(sidebar);
 
   const workspace = el('main', 'workspace');
@@ -237,10 +482,10 @@ function render() {
   const search = el('label', 'search'); search.append(icon('search'));
   const input = el('input'); input.id = 'search'; input.type = 'search'; input.placeholder = 'Search this project'; input.setAttribute('aria-label', 'Search this project'); input.value = state.query;
   input.disabled = !state.preview || state.busy || state.view === 'policies' || state.view === 'connections';
-  input.addEventListener('input', () => { state.query = input.value; state.page = 0; render(); });
+  input.addEventListener('input', () => { state.query = input.value; state.page = 0; state.uploadPage = 0; render(); });
   search.append(input); top.append(search);
-  top.append(badge('Local file preview', 'offline'));
-  const loadConfig = button('Open configuration', () => void scan('OpenConfiguration'), 'button subtle'); loadConfig.disabled = state.busy; top.append(loadConfig);
+  top.append(badge(activeTransfer() ? 'Drive upload in progress' : state.destination ? 'Drive destination selected' : 'Local file preview', state.destination ? 'connected' : 'offline'));
+  const loadConfig = button('Open configuration', () => void scan('OpenConfiguration'), 'button subtle'); loadConfig.disabled = state.busy || uploadLocked(); top.append(loadConfig);
   workspace.append(top);
   if (state.error) { const error = el('div', 'error', state.error); error.setAttribute('role', 'alert'); workspace.append(error); }
   if (state.busy) {
@@ -257,26 +502,28 @@ function render() {
     const heading = el('div', 'heading');
     const title = el('div'); title.append(el('p', 'eyebrow', 'LOCAL WORKSPACE'), el('h1', '', state.view === 'files' ? 'Files' : state.view === 'preview' ? 'Preview your sync pair' : 'Policy capabilities'));
     heading.append(title);
-    const refresh = button('Refresh', () => void scan('Refresh'), 'button subtle', 'refresh'); refresh.disabled = state.busy; heading.append(refresh); content.append(heading);
+    const refresh = button('Refresh', () => void scan('Refresh'), 'button subtle', 'refresh'); refresh.disabled = state.busy || uploadLocked(); heading.append(refresh); content.append(heading);
     if (state.view === 'files') renderFiles(content);
     else if (state.view === 'preview') renderPreview(content);
     else renderPolicies(content);
   }
   body.append(content);
-  if (state.preview && state.view !== 'policies' && state.view !== 'connections') { const inspector = el('aside', 'inspector'); inspector.id = 'inspector'; inspector.setAttribute('aria-label', 'Details and policy explanation'); renderInspector(inspector); body.append(inspector); }
+  if (state.preview && state.view !== 'policies' && state.view !== 'connections' && !(state.view === 'preview' && state.destination)) { const inspector = el('aside', 'inspector'); inspector.id = 'inspector'; inspector.setAttribute('aria-label', 'Details and policy explanation'); renderInspector(inspector); body.append(inspector); }
   workspace.append(body); shell.append(workspace); root.append(shell);
+  content.scrollTop = contentScroll;
+  const inspector = document.getElementById('inspector'); if (inspector) inspector.scrollTop = inspectorScroll;
   if (restoreSearch) { const input = document.querySelector<HTMLInputElement>('#search')!; input.focus(); input.setSelectionRange(cursor, cursor); }
   else if (restoreDrive) {
     const target = document.getElementById(restoreDrive) as HTMLButtonElement | null;
     if (target && !target.disabled) target.focus();
-    else document.querySelector<HTMLElement>('#drive-heading')?.focus();
+    else document.querySelector<HTMLElement>(restoreDrive.startsWith('upload-') ? '#upload-heading' : '#drive-heading')?.focus();
   }
 }
 
 function driveButton(label: string, action: () => void, id: string, primary = false) {
   const control = button(label, action, `button ${primary ? 'primary' : 'subtle'}`);
   control.id = `drive-${id}`;
-  control.disabled = Boolean(state.driveBusy || state.driveCancelling);
+  control.disabled = Boolean(state.driveBusy || state.driveCancelling || uploadLocked());
   return control;
 }
 function renderConnections(container: HTMLElement) {
@@ -287,7 +534,7 @@ function renderConnections(container: HTMLElement) {
   title.append(el('p', 'eyebrow', 'ACCOUNT ACCESS'), h1); heading.append(title); container.append(heading);
   container.append(el('p', 'section-description', 'Connect your Google account, authorize LedgeSync in your browser, and return here. Your access is saved in this computer’s credential vault.'));
   const limits = el('div', 'notice');
-  limits.append(icon('info'), el('p', '', 'Cloud browsing and file transfers are not implemented yet. Files and Sync pairs still show local files and a simulated destination.'));
+  limits.append(icon('info'), el('p', '', uploadLocked() ? 'Finish or cancel the folder upload in Files or Sync pairs before changing account access.' : 'In Files, choose a local folder and a Drive destination, preview the included contents, then approve the upload. Selecting a source or connecting an account does not start a transfer.'));
   container.append(limits);
   if (state.driveError) { const error = el('div', 'error', state.driveError); error.setAttribute('role', 'alert'); container.append(error); }
 
@@ -349,16 +596,17 @@ function renderConnections(container: HTMLElement) {
 function renderEmpty(container: HTMLElement) {
   const empty = el('div', 'welcome'); empty.append(el('div', 'welcome-mark')); empty.firstElementChild!.append(icon('folder'));
   empty.append(el('p', 'eyebrow', 'MEET YOUR NEXT CLEAN SYNC'), el('h1', '', 'See what belongs.'), el('p', 'welcome-description', 'Explore a local folder, see which files your rules exclude, and review every planned copy before anything moves.'));
-  const choose = button('Choose a local folder', () => void scan('OpenFolder'), 'button primary large', 'folder'); choose.disabled = state.busy; empty.append(choose);
+  const choose = button('Choose a local folder', () => void scan('OpenFolder'), 'button primary large', 'folder'); choose.disabled = state.busy || uploadLocked(); empty.append(choose);
   empty.append(el('p', 'welcome-hint', 'Starts with recursive .gitignore rules. Read-only, with no account needed.'));
   const features = el('div', 'welcome-features');
-  for (const [symbol, title, description] of [['folder', 'Your files, in view', 'Browse a real local inventory.'], ['shield', 'Every rule explained', 'See why each file is included or excluded.'], ['arrow', 'Preview first', 'Compare against an empty test destination.']]) {
+  for (const [symbol, title, description] of [['folder', 'Your files, in view', 'Browse a real local inventory.'], ['shield', 'Every rule explained', 'See why each file is included or excluded.'], ['arrow', 'Preview first', 'Choose a Drive destination and approve the folder upload.']]) {
     const card = el('div'); card.append(icon(symbol), el('strong', '', title), el('p', '', description)); features.append(card);
   }
   empty.append(features); container.append(empty);
 }
 function renderFiles(container: HTMLElement) {
   const preview = state.preview!;
+  renderDriveDestination(container);
   const breadcrumbs = el('nav', 'breadcrumbs'); breadcrumbs.setAttribute('aria-label', 'Folder path');
   const back = button('Back', () => historyMove(-1), 'icon-button', 'back'); back.disabled = state.historyIndex === 0; back.setAttribute('aria-label', 'Back');
   const forward = button('Forward', () => historyMove(1), 'icon-button forward', 'back'); forward.disabled = state.historyIndex === state.history.length - 1; forward.setAttribute('aria-label', 'Forward');
@@ -451,7 +699,7 @@ function renderInspector(container: HTMLElement) {
   if (!entry) {
     container.append(el('div', 'inspector-placeholder')); container.lastElementChild!.append(icon('file'));
     container.append(el('h3', '', 'Every file has a reason'), el('p', 'muted', 'Select a file or folder to inspect its metadata and the exact policy behind its selection.'));
-    const details = el('dl', 'details'); field(details, 'Project', preview.projectName); field(details, 'Source', preview.sourceRoot); field(details, 'Destination', 'Empty test destination'); field(details, 'Scan', preview.plan.scanComplete.source ? 'Complete' : 'Incomplete'); container.append(details); return;
+    const details = el('dl', 'details'); field(details, 'Project', preview.projectName); field(details, 'Source', preview.sourceRoot); field(details, 'Destination', state.destination ? displayPath(state.destination.name) : 'No Drive destination selected'); field(details, 'Scan', preview.plan.scanComplete.source ? 'Complete' : 'Incomplete'); container.append(details); return;
   }
   const entryTitle = el('div', 'selected-title'); entryTitle.append(icon(entry.kind === 'directory' ? 'folder' : 'file'), el('h3', '', displayPath(entry.name))); container.append(entryTitle, badge(entry.status, entry.decision === 'exclude' ? 'excluded-badge' : ''));
   const details = el('dl', 'details'); field(details, 'Path', displayPath(entry.path)); field(details, 'Kind', entry.kind); if (entry.kind !== 'directory') field(details, 'Size', bytes(entry.size)); field(details, 'Modified', date(entry.modifiedAt)); container.append(details);
@@ -465,8 +713,14 @@ function operationLabel(operation: Operation) {
 }
 function renderPreview(container: HTMLElement) {
   const preview = state.preview!; const plan = preview.plan;
+  renderDriveDestination(container);
+  if (state.uploadPlan) { renderDriveUploadPlan(container); return; }
+  if (state.destination) {
+    if (!activeTransfer()) container.append(el('p', 'section-description', 'Preview folder upload to read the current local files, validate this destination and review the exact files and folders before approving.'));
+    return;
+  }
   const banner = el('div', 'notice'); banner.append(icon('info'), el('p', '', 'Read-only simulation using an empty test destination. This preview uses a simulated destination and cannot be applied, regardless of your Google Drive connection.')); container.append(banner);
-  const pair = el('div', 'pair'); const local = el('div'); local.append(icon('folder'), el('strong', '', preview.projectName), el('small', '', 'Local folder')); const remote = el('div'); remote.append(icon('cloud'), el('strong', '', 'Test destination'), el('small', '', 'Empty · offline')); pair.append(local, icon('arrow'), remote); container.append(pair);
+  const pair = el('div', 'pair'); const local = el('div'); local.append(icon('folder'), el('strong', '', preview.projectName), el('small', '', 'Local folder')); const remote = el('div'); remote.append(icon('cloud'), el('strong', '', 'No Drive destination selected'), el('small', '', 'Local simulation · nothing uploaded')); pair.append(local, icon('arrow'), remote); container.append(pair);
   const stats = el('div', 'stats');
   for (const [value, label] of [[String(plan.summary.operationCount), 'planned operations'], [bytes(plan.summary.uploadBytes), 'planned copy size'], [String(preview.entries.filter(e => e.decision === 'exclude').length), 'excluded items'], [String(plan.summary.trashCount), 'deletions']]) { const stat = el('div'); stat.append(el('strong', '', value), el('span', '', label)); stats.append(stat); }
   container.append(stats);
@@ -498,3 +752,6 @@ function renderPolicies(container: HTMLElement) {
   container.append(list);
 }
 render();
+// The desktop bridge may arrive after web assets initialize. Startup reads only
+// saved connection metadata; destination selection and upload remain explicit.
+if (typeof window.go?.desktop?.App?.GoogleDriveStatus === 'function') void driveAction('status');

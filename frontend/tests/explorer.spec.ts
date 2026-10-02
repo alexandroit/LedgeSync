@@ -60,7 +60,7 @@ test('real core selection, excluded provenance, navigation, grid, search, and pr
   await expect(page.getByRole('searchbox', { name: 'Search this project' })).toBeFocused();
   await expect(page.getByRole('button', { name: 'src/main.ts, Local only', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Sync pairs', exact: true }).click();
-  await expect(page.getByText('Read-only simulation using an empty test destination.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Local selection only. Google Drive was not contacted', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Excluded', exact: true }).click();
   await expect(page.locator('.operations')).toContainText('debug.log');
   await expect(page.locator('.operations')).not.toContainText('README.md');

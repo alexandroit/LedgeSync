@@ -188,10 +188,10 @@ test('a connected account does not turn the local simulated plan into a Drive pl
   await page.evaluate(data => { window.go!.desktop!.App!.OpenFolder = async () => data; }, preview);
   await page.getByRole('button', { name: 'Choose folder', exact: true }).click();
   await page.getByRole('button', { name: 'Sync pairs', exact: true }).click();
-  await expect(page.getByText('This preview uses a simulated destination and cannot be applied', { exact: false })).toBeVisible();
+  await expect(page.getByText('Nothing here can be applied.', { exact: false })).toBeVisible();
   await expect(page.locator('body')).not.toContainText('Google Drive is not connected');
   await expect(page.getByText('Google Drive connected. Choose a destination and preview your folder upload.', { exact: true })).toBeVisible();
-  await expect(page.getByText('Developer alpha · 0.1.0-alpha.4', { exact: true })).toBeVisible();
+  await expect(page.getByText('Developer alpha · 0.1.0-alpha.5', { exact: true })).toBeVisible();
 });
 
 test('account check reports reconnection and disconnect removes displayed account without cloud deletion claims', async ({ page }) => {

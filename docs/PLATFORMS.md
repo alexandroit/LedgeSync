@@ -1,16 +1,24 @@
 # Platform builds and installation
 
-**0.1.0-alpha.5 candidate (2026-10-02, not yet published).** The source on this
-branch fixes the reported synchronization failure (My Drive under `drive.file`,
-links in ignored folders, ignored-file churn, earlier copies missing in Drive) and
-adds saved sync pairs, opt-in automatic copies, restore to a new folder, typed
-errors and the server CLI commands; see
-[failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md) and
-[status](17_AGENT_HANDOFF_AND_STATUS.md). Alpha.5 packages are built by the same
-native CI and installer workflows. They are publisher-signed only when the
-signing material in [Publisher signing](#publisher-signing) is configured;
-otherwise they are labeled unsigned developer builds. The published alpha.4
-release described below remains unchanged.
+**0.1.0-alpha.5 — current developer pre-release (2026-10-02).** It fixes the
+reported synchronization failure and adds saved sync pairs, opt-in automatic
+copies, restore to a new folder, typed errors and server CLI commands; see the
+[failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md).
+
+| Gate | Result |
+|---|---|
+| Pull request CI | [run 37052557562](https://github.com/alexandroit/LedgeSync/actions/runs/37052557562): 16/16; native vault [37052557564](https://github.com/alexandroit/LedgeSync/actions/runs/37052557564): 6/6 |
+| Official build (publisher OAuth client on all six targets) | [run 37053500290](https://github.com/alexandroit/LedgeSync/actions/runs/37053500290): 16/16 at `64cf420` |
+| Release | [v0.1.0-alpha.5](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.5): 37 assets, `SHA256SUMS`, `RELEASE.json`, `INSTALLERS_RELEASE.json` |
+| Clean-machine installers | [run 37054397393](https://github.com/alexandroit/LedgeSync/actions/runs/37054397393): Windows Server 2022 x64 and Windows 11 ARM64 wizard/install/reinstall/uninstall; Ubuntu amd64/arm64 package, GUI startup and removal; local signed APT lifecycle |
+| Public APT | Snapshot `20261002-alpha5-64cf420` active; [run 37054874133](https://github.com/alexandroit/LedgeSync/actions/runs/37054874133): `apt-get install ledgesync` and `ledgesync-cli` on clean amd64/arm64 |
+| Local macOS check | Official arm64 DMG mounted; app arm64, ad-hoc signature valid, macOS 13 minimum, starts; `spctl` rejects it as unsigned |
+| Publisher signing | Not available: see [Publisher signing](#publisher-signing) |
+
+Exact hashes and results: [alpha.5 release evidence](research/DRIVE_SYNC_ALPHA5_RELEASE.json).
+Windows 11 x64 has no GitHub-hosted runner; the x64 installer was exercised on
+Windows Server 2022 and the core tests on Server 2022 and 2025. Alpha.4 and
+earlier releases below remain unchanged.
 
 LedgeSync **0.1.0-alpha.4** implements explicitly approved Google Drive folder
 copies in the desktop and native CLI. The [application release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4)

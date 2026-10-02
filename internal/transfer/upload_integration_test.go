@@ -224,7 +224,10 @@ func previewPlan(t *testing.T, f *fixture) transfer.Plan {
 }
 func finishRun(t *testing.T, s *transfer.Service) transfer.Status {
 	t.Helper()
-	timer := time.NewTimer(5 * time.Second)
+	// Native ACL checks and synchronous journal flushes run on the hosted
+	// filesystem even with a fake provider. This is a completion bound, not an
+	// upload performance assertion; busy Windows runners can exceed five seconds.
+	timer := time.NewTimer(30 * time.Second)
 	defer timer.Stop()
 	ticker := time.NewTicker(time.Millisecond)
 	defer ticker.Stop()
@@ -234,8 +237,9 @@ func finishRun(t *testing.T, s *transfer.Service) transfer.Status {
 		}
 		select {
 		case <-timer.C:
+			status := s.Status()
 			s.Cancel()
-			t.Fatal("transfer did not finish within five seconds")
+			t.Fatalf("transfer did not finish within thirty seconds; last status: %+v", status)
 		case <-ticker.C:
 		}
 	}

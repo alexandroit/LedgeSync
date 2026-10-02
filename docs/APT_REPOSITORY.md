@@ -47,7 +47,7 @@ renewal/publication is not an application auto-update service.
 4. Run `tools/build_apt_repository.py` with `--packages`, a new `--output`
    snapshot path, the protected `--gnupghome`, and the full public `--key`
    fingerprint. Supply the exact Debian package version explicitly, for example
-   `--version '0.1.0~alpha.3-1'`; all four input packages must match it. For
+   `--version '0.1.0~alpha.4-1'`; all four input packages must match it. For
    subsequent publications pass `--previous` with the prior
    public snapshot to retain old pool files and by-hash indexes. The tool signs
    with the existing server key and verifies the resulting signature. It never
@@ -56,7 +56,7 @@ renewal/publication is not an application auto-update service.
    symlink to the verified new snapshot and replace `public` atomically. Preserve
    previous snapshots for rollback. Content-only updates need no Nginx reload.
 6. Dispatch `installers.yml` with `verify_public_apt=true` and the expected
-   application `version` (for example `0.1.0-alpha.3`). Both native Ubuntu
+   application `version` (for example `0.1.0-alpha.4`). Both native Ubuntu
    runners fetch the HTTPS public key, check it against the pinned key, reject
    tampered signed metadata, force by-hash fetching, run `apt-get install
    ledgesync`, remove it, install the headless CLI separately and verify removal
@@ -100,9 +100,9 @@ alpha.2 desktop with its GNOME Keyring recommendation, then tested the separate
 CLI and removal preserving synthetic user data. See
 [deployment evidence](research/OAUTH_DEPLOYMENT_VERIFICATION.json).
 
-## Current alpha.3 publication
+## Historical alpha.3 publication
 
-Current snapshot: `20261002-alpha3-0ec2f3f`, Debian version `0.1.0~alpha.3-1`.
+Historical snapshot: `20261002-alpha3-0ec2f3f`, Debian version `0.1.0~alpha.3-1`.
 It includes the bundled Desktop OAuth client in the graphical packages. The
 existing signing key and all 24 previous pool/by-hash files are unchanged.
 The alpha.2 snapshot remains available for rollback. No application package was
@@ -117,3 +117,32 @@ by-hash indexes, desktop installation with Secret Service, separate headless
 CLI installation and removal preserving synthetic user data. The downloaded
 reports were checked against GitHub's artifact ZIP digests. See
 [alpha.3 deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
+
+## Current alpha.4 publication
+
+Current snapshot: `20261002-alpha4-fcd5784`, Debian version `0.1.0~alpha.4-1`.
+Both desktop and native CLI packages include the configured publisher Desktop
+client and the approved manual Drive-copy engine. Desktop recommends GNOME
+Keyring; the CLI only suggests it and has no graphical-library dependency.
+Online CLI use still requires a user D-Bus session and an unlocked Secret Service
+collection; package installation alone does not establish either prerequisite.
+See the [CLI guide](CLI.md).
+
+[Installer run 36964667348](https://github.com/alexandroit/LedgeSync/actions/runs/36964667348)
+passed native packaging, install/removal and local signed APT lifecycle at
+packaging commit `13342144685824daa38c774cb3ef7bdf14e315d3`, using the immutable
+application commit `fcd578488d07f627372e7f5dd2221e162634bf05`.
+[Public APT run 36965018881](https://github.com/alexandroit/LedgeSync/actions/runs/36965018881)
+passed on both amd64 and arm64 against the deployed HTTPS repository. Both
+reports confirm the pinned key/source, signature and tamper rejection, forced
+by-hash downloads, desktop installation, separate CLI installation/execution
+and removal preserving synthetic user data. Original workflow ZIP digests were
+verified before report extraction.
+
+The existing signing key and all 36 prior pool/by-hash files remain unchanged.
+The alpha.3 snapshot remains available for rollback. No application package was
+installed on the production server and no Nginx reload was required. These
+checks establish package distribution, not live Google consent or an unlocked
+headless server session. Exact package and publication evidence is recorded in
+[installer evidence](research/DRIVE_COPY_INSTALLERS_RELEASE.json),
+[public assets](research/DRIVE_COPY_PUBLIC_ASSETS.json) and [deployment evidence](research/DRIVE_COPY_DEPLOYMENT_VERIFICATION.json).

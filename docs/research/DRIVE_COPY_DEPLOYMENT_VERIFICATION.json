@@ -1,0 +1,404 @@
+{
+  "product": "LedgeSync",
+  "version": "0.1.0-alpha.4",
+  "verifiedAt": "2026-10-02T04:35:23.248432+00:00",
+  "applicationSourceCommit": "fcd578488d07f627372e7f5dd2221e162634bf05",
+  "packagingSourceCommit": "13342144685824daa38c774cb3ef7bdf14e315d3",
+  "aptActivation": {
+    "version": "0.1.0-alpha.4",
+    "aptSnapshot": "20261002-alpha4-fcd5784",
+    "previousSnapshotRetained": "20261002-alpha3-0ec2f3f",
+    "previousPoolAndByHashFilesPreserved": 36,
+    "signingFingerprint": "11B35F4E066806C33AA8653A51AD694F4729F5AB",
+    "keySHA256": "94303c3848c110843c8b36f403bef80b5035d2657fea3e3f5f55f991dc61b7fb",
+    "packages": {
+      "ledgesync_0.1.0~alpha.4-1_amd64.deb": "c50612b050e87deeb7a9b6d8dba49ba6ea645d9c7c5f7169f54a451d67cfcbda",
+      "ledgesync-cli_0.1.0~alpha.4-1_amd64.deb": "667cd096f8b1e3039cc7008206db259d705bd06a2cbc30c3e6b84343af04338b",
+      "ledgesync_0.1.0~alpha.4-1_arm64.deb": "d3e5f6f3f874d1fc61b3b516427998c7e096f1652ad0075c50b6112bec0829bb",
+      "ledgesync-cli_0.1.0~alpha.4-1_arm64.deb": "7dcd18477b61c39196bd062d09d8eda46c92b40ea8f0563a5ce79663c5672631"
+    },
+    "applicationInstalledOnProductionServer": false,
+    "nginxReloadRequired": false
+  },
+  "publicAPT": {
+    "product": "LedgeSync",
+    "version": "0.1.0-alpha.4",
+    "debianVersion": "0.1.0~alpha.4-1",
+    "applicationSourceCommit": "fcd578488d07f627372e7f5dd2221e162634bf05",
+    "packagingSourceCommit": "13342144685824daa38c774cb3ef7bdf14e315d3",
+    "verifiedAt": "2026-10-02T04:34:11.647250+00:00",
+    "publicAPTRun": {
+      "id": 36965018881,
+      "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36965018881",
+      "headSha": "13342144685824daa38c774cb3ef7bdf14e315d3",
+      "workflow": ".github/workflows/installers.yml",
+      "event": "workflow_dispatch",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "public_apt (ubuntu-24.04)",
+          "id": 110706775471,
+          "conclusion": "success"
+        },
+        {
+          "name": "public_apt (ubuntu-24.04-arm)",
+          "id": 110706775684,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows",
+          "id": 110706776207,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "ubuntu",
+          "id": 110706776474,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "apt_repository",
+          "id": 110706776993,
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    "signingFingerprint": "11B35F4E066806C33AA8653A51AD694F4729F5AB",
+    "keySHA256": "94303c3848c110843c8b36f403bef80b5035d2657fea3e3f5f55f991dc61b7fb",
+    "sourcesSHA256": "c4bc0c12d28b9b02125ebd43d42fc77a87bf106e9e310ef31d143c8728cc2f5b",
+    "nativeAPTVerification": {
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "allPassed": true,
+      "expectedApplicationVersion": "0.1.0-alpha.4",
+      "installedDebianVersion": "0.1.0~alpha.4-1",
+      "pinnedKeyAndSourceBytesCheckedByBothNativeJobs": true,
+      "testScriptSHA256": "3f4a5c2add5cf7b36d57eb1cbf3c9d207809f6c65107ac31ffdd88bcadd2c693",
+      "workflowSHA256": "fd28dbfcf4e8bdd257f9cbd8333b7a37f121646181e322c87eb0d46b9aab4e3a"
+    },
+    "publicPinDownloads": [
+      {
+        "name": "ledgesync-archive-keyring.gpg",
+        "url": "https://ledgesync.com/apt/ledgesync-archive-keyring.gpg",
+        "size": 1153,
+        "sha256": "94303c3848c110843c8b36f403bef80b5035d2657fea3e3f5f55f991dc61b7fb",
+        "matchesPinnedSource": true,
+        "anonymousDownloadVerified": true
+      },
+      {
+        "name": "ledgesync.sources",
+        "url": "https://ledgesync.com/apt/ledgesync.sources",
+        "size": 161,
+        "sha256": "c4bc0c12d28b9b02125ebd43d42fc77a87bf106e9e310ef31d143c8728cc2f5b",
+        "matchesPinnedSource": true,
+        "anonymousDownloadVerified": true
+      }
+    ],
+    "reports": [
+      {
+        "baseURL": "https://ledgesync.com/apt",
+        "architecture": "amd64",
+        "version": "0.1.0~alpha.4-1",
+        "signatureVerified": true,
+        "tamperedMetadataRejected": true,
+        "byHashForced": true,
+        "desktopInstalled": true,
+        "secretServiceInstalled": true,
+        "headlessCliInstalled": true,
+        "uninstallPreservedUserFixture": true
+      },
+      {
+        "baseURL": "https://ledgesync.com/apt",
+        "architecture": "arm64",
+        "version": "0.1.0~alpha.4-1",
+        "signatureVerified": true,
+        "tamperedMetadataRejected": true,
+        "byHashForced": true,
+        "desktopInstalled": true,
+        "secretServiceInstalled": true,
+        "headlessCliInstalled": true,
+        "uninstallPreservedUserFixture": true
+      }
+    ],
+    "ciArtifactVerification": [
+      {
+        "name": "ledgesync-public-apt-ubuntu-24.04-arm",
+        "id": 11209740057,
+        "zipSHA256": "54d4475bf272180835e4d8e905d05bf8bb0aea4c966726d087bbce0b67878b6d",
+        "zipBytes": 343,
+        "files": {
+          "public-arm64.json": "54816e322a591cff6621e22151cffd71174d18363b5a946159685ecbc83eb8d1"
+        }
+      },
+      {
+        "name": "ledgesync-public-apt-ubuntu-24.04",
+        "id": 11208504492,
+        "zipSHA256": "127618879519dfe440300604fadb79610b38f26b38b399bac0f41f11d5ba58fd",
+        "zipBytes": 343,
+        "files": {
+          "public-amd64.json": "7b74d116332ea1a52d42f34f20d3b07c833a4f62fcab7965b519b38be8399286"
+        }
+      }
+    ],
+    "limits": [
+      "Package installation and removal ran on disposable native GitHub Ubuntu 24.04 runners.",
+      "This does not assert real Google authorization, uploads or an unlocked headless user keyring."
+    ]
+  },
+  "websiteActivation": {
+    "sourceCommit": "6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1",
+    "previousSourceCommit": "43f7ab6ada2711795ca0b14df6bc333f6344e131",
+    "files": {
+      "assets/ledgesync-logo.png": {
+        "bytes": 4072,
+        "sha256": "04e7fc46d3fea57f921e60347c75ddbd853645f2f00174cb765efeb0e757a602"
+      },
+      "assets/ledgesync-logo.svg": {
+        "bytes": 266,
+        "sha256": "24274afdbb8f394cebdb4bf8be2aac3d4f6729e3d0fd26a512dbeaeef3f71ac1"
+      },
+      "assets/legal.css": {
+        "bytes": 1468,
+        "sha256": "c8bcfb6d477b878e6597ce7f76a0cd6f01b69591a2d1ce1d0117356db3a292af"
+      },
+      "index.html": {
+        "bytes": 13104,
+        "sha256": "e6b3e0d083a29d0facfdb678b26f55e2d521c27f7884118f72d9c120c50bba94"
+      },
+      "privacy-policy/index.html": {
+        "bytes": 12250,
+        "sha256": "d50b999947ad28bf32ad3d2ad004d5f699e15014d47f54a0aaa8df544bf2a197"
+      },
+      "public-term/index.html": {
+        "bytes": 8839,
+        "sha256": "3508d1e086ddfaf4e0aad6e1dc16f34325105ef648933260bed3df722794a4fa"
+      },
+      "style.css": {
+        "bytes": 12721,
+        "sha256": "1c913bddba4fbf3e42d2d59766ae16427a6cbfd56f5342b81aae133b392e1504"
+      }
+    },
+    "nginxReloadRequired": false
+  },
+  "websiteVerification": {
+    "siteSourceCommit": "6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1",
+    "pagesSourceCommit": "6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1",
+    "pagesRunId": 36965146423,
+    "pagesRunUrl": "https://github.com/alexandroit/LedgeSync/actions/runs/36965146423",
+    "checks": [
+      {
+        "surface": "public",
+        "url": "https://ledgesync.com/assets/ledgesync-logo.png",
+        "file": "assets/ledgesync-logo.png",
+        "bytes": 4072,
+        "sha256": "04e7fc46d3fea57f921e60347c75ddbd853645f2f00174cb765efeb0e757a602",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "public",
+        "url": "https://ledgesync.com/assets/ledgesync-logo.svg",
+        "file": "assets/ledgesync-logo.svg",
+        "bytes": 266,
+        "sha256": "24274afdbb8f394cebdb4bf8be2aac3d4f6729e3d0fd26a512dbeaeef3f71ac1",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "public",
+        "url": "https://ledgesync.com/assets/legal.css",
+        "file": "assets/legal.css",
+        "bytes": 1468,
+        "sha256": "c8bcfb6d477b878e6597ce7f76a0cd6f01b69591a2d1ce1d0117356db3a292af",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "public",
+        "url": "https://ledgesync.com/",
+        "file": "index.html",
+        "bytes": 13104,
+        "sha256": "e6b3e0d083a29d0facfdb678b26f55e2d521c27f7884118f72d9c120c50bba94",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "public",
+        "url": "https://ledgesync.com/privacy-policy",
+        "file": "privacy-policy/index.html",
+        "bytes": 12250,
+        "sha256": "d50b999947ad28bf32ad3d2ad004d5f699e15014d47f54a0aaa8df544bf2a197",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "public",
+        "url": "https://ledgesync.com/public-term",
+        "file": "public-term/index.html",
+        "bytes": 8839,
+        "sha256": "3508d1e086ddfaf4e0aad6e1dc16f34325105ef648933260bed3df722794a4fa",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "public",
+        "url": "https://ledgesync.com/style.css",
+        "file": "style.css",
+        "bytes": 12721,
+        "sha256": "1c913bddba4fbf3e42d2d59766ae16427a6cbfd56f5342b81aae133b392e1504",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "origin",
+        "url": "https://ledgesync.com/assets/ledgesync-logo.png",
+        "file": "assets/ledgesync-logo.png",
+        "bytes": 4072,
+        "sha256": "04e7fc46d3fea57f921e60347c75ddbd853645f2f00174cb765efeb0e757a602",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "origin",
+        "url": "https://ledgesync.com/assets/ledgesync-logo.svg",
+        "file": "assets/ledgesync-logo.svg",
+        "bytes": 266,
+        "sha256": "24274afdbb8f394cebdb4bf8be2aac3d4f6729e3d0fd26a512dbeaeef3f71ac1",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "origin",
+        "url": "https://ledgesync.com/assets/legal.css",
+        "file": "assets/legal.css",
+        "bytes": 1468,
+        "sha256": "c8bcfb6d477b878e6597ce7f76a0cd6f01b69591a2d1ce1d0117356db3a292af",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "origin",
+        "url": "https://ledgesync.com/",
+        "file": "index.html",
+        "bytes": 13104,
+        "sha256": "e6b3e0d083a29d0facfdb678b26f55e2d521c27f7884118f72d9c120c50bba94",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "origin",
+        "url": "https://ledgesync.com/privacy-policy",
+        "file": "privacy-policy/index.html",
+        "bytes": 12250,
+        "sha256": "d50b999947ad28bf32ad3d2ad004d5f699e15014d47f54a0aaa8df544bf2a197",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "origin",
+        "url": "https://ledgesync.com/public-term",
+        "file": "public-term/index.html",
+        "bytes": 8839,
+        "sha256": "3508d1e086ddfaf4e0aad6e1dc16f34325105ef648933260bed3df722794a4fa",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "origin",
+        "url": "https://ledgesync.com/style.css",
+        "file": "style.css",
+        "bytes": 12721,
+        "sha256": "1c913bddba4fbf3e42d2d59766ae16427a6cbfd56f5342b81aae133b392e1504",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "pages",
+        "url": "https://alexandroit.github.io/LedgeSync/assets/ledgesync-logo.png",
+        "file": "assets/ledgesync-logo.png",
+        "bytes": 4072,
+        "sha256": "04e7fc46d3fea57f921e60347c75ddbd853645f2f00174cb765efeb0e757a602",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "pages",
+        "url": "https://alexandroit.github.io/LedgeSync/assets/ledgesync-logo.svg",
+        "file": "assets/ledgesync-logo.svg",
+        "bytes": 266,
+        "sha256": "24274afdbb8f394cebdb4bf8be2aac3d4f6729e3d0fd26a512dbeaeef3f71ac1",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "pages",
+        "url": "https://alexandroit.github.io/LedgeSync/assets/legal.css",
+        "file": "assets/legal.css",
+        "bytes": 1468,
+        "sha256": "c8bcfb6d477b878e6597ce7f76a0cd6f01b69591a2d1ce1d0117356db3a292af",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "pages",
+        "url": "https://alexandroit.github.io/LedgeSync/",
+        "file": "index.html",
+        "bytes": 13104,
+        "sha256": "e6b3e0d083a29d0facfdb678b26f55e2d521c27f7884118f72d9c120c50bba94",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "pages",
+        "url": "https://alexandroit.github.io/LedgeSync/privacy-policy/",
+        "file": "privacy-policy/index.html",
+        "bytes": 12250,
+        "sha256": "d50b999947ad28bf32ad3d2ad004d5f699e15014d47f54a0aaa8df544bf2a197",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "pages",
+        "url": "https://alexandroit.github.io/LedgeSync/public-term/",
+        "file": "public-term/index.html",
+        "bytes": 8839,
+        "sha256": "3508d1e086ddfaf4e0aad6e1dc16f34325105ef648933260bed3df722794a4fa",
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "pages",
+        "url": "https://alexandroit.github.io/LedgeSync/style.css",
+        "file": "style.css",
+        "bytes": 12721,
+        "sha256": "1c913bddba4fbf3e42d2d59766ae16427a6cbfd56f5342b81aae133b392e1504",
+        "tlsVerificationEnabled": true
+      }
+    ]
+  },
+  "sharedServerPreservation": {
+    "sharedConfigurationHashesUnchanged": true,
+    "configurationFilesVerified": 17,
+    "existingServicePIDUnchanged": true,
+    "nginxActive": true,
+    "nginxConfigurationValid": true,
+    "websiteCurrentMatchesSource": "6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1",
+    "aptSnapshot": "20261002-alpha4-fcd5784",
+    "previousWebsiteAndAPTDirectoriesRetained": true,
+    "existingSiteHealth": [
+      {
+        "surface": "public",
+        "url": "https://hipermusicas.com/",
+        "status": 200,
+        "tlsVerificationEnabled": true
+      },
+      {
+        "surface": "origin",
+        "url": "https://hipermusicas.com/",
+        "status": 200,
+        "tlsVerificationEnabled": true
+      }
+    ]
+  },
+  "repository": {
+    "url": "https://github.com/alexandroit/LedgeSync",
+    "visibility": "public",
+    "description": "Preview and approve local folder copies to Google Drive. Native desktop and CLI for macOS, Windows and Ubuntu, with OS credential vaults. Apache-2.0.",
+    "homepage": "https://ledgesync.com/",
+    "license": "Apache-2.0"
+  },
+  "release": {
+    "url": "https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4",
+    "id": 401539841,
+    "prerelease": true,
+    "assetCount": 37,
+    "finalReleaseNotesVerified": true
+  },
+  "limits": [
+    "No real Google consent, Picker, upload or SSH-session acceptance was performed by these distribution checks.",
+    "macOS apps are ad-hoc signed and not notarized; Windows binaries have no trusted publisher signature.",
+    "This release targets desktop macOS, Windows and Ubuntu. No iPhone/iPad build is included.",
+    "Manual approved folder copies only; no automatic watching, scheduling, destructive mirror, remote deletion or bidirectional synchronization."
+  ]
+}

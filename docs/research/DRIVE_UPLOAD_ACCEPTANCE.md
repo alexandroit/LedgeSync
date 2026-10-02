@@ -2,11 +2,12 @@
 
 ## Status and evidence boundary
 
-The current source is an **alpha.4 candidate**, not a published release. Public
-alpha.3 downloads and their existing APT snapshot remain unchanged and do not
-upload files. A local candidate build, package, mock result or version string is
-not evidence that an alpha.4 installer is publicly available or that a live
-Google transfer succeeded.
+Release **0.1.0-alpha.4** implements manual Google Drive folder copies. Its exact
+application commit, native CI identities, artifact ZIP digests and package
+hashes are recorded in [release evidence](DRIVE_COPY_RELEASE.json) and the
+[platform guide](../PLATFORMS.md). Published bytes and installation checks are
+separate from the live Google acceptance described here. Earlier alpha.3
+artifacts remain immutable and do not upload files.
 
 The owner reports that OAuth is in Production, Google Picker API is enabled and
 the existing application connected successfully. Those are owner reports, not
@@ -20,7 +21,7 @@ The OAuth/Picker protocol and bridge checks are recorded in
 [the connection guide](../GOOGLE_DRIVE_AUTH.md) and
 [platform installation boundaries](../PLATFORMS.md) before native testing.
 
-## Implemented candidate behavior
+## Implemented behavior
 
 The desktop uses **Connect Google Drive → choose destination → Preview folder
 upload → Upload folder**. The same shared services handle local policy preview,

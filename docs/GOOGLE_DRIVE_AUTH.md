@@ -1,20 +1,22 @@
 # Connect Google Drive
 
-Official LedgeSync desktop releases starting with alpha.3 include the project's
-Google OAuth Desktop client. You do not create a Google Cloud project, download
-credentials, import JSON or paste tokens into the app.
+LedgeSync **0.1.0-alpha.4** connects directly to Google and copies explicitly
+approved folders through its desktop and native CLI. Official builds include the
+project's Google OAuth Desktop client. You do not create a Google Cloud project,
+download credentials, import JSON or paste tokens into the app.
 
-**Release status:** [alpha.3 is published](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3)
-with the bundled Desktop client. The steps below apply to that release.
+The [alpha.4 applications and installers](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4)
+are published and publicly verified. The signed Ubuntu APT repository serves
+alpha.4; native installation checks passed for amd64 and arm64. See the
+[installation guide](PLATFORMS.md).
+The release includes [OAuth hardening](research/OAUTH_SECURITY_HARDENING.md),
+native Google destination selection, desktop/CLI credential-operation locking,
+**Disconnect from this device**, and separately confirmed desktop revocation.
 
-The **alpha.4 source/local candidate is not yet published**. It adds manual
-folder uploads and native Google destination selection, together with the
-[OAuth hardening follow-up](research/OAUTH_SECURITY_HARDENING.md). It renames
-**Disconnect account** to **Disconnect from this device** and adds the separate,
-confirmed remote revocation action described below. Published alpha.3 installers
-do not contain those follow-up changes or a file-transfer executor. The owner
-reports production OAuth, enabled Google Picker API and a successful account
-connection; live acceptance of the new Picker/upload flow remains pending.
+The owner reports Production OAuth, enabled Google Picker API and a successful
+account connection. Independent live acceptance of the new Picker, copy/recovery
+and SSH return paths remains unverified. Earlier alpha.3 installers connected an
+account and provided offline previews; they did not contain this copy executor.
 
 ## Connect your account
 
@@ -31,20 +33,19 @@ connection; live acceptance of the new Picker/upload flow remains pending.
    **Cancel authorization** stops a pending request; the browser tab may remain.
 
 Only one account is supported. **Reconnect Google Drive** asks the same account
-for fresh consent after expiry or revocation. **Disconnect account** in alpha.3,
-or **Disconnect from this device** in the candidate, must be
-used before switching accounts. Authorization can expire or be revoked; a
+for fresh consent after expiry or revocation. Use **Disconnect from this device**
+before switching accounts. Authorization can expire or be revoked; a
 saved refresh token does not promise permanent access.
 
 ## Updating from alpha.2
 
 If the saved authorization belongs to a different OAuth client, LedgeSync shows
 **Authorization update required** and retains the existing account. Explicitly
-choose **Disconnect account**, then **Connect Google Drive** to authorize the
+choose **Disconnect from this device**, then **Connect Google Drive** to authorize the
 bundled client. The app never silently moves tokens between clients or connects
 a different account. A failed disconnect leaves the previous record intact.
 
-## Copy a folder in the alpha.4 candidate
+## Copy a folder
 
 1. Choose a local folder, or open a project configuration, and connect Google
    Drive using the flow above.
@@ -73,8 +74,25 @@ IDs before continuing; an unfinished file may restart from the beginning after
 an application restart. Closing during an active operation defaults to **Keep
 Open**. There is no scheduler, watcher or automatic resumption on startup.
 
-See the [candidate acceptance checklist](research/DRIVE_UPLOAD_ACCEPTANCE.md)
+See the [acceptance checklist](research/DRIVE_UPLOAD_ACCEPTANCE.md)
 for disposable-fixture verification and unimplemented capabilities.
+
+## CLI connection and server copies in alpha.4
+
+In an interactive terminal, use `ledgesync auth connect`, followed by
+`ledgesync copy --root "/path/to/folder" --destination picker`. Review the complete
+preview and type its exact digest before uploading. `--destination root` selects
+My Drive; a folder ID works only when already authorized to this application.
+The same account binding, filtering, journal and verification rules apply as in
+the desktop. Online commands do not accept redirected approval or unattended
+`--yes` execution.
+
+For an SSH server, `auth connect --no-browser` displays Google's consent URL and
+the temporary loopback forwarding command to run on your own computer. The
+Picker also supports `--no-browser`; each attempt needs its displayed port.
+Credentials remain in the server user's native vault. A tunnel supplies the
+browser return path; it does not supply or unlock a missing vault. See the
+[CLI/server guide](CLI.md) for session requirements, cancellation and recovery.
 
 ## Storage and scope
 
@@ -95,7 +113,14 @@ provide this. There is no plaintext fallback. Protected native process locks
 serialize credential operations across the GUI and CLI. A competing process
 reports that the connection is in use and requires a fresh status check.
 
-The candidate also keeps a per-user SQLite transfer journal outside source
+Native filesystem protections also apply to the local journal and process locks:
+owner/permission checks on Linux, extended-ACL checks on macOS and protected
+owner-only DACLs on Windows. Linux additionally checks the D-Bus socket peer's
+user identity before authentication. A missing native protection fails closed;
+these checks do not make a compromised operating-system user or administrator
+unable to access that user's files or credentials.
+
+LedgeSync also keeps a per-user SQLite transfer journal outside source
 folders. It records approved plans, provider IDs, checksums and previously
 observed policy sources; it contains no OAuth tokens or upload-session URLs.
 Transfer-state writes and credential operations have separate native process
@@ -107,9 +132,6 @@ created by or explicitly made available to the app. It does not grant access
 to every existing Drive file or recursively grant a selected folder's children.
 See Google's [scope description](https://developers.google.com/workspace/drive/api/guides/api-specific-auth).
 
-Published alpha.3 reads account identity but does not browse cloud files, select a
-remote root, upload, download, overwrite or delete Drive files. The Files screen
-still previews an empty simulated destination. CLI previews remain offline.
 The alpha.4 native CLI supports explicit browser consent and interactive `copy`
 through the same services as the desktop. `auth status` reads safe local metadata
 without checking the grant online. See [CLI usage](CLI.md) and [native build
@@ -117,16 +139,14 @@ configuration](OAUTH_BUILD.md). Both interfaces support scoped destination
 selection and managed-file checks, not a browser over every pre-existing Drive
 file. The offline `plan` command remains inspection-only.
 
-**Disconnect account** removes the local account credentials while retaining
-client configuration. It does not revoke Google's grant or delete Drive files.
-You can revoke permission in [Google Account connections](https://myaccount.google.com/connections).
-Disconnect before uninstalling if you want to remove the saved local access.
+Disconnect before uninstalling if you want to remove saved local access. You can
+also review permission in [Google Account connections](https://myaccount.google.com/connections).
 
-## Local disconnection and remote revocation in the updated source
+## Local disconnection and remote revocation
 
 **Disconnect from this device** cancels the active account operation, waits for
 its pending credential writes and removes the local account tokens. In the
-candidate, it first cancels and drains any active transfer. It keeps
+alpha.4 desktop, it first cancels and drains that application's active transfer. It keeps
 Google's grant and the client configuration. If the vault is unavailable or the
 operation cannot finish within its deadline, the app reports failure; it does
 not pretend credentials were removed. Completed Drive files are preserved.
@@ -164,9 +184,17 @@ An unconfigured developer build displays an unavailable connection state instead
 of asking users to supply credentials. Maintainers can follow
 [OAuth build configuration](OAUTH_BUILD.md).
 
-Automated tests use synthetic credentials and local fake endpoints. Earlier
-native-vault CI used disposable accounts. The owner has reported successful live
-connection; that is distinct from automated evidence and does not prove new
-Picker selection, uploads, refresh recovery or remote revocation. Those new live
-acceptance checks remain pending.
+Application source `fcd578488d07f627372e7f5dd2221e162634bf05` passed all 16 jobs in
+[build run 36963525743](https://github.com/alexandroit/LedgeSync/actions/runs/36963525743); the six native desktop jobs also packaged the CLI with the
+publisher configuration and removed generated configuration afterward.
+[native-vault run 36963524884](https://github.com/alexandroit/LedgeSync/actions/runs/36963524884) passed synthetic vault lifecycle checks on macOS,
+Ubuntu and Windows, each for AMD64 and ARM64. Tests use synthetic credentials,
+local fake endpoints and disposable runner accounts, not personal Google data.
+
+The owner has reported successful live connection. That report and the automated
+results do not prove the new Picker selection, folder upload/recovery, remote
+revocation or SSH consent return. Those live acceptance checks remain pending.
+Native installer lifecycle, public APT installation and site publication passed;
+trusted Apple/Windows publisher signing remains unavailable. Their exact evidence
+and boundaries are in the [release results](PLATFORMS.md#alpha4-native-validation-and-publication-gates).
 See [current evidence](17_AGENT_HANDOFF_AND_STATUS.md).

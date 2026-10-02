@@ -90,7 +90,7 @@ Keychain, Credential Manager, and Secret Service backends remain native stores.
   newly opened lock/database files. The default remains `os.UserConfigDir()` plus
   `LedgeSync/transfers`, outside upload roots.
 
-## Validation evidence and remaining native execution
+## Initial local validation evidence
 
 All fixtures were synthetic. No developer credential vault, personal tokens,
 Drive account, or real upload source was accessed. No changes were committed or
@@ -124,8 +124,31 @@ native runner cannot create a synthetic symbolic link. Linux fixtures cover a
 same-user Unix listener, mismatched expected UID with zero transmitted bytes
 and socket closure, and closed/uninspectable sockets.
 
-Windows and Linux binaries were cross-compiled here; their new tests still
-require native CI execution. Darwin amd64 was also compile-only in this review.
+At the time of this local review, Windows/Linux binaries and Darwin amd64
+were compile-only. The subsequent native CI results below supersede that gap.
 These checks do not establish arbitrary filesystem support, installer migration,
 live OAuth acceptance, resistance to same-user/admin modification after the
 checks, or end-to-end cloud copy behavior.
+
+## Native CI confirmation — 2026-10-02
+
+The final application source `fcd578488d07f627372e7f5dd2221e162634bf05` passed
+[build run 36963525743](https://github.com/alexandroit/LedgeSync/actions/runs/36963525743):
+all 16 jobs, including native core tests and vet on macOS Intel/ARM64, Ubuntu
+amd64/arm64, Windows Server 2022/2025 x64 and Windows 11 ARM64. Race detection
+ran on the supported targets; Windows ARM64 is excluded by the workflow.
+The platform-specific ACL, ownership and peer-identity regression tests are
+part of those core suites.
+
+[Native-vault run 36963524884](https://github.com/alexandroit/LedgeSync/actions/runs/36963524884)
+passed all six native lifecycle jobs at the same commit: Keychain on both Mac
+architectures, Credential Manager on Windows x64/ARM64, and Secret Service on
+both Ubuntu architectures. These tests create and clean up synthetic credentials.
+The original workflow ZIP digests, exact jobs, lifecycle reports and release
+archive hashes are recorded in [release evidence](DRIVE_COPY_RELEASE.json).
+
+This closes the native execution gap for the tested runners. It does not prove
+interactive Google consent, a live cloud copy, arbitrary server login sessions,
+or protection against a compromised account or operating system. Trusted
+Apple publisher signing/notarization and Windows Authenticode remain separate
+distribution requirements.

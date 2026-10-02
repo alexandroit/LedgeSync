@@ -1,0 +1,749 @@
+{
+  "product": "LedgeSync",
+  "version": "0.1.0-alpha.2",
+  "scope": "Developer alpha with Google Drive OAuth onboarding and offline previews; cloud file transfers are not enabled.",
+  "sourceCommit": "42474b558d3b1557318f9cb0ae714748869f90b3",
+  "dmgPackagingCommit": "b4e3d7261776309648f203c29119bf859ca49695",
+  "ciRunId": 36949133758,
+  "ciRunUrl": "https://github.com/alexandroit/LedgeSync/actions/runs/36949133758",
+  "ciVerification": {
+    "id": 36949133758,
+    "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36949133758",
+    "headSha": "42474b558d3b1557318f9cb0ae714748869f90b3",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "contracts",
+        "id": 110657916894,
+        "conclusion": "success"
+      },
+      {
+        "name": "Desktop / windows/amd64",
+        "id": 110657917184,
+        "conclusion": "success"
+      },
+      {
+        "name": "Pinned rclone differential",
+        "id": 110657917186,
+        "conclusion": "success"
+      },
+      {
+        "name": "Desktop interaction tests",
+        "id": 110657917227,
+        "conclusion": "success"
+      },
+      {
+        "name": "Desktop / darwin/arm64",
+        "id": 110657917251,
+        "conclusion": "success"
+      },
+      {
+        "name": "Desktop / windows/arm64",
+        "id": 110657917260,
+        "conclusion": "success"
+      },
+      {
+        "name": "Core / ubuntu-24.04-arm",
+        "id": 110657917267,
+        "conclusion": "success"
+      },
+      {
+        "name": "Core / windows-2025",
+        "id": 110657917269,
+        "conclusion": "success"
+      },
+      {
+        "name": "Core / macos-15-intel",
+        "id": 110657917292,
+        "conclusion": "success"
+      },
+      {
+        "name": "Desktop / darwin/amd64",
+        "id": 110657917293,
+        "conclusion": "success"
+      },
+      {
+        "name": "Core / windows-2022",
+        "id": 110657917312,
+        "conclusion": "success"
+      },
+      {
+        "name": "Core / ubuntu-24.04",
+        "id": 110657917319,
+        "conclusion": "success"
+      },
+      {
+        "name": "Core / macos-15",
+        "id": 110657917340,
+        "conclusion": "success"
+      },
+      {
+        "name": "Desktop / linux/amd64",
+        "id": 110657917348,
+        "conclusion": "success"
+      },
+      {
+        "name": "Core / windows-11-arm",
+        "id": 110657917373,
+        "conclusion": "success"
+      },
+      {
+        "name": "Desktop / linux/arm64",
+        "id": 110657917409,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "nativeVaultCI": {
+    "id": 36949135946,
+    "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36949135946",
+    "headSha": "42474b558d3b1557318f9cb0ae714748869f90b3",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Native vault / windows-11-arm",
+        "id": 110657924402,
+        "conclusion": "success"
+      },
+      {
+        "name": "Native vault / ubuntu-24.04-arm",
+        "id": 110657924544,
+        "conclusion": "success"
+      },
+      {
+        "name": "Native vault / macos-15",
+        "id": 110657924559,
+        "conclusion": "success"
+      },
+      {
+        "name": "Native vault / ubuntu-24.04",
+        "id": 110657924564,
+        "conclusion": "success"
+      },
+      {
+        "name": "Native vault / windows-2022",
+        "id": 110657924589,
+        "conclusion": "success"
+      },
+      {
+        "name": "Native vault / macos-15-intel",
+        "id": 110657924631,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "verifiedAt": "2026-10-02T01:10:56.314771+00:00",
+  "trustedPublisherSignature": false,
+  "notarized": false,
+  "limitations": [
+    "No live Google OAuth handshake was performed; a Google Desktop OAuth client is required.",
+    "CLI remains offline-only.",
+    "Cross-compilation and binary inspection are not native execution on every OS.",
+    "macOS app signatures are ad-hoc; Windows artifacts have no trusted publisher signature.",
+    "No cloud file transfers, scheduled jobs, or provider mutations are enabled."
+  ],
+  "artifacts": [
+    {
+      "surface": "dmg",
+      "goos": "darwin",
+      "goarch": "amd64",
+      "filename": "LedgeSync-0.1.0-alpha.2-macos-amd64.dmg",
+      "sha256": "e6a69a6af688842fad5e110c7586c1bcb82baf2aa9fd0476904536b59da1c081",
+      "bytes": 6405750,
+      "dmgVerification": {
+        "hdiutilVerified": true,
+        "mountedReadOnly": true,
+        "exactArchiveBundleMatch": true,
+        "noticesVerified": 44,
+        "applicationsLink": "/Applications",
+        "signature": "ad-hoc, no trusted publisher/notarization"
+      },
+      "originalCIArtifact": {
+        "filename": "LedgeSync-0.1.0-alpha.2-macos-amd64.dmg",
+        "sha256": "b0a24fc3bad2ea82b069b4e0749c9cf4c67571f9e749a221fcdfefd4d37641f6",
+        "bytes": 5364122,
+        "verification": {
+          "hdiutilVerified": true,
+          "mountedReadOnly": true,
+          "exactArchiveBundleMatch": true,
+          "noticesVerified": 44,
+          "applicationsLink": "/Applications",
+          "signature": "ad-hoc, no trusted publisher/notarization"
+        }
+      },
+      "dmgPackagingCommit": "b4e3d7261776309648f203c29119bf859ca49695"
+    },
+    {
+      "surface": "dmg",
+      "goos": "darwin",
+      "goarch": "arm64",
+      "filename": "LedgeSync-0.1.0-alpha.2-macos-arm64.dmg",
+      "sha256": "41e668bac8a966eead33b4a69a144ba0459e26dfeb6fb9e59db544d79c6c117a",
+      "bytes": 4834043,
+      "dmgVerification": {
+        "hdiutilVerified": true,
+        "mountedReadOnly": true,
+        "exactArchiveBundleMatch": true,
+        "noticesVerified": 44,
+        "applicationsLink": "/Applications",
+        "signature": "ad-hoc, no trusted publisher/notarization"
+      },
+      "originalCIArtifact": {
+        "filename": "LedgeSync-0.1.0-alpha.2-macos-arm64.dmg",
+        "sha256": "34d9ee46f69e5f74ce701862c8ca6e9703ba6310dc59fcb1ef60d3420aada4bf",
+        "bytes": 4830909,
+        "verification": {
+          "hdiutilVerified": true,
+          "mountedReadOnly": true,
+          "exactArchiveBundleMatch": true,
+          "noticesVerified": 44,
+          "applicationsLink": "/Applications",
+          "signature": "ad-hoc, no trusted publisher/notarization"
+        }
+      },
+      "dmgPackagingCommit": "b4e3d7261776309648f203c29119bf859ca49695"
+    },
+    {
+      "surface": "cli",
+      "goos": "darwin",
+      "goarch": "amd64",
+      "filename": "ledgesync-0.1.0-alpha.2-darwin-amd64.tar.gz",
+      "sha256": "d0dffe884a1ee2dec199942e3a1973c78dbb03930f842ccf3dbeaaf923d38c4b",
+      "bytes": 3086669,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "31c562f110436c5ac60d5ea3c7edf849ddcef97d4f63b584713f3e0ab247484b",
+      "binary": {
+        "format": "Mach-O",
+        "architecture": "amd64",
+        "bits": 64
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {},
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-trimpath": "true",
+          "CGO_ENABLED": "0",
+          "GOARCH": "amd64",
+          "GOOS": "darwin",
+          "GOAMD64": "v1",
+          "vcs": "git",
+          "vcs.revision": "42474b558d3b1557318f9cb0ae714748869f90b3",
+          "vcs.time": "2026-10-02T01:04:06Z",
+          "vcs.modified": "false"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "embeddedVcsRevision": "42474b558d3b1557318f9cb0ae714748869f90b3"
+      },
+      "nativeCLIVersionExecuted": false
+    },
+    {
+      "surface": "cli",
+      "goos": "darwin",
+      "goarch": "arm64",
+      "filename": "ledgesync-0.1.0-alpha.2-darwin-arm64.tar.gz",
+      "sha256": "0d8be27927eaf8104d937f27ad1175c241f33ce214a3e38700fa2c03be921666",
+      "bytes": 2890526,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "420b7d6cfcb51e8a6caae13bddb7cf61d85972885874ecc5c0f06718cd23f25d",
+      "binary": {
+        "format": "Mach-O",
+        "architecture": "arm64",
+        "bits": 64
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {},
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-trimpath": "true",
+          "CGO_ENABLED": "0",
+          "GOARCH": "arm64",
+          "GOOS": "darwin",
+          "GOARM64": "v8.0",
+          "vcs": "git",
+          "vcs.revision": "42474b558d3b1557318f9cb0ae714748869f90b3",
+          "vcs.time": "2026-10-02T01:04:06Z",
+          "vcs.modified": "false"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "embeddedVcsRevision": "42474b558d3b1557318f9cb0ae714748869f90b3"
+      },
+      "nativeCLIVersionExecuted": true
+    },
+    {
+      "surface": "cli",
+      "goos": "linux",
+      "goarch": "amd64",
+      "filename": "ledgesync-0.1.0-alpha.2-linux-amd64.tar.gz",
+      "sha256": "b40e49c058687bed551b1077cad5ab3ee15e9830348ca8ee1f2b8b82fdc29402",
+      "bytes": 3044492,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "e1f7f9fea19ece8a00c5e9104d973c7e7450bd1c94532989bfe5d6a1d734eee7",
+      "binary": {
+        "format": "ELF",
+        "architecture": "amd64",
+        "bits": 64
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {},
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-trimpath": "true",
+          "CGO_ENABLED": "0",
+          "GOARCH": "amd64",
+          "GOOS": "linux",
+          "GOAMD64": "v1",
+          "vcs": "git",
+          "vcs.revision": "42474b558d3b1557318f9cb0ae714748869f90b3",
+          "vcs.time": "2026-10-02T01:04:06Z",
+          "vcs.modified": "false"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "embeddedVcsRevision": "42474b558d3b1557318f9cb0ae714748869f90b3"
+      },
+      "nativeCLIVersionExecuted": false
+    },
+    {
+      "surface": "cli",
+      "goos": "linux",
+      "goarch": "arm64",
+      "filename": "ledgesync-0.1.0-alpha.2-linux-arm64.tar.gz",
+      "sha256": "8bedbe7c6eae68984136051aef558648180559ac7e5d2571d470215c1c369e54",
+      "bytes": 2789137,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "fef1e0306975bb16057570c198a383f8da14248b8430df7bc07727f54bbce6e6",
+      "binary": {
+        "format": "ELF",
+        "architecture": "arm64",
+        "bits": 64
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {},
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-trimpath": "true",
+          "CGO_ENABLED": "0",
+          "GOARCH": "arm64",
+          "GOOS": "linux",
+          "GOARM64": "v8.0",
+          "vcs": "git",
+          "vcs.revision": "42474b558d3b1557318f9cb0ae714748869f90b3",
+          "vcs.time": "2026-10-02T01:04:06Z",
+          "vcs.modified": "false"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "embeddedVcsRevision": "42474b558d3b1557318f9cb0ae714748869f90b3"
+      },
+      "nativeCLIVersionExecuted": false
+    },
+    {
+      "surface": "cli",
+      "goos": "windows",
+      "goarch": "amd64",
+      "filename": "ledgesync-0.1.0-alpha.2-windows-amd64.zip",
+      "sha256": "a0dcf824919c668ab073668b0d432cd73fa446043fb40d6c2d688e4df20fe8f3",
+      "bytes": 3135265,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "7fdf17cb0e11c4a2824edb4c7cb1189844444fdfc6725ecbf67234b3e655cb0e",
+      "binary": {
+        "format": "PE",
+        "architecture": "amd64",
+        "bits": 64,
+        "subsystem": "windows_console",
+        "authenticodeCertificateTablePresent": false
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {},
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-trimpath": "true",
+          "CGO_ENABLED": "0",
+          "GOARCH": "amd64",
+          "GOOS": "windows",
+          "GOAMD64": "v1",
+          "vcs": "git",
+          "vcs.revision": "42474b558d3b1557318f9cb0ae714748869f90b3",
+          "vcs.time": "2026-10-02T01:04:06Z",
+          "vcs.modified": "false"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "embeddedVcsRevision": "42474b558d3b1557318f9cb0ae714748869f90b3"
+      },
+      "nativeCLIVersionExecuted": false
+    },
+    {
+      "surface": "cli",
+      "goos": "windows",
+      "goarch": "arm64",
+      "filename": "ledgesync-0.1.0-alpha.2-windows-arm64.zip",
+      "sha256": "b152a5bbdcf2b6874e06fb638e17e9247fd401ee7a1239f04ff425f304afe250",
+      "bytes": 2856692,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "0d221e54863ed105134b32a4164958372829bf6f4b378b9029a1b9180e69a6af",
+      "binary": {
+        "format": "PE",
+        "architecture": "arm64",
+        "bits": 64,
+        "subsystem": "windows_console",
+        "authenticodeCertificateTablePresent": false
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {},
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-trimpath": "true",
+          "CGO_ENABLED": "0",
+          "GOARCH": "arm64",
+          "GOOS": "windows",
+          "GOARM64": "v8.0",
+          "vcs": "git",
+          "vcs.revision": "42474b558d3b1557318f9cb0ae714748869f90b3",
+          "vcs.time": "2026-10-02T01:04:06Z",
+          "vcs.modified": "false"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "embeddedVcsRevision": "42474b558d3b1557318f9cb0ae714748869f90b3"
+      },
+      "nativeCLIVersionExecuted": false
+    },
+    {
+      "surface": "desktop",
+      "goos": "darwin",
+      "goarch": "amd64",
+      "filename": "ledgesync-desktop-0.1.0-alpha.2-darwin-amd64.tar.gz",
+      "sha256": "b1c89c477e0499015b332143d43b3d0f2580c9e2efb0462637def8554fc4d966",
+      "bytes": 4828286,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "490f82d9f47b28abd6f97c98335f8255c7289f564f976cb5281d7749a1e26b86",
+      "binary": {
+        "format": "Mach-O",
+        "architecture": "amd64",
+        "bits": 64
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {
+          "github.com/keybase/go-keychain": "v0.0.1",
+          "github.com/leaanthony/go-ansi-parser": "v1.6.1",
+          "github.com/leaanthony/slicer": "v1.6.0",
+          "github.com/leaanthony/u": "v1.1.1",
+          "github.com/pkg/browser": "v0.0.0-20240102092130-5ac0b6a4141c",
+          "github.com/pkg/errors": "v0.9.1",
+          "github.com/rivo/uniseg": "v0.4.7",
+          "github.com/samber/lo": "v1.49.1",
+          "github.com/tkrajina/go-reflector": "v0.5.8",
+          "github.com/wailsapp/mimetype": "v1.4.1",
+          "github.com/wailsapp/wails/v2": "v2.14.0",
+          "golang.org/x/net": "v0.56.0",
+          "golang.org/x/text": "v0.39.0"
+        },
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-tags": "desktop,wv2runtime.download,production",
+          "-trimpath": "true",
+          "CGO_ENABLED": "1",
+          "GOARCH": "amd64",
+          "GOOS": "darwin",
+          "GOAMD64": "v1"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync-desktop",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "nativeVaultDependency": {
+          "module": "github.com/keybase/go-keychain",
+          "version": "v0.0.1"
+        },
+        "embeddedVcsRevision": null
+      },
+      "nativeSecurityFramework": true,
+      "signature": "ad-hoc"
+    },
+    {
+      "surface": "desktop",
+      "goos": "darwin",
+      "goarch": "arm64",
+      "filename": "ledgesync-desktop-0.1.0-alpha.2-darwin-arm64.tar.gz",
+      "sha256": "a3ef69bdaaf576e2a69b0279d4e8be51d8c9c742286cded077a0da7b6453c5fc",
+      "bytes": 4367522,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "719cd71408ddde65e54d6c65b295f31af8ea5a24b9938212ed35d257baf97a69",
+      "binary": {
+        "format": "Mach-O",
+        "architecture": "arm64",
+        "bits": 64
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {
+          "github.com/keybase/go-keychain": "v0.0.1",
+          "github.com/leaanthony/go-ansi-parser": "v1.6.1",
+          "github.com/leaanthony/slicer": "v1.6.0",
+          "github.com/leaanthony/u": "v1.1.1",
+          "github.com/pkg/browser": "v0.0.0-20240102092130-5ac0b6a4141c",
+          "github.com/pkg/errors": "v0.9.1",
+          "github.com/rivo/uniseg": "v0.4.7",
+          "github.com/samber/lo": "v1.49.1",
+          "github.com/tkrajina/go-reflector": "v0.5.8",
+          "github.com/wailsapp/mimetype": "v1.4.1",
+          "github.com/wailsapp/wails/v2": "v2.14.0",
+          "golang.org/x/net": "v0.56.0",
+          "golang.org/x/text": "v0.39.0"
+        },
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-tags": "desktop,wv2runtime.download,production",
+          "-trimpath": "true",
+          "CGO_ENABLED": "1",
+          "GOARCH": "arm64",
+          "GOOS": "darwin",
+          "GOARM64": "v8.0"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync-desktop",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "nativeVaultDependency": {
+          "module": "github.com/keybase/go-keychain",
+          "version": "v0.0.1"
+        },
+        "embeddedVcsRevision": null
+      },
+      "nativeSecurityFramework": true,
+      "signature": "ad-hoc"
+    },
+    {
+      "surface": "desktop",
+      "goos": "linux",
+      "goarch": "amd64",
+      "filename": "ledgesync-desktop-0.1.0-alpha.2-linux-amd64.tar.gz",
+      "sha256": "f41637ceae7942fb8fd34a31655a41ae1f9ae884b0c6494bb2be9c15552eec84",
+      "bytes": 4848789,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "bee1a4f30077f356b10ffd83910440eb8053fba09a809da5ef3abc51885b70b5",
+      "binary": {
+        "format": "ELF",
+        "architecture": "amd64",
+        "bits": 64
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {
+          "github.com/godbus/dbus/v5": "v5.1.0",
+          "github.com/leaanthony/go-ansi-parser": "v1.6.1",
+          "github.com/leaanthony/slicer": "v1.6.0",
+          "github.com/leaanthony/u": "v1.1.1",
+          "github.com/pkg/browser": "v0.0.0-20240102092130-5ac0b6a4141c",
+          "github.com/pkg/errors": "v0.9.1",
+          "github.com/rivo/uniseg": "v0.4.7",
+          "github.com/samber/lo": "v1.49.1",
+          "github.com/tkrajina/go-reflector": "v0.5.8",
+          "github.com/wailsapp/mimetype": "v1.4.1",
+          "github.com/wailsapp/wails/v2": "v2.14.0",
+          "golang.org/x/net": "v0.56.0",
+          "golang.org/x/sys": "v0.46.0",
+          "golang.org/x/text": "v0.39.0"
+        },
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-tags": "desktop,webkit2_41,wv2runtime.download,production",
+          "-trimpath": "true",
+          "CGO_ENABLED": "1",
+          "GOARCH": "amd64",
+          "GOOS": "linux",
+          "GOAMD64": "v1"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync-desktop",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "nativeVaultDependency": {
+          "module": "github.com/godbus/dbus/v5",
+          "version": "v5.1.0"
+        },
+        "embeddedVcsRevision": null
+      }
+    },
+    {
+      "surface": "desktop",
+      "goos": "linux",
+      "goarch": "arm64",
+      "filename": "ledgesync-desktop-0.1.0-alpha.2-linux-arm64.tar.gz",
+      "sha256": "383af0f01127323d94df27549d1fda0e21e2a1a01d489356ddeb4215742c63c8",
+      "bytes": 4381284,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "cc02284d29450cfb51c19fc492da1469118ef6309957008c83969e42990a9c38",
+      "binary": {
+        "format": "ELF",
+        "architecture": "arm64",
+        "bits": 64
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {
+          "github.com/godbus/dbus/v5": "v5.1.0",
+          "github.com/leaanthony/go-ansi-parser": "v1.6.1",
+          "github.com/leaanthony/slicer": "v1.6.0",
+          "github.com/leaanthony/u": "v1.1.1",
+          "github.com/pkg/browser": "v0.0.0-20240102092130-5ac0b6a4141c",
+          "github.com/pkg/errors": "v0.9.1",
+          "github.com/rivo/uniseg": "v0.4.7",
+          "github.com/samber/lo": "v1.49.1",
+          "github.com/tkrajina/go-reflector": "v0.5.8",
+          "github.com/wailsapp/mimetype": "v1.4.1",
+          "github.com/wailsapp/wails/v2": "v2.14.0",
+          "golang.org/x/net": "v0.56.0",
+          "golang.org/x/sys": "v0.46.0",
+          "golang.org/x/text": "v0.39.0"
+        },
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-tags": "desktop,webkit2_41,wv2runtime.download,production",
+          "-trimpath": "true",
+          "CGO_ENABLED": "1",
+          "GOARCH": "arm64",
+          "GOOS": "linux",
+          "GOARM64": "v8.0"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync-desktop",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "nativeVaultDependency": {
+          "module": "github.com/godbus/dbus/v5",
+          "version": "v5.1.0"
+        },
+        "embeddedVcsRevision": null
+      }
+    },
+    {
+      "surface": "desktop",
+      "goos": "windows",
+      "goarch": "amd64",
+      "filename": "ledgesync-desktop-0.1.0-alpha.2-windows-amd64.zip",
+      "sha256": "a5c32b1b90700e06a8d9d734a0ebf667cd1ebf64624ed20d66d0f147bf0f6b0a",
+      "bytes": 5321997,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "10a394321e0207b084013b001a74951841683780a1de5cd57cc50a2f700d198c",
+      "binary": {
+        "format": "PE",
+        "architecture": "amd64",
+        "bits": 64,
+        "subsystem": "windows_gui",
+        "authenticodeCertificateTablePresent": false
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {
+          "git.sr.ht/~jackmordaunt/go-toast/v2": "v2.0.3",
+          "github.com/bep/debounce": "v1.2.1",
+          "github.com/danieljoos/wincred": "v1.2.3",
+          "github.com/go-ole/go-ole": "v1.3.0",
+          "github.com/google/uuid": "v1.6.0",
+          "github.com/leaanthony/go-ansi-parser": "v1.6.1",
+          "github.com/leaanthony/slicer": "v1.6.0",
+          "github.com/leaanthony/u": "v1.1.1",
+          "github.com/pkg/browser": "v0.0.0-20240102092130-5ac0b6a4141c",
+          "github.com/pkg/errors": "v0.9.1",
+          "github.com/rivo/uniseg": "v0.4.7",
+          "github.com/samber/lo": "v1.49.1",
+          "github.com/tkrajina/go-reflector": "v0.5.8",
+          "github.com/wailsapp/go-webview2": "v1.0.22",
+          "github.com/wailsapp/mimetype": "v1.4.1",
+          "github.com/wailsapp/wails/v2": "v2.14.0",
+          "golang.org/x/net": "v0.56.0",
+          "golang.org/x/sys": "v0.46.0",
+          "golang.org/x/text": "v0.39.0"
+        },
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-tags": "desktop,wv2runtime.download,production",
+          "-trimpath": "true",
+          "CGO_ENABLED": "1",
+          "GOARCH": "amd64",
+          "GOOS": "windows",
+          "GOAMD64": "v1"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync-desktop",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "nativeVaultDependency": {
+          "module": "github.com/danieljoos/wincred",
+          "version": "v1.2.3"
+        },
+        "embeddedVcsRevision": null
+      }
+    },
+    {
+      "surface": "desktop",
+      "goos": "windows",
+      "goarch": "arm64",
+      "filename": "ledgesync-desktop-0.1.0-alpha.2-windows-arm64.zip",
+      "sha256": "2d10ffd7448665a7f95f8d90410e1adde8cec9216600da864a586d986696323b",
+      "bytes": 4764435,
+      "verifiedNoticeHashes": 44,
+      "executableSha256": "94b08c5d2aca63653917b1667663b8edd6e57a467b6b6e0630598529986698f7",
+      "binary": {
+        "format": "PE",
+        "architecture": "arm64",
+        "bits": 64,
+        "subsystem": "windows_gui",
+        "authenticodeCertificateTablePresent": false
+      },
+      "goBuild": {
+        "goVersion": "go1.27.1",
+        "modules": {
+          "git.sr.ht/~jackmordaunt/go-toast/v2": "v2.0.3",
+          "github.com/bep/debounce": "v1.2.1",
+          "github.com/danieljoos/wincred": "v1.2.3",
+          "github.com/go-ole/go-ole": "v1.3.0",
+          "github.com/google/uuid": "v1.6.0",
+          "github.com/leaanthony/go-ansi-parser": "v1.6.1",
+          "github.com/leaanthony/slicer": "v1.6.0",
+          "github.com/leaanthony/u": "v1.1.1",
+          "github.com/pkg/browser": "v0.0.0-20240102092130-5ac0b6a4141c",
+          "github.com/pkg/errors": "v0.9.1",
+          "github.com/rivo/uniseg": "v0.4.7",
+          "github.com/samber/lo": "v1.49.1",
+          "github.com/tkrajina/go-reflector": "v0.5.8",
+          "github.com/wailsapp/go-webview2": "v1.0.22",
+          "github.com/wailsapp/mimetype": "v1.4.1",
+          "github.com/wailsapp/wails/v2": "v2.14.0",
+          "golang.org/x/net": "v0.56.0",
+          "golang.org/x/sys": "v0.46.0",
+          "golang.org/x/text": "v0.39.0"
+        },
+        "settings": {
+          "-buildmode": "exe",
+          "-compiler": "gc",
+          "-tags": "desktop,wv2runtime.download,production",
+          "-trimpath": "true",
+          "CGO_ENABLED": "1",
+          "GOARCH": "arm64",
+          "GOOS": "windows",
+          "GOARM64": "v8.0"
+        },
+        "packagePath": "github.com/alexandroit/LedgeSync/cmd/ledgesync-desktop",
+        "modulePath": "github.com/alexandroit/LedgeSync",
+        "nativeVaultDependency": {
+          "module": "github.com/danieljoos/wincred",
+          "version": "v1.2.3"
+        },
+        "embeddedVcsRevision": null
+      }
+    }
+  ]
+}

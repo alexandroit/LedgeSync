@@ -1,15 +1,15 @@
 # Platform builds and installation
 
-LedgeSync **0.1.0-alpha.3 source** adds one-click Google Drive authorization with
-a bundled Desktop client. Alpha.3 release validation/publication is pending.
+LedgeSync **0.1.0-alpha.3** includes one-click Google Drive authorization with
+a bundled Desktop client.
 The desktop and CLI share the local policy/preview engine; the headless CLI
 remains offline and has no account-authorization workflow. No package installs
 a service, schedules jobs, connects an account automatically, uploads files or
 enables deletion. Connecting requires an explicit click and browser consent.
 
-[Alpha.2 is published](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.2).
-The previous alpha.1 assets remain unchanged. Evidence for the two releases is
-recorded separately below.
+[Alpha.3 is published](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3).
+Evidence for this release and the previous alpha.1/alpha.2 releases is recorded
+separately below.
 
 ## Target matrix
 
@@ -48,6 +48,47 @@ refresh or revocation. Native credential storage was separately tested on
 disposable runner accounts as recorded below.
 The owner supplied a Desktop client for alpha.3. Real Google account acceptance
 remains pending; no personal account was used in automated tests.
+
+## Observed alpha.3 release results
+
+Application/tag source: `4da377c311b78a99b1a9fde1127d77e21e6e05ec`.
+[Build run 36953803971](https://github.com/alexandroit/LedgeSync/actions/runs/36953803971)
+passed all 16 jobs, including 22 frontend tests. All six desktop jobs completed
+publisher-client injection, native compilation and generated-source cleanup.
+A separate private byte comparison confirmed the supplied Desktop client in all
+six released graphical binaries and its absence from all six CLI binaries;
+client values were not printed or recorded in the report. This does not establish
+live Google authorization. [Vault run 36953805903](https://github.com/alexandroit/LedgeSync/actions/runs/36953805903)
+passed synthetic create/read/update/delete on all six native OS/architecture
+runners. The local macOS ARM64 WebView displayed **Connect Google Drive** without
+import/setup controls; no Google consent was started or user token written.
+
+[Installer run 36954256173](https://github.com/alexandroit/LedgeSync/actions/runs/36954256173)
+passed all five required jobs at packaging source
+`0ec2f3fb66624522638b69f3b7a71ef517cf5259`: Windows x64/ARM64 wizard and
+install/reinstall/remove tests, Ubuntu x64/ARM64 package tests and signed local
+APT installation. The installers preserve the released application payloads.
+Ubuntu GUI checks observe eight seconds of Xvfb process startup. Windows checks
+exercise the installer and compare installed bytes; neither is a complete
+interactive application or live-account acceptance test. Same-version reinstall
+is covered; cross-version migration is not established.
+
+[Public APT run 36954499569](https://github.com/alexandroit/LedgeSync/actions/runs/36954499569)
+passed on Ubuntu 24.04 amd64 and arm64: pinned HTTPS key, signed metadata,
+tamper rejection, forced by-hash indexes, desktop plus GNOME Keyring, separate
+headless CLI and removal preserving synthetic user data. The active snapshot is
+`20261002-alpha3-0ec2f3f`, with Debian version `0.1.0~alpha.3-1`; the existing
+signing key and all 24 previous pool/by-hash files are preserved.
+
+All 37 alpha.3 assets passed anonymous download, size and SHA-256 verification.
+The 24 initial alpha.3 assets and all 69 alpha.1/alpha.2 assets remain unchanged.
+Canonical Ubuntu and secondary Pages HTML/CSS match website source
+`5c702076b39a8170f2065c3262f5060d7b65698f`.
+
+Detailed evidence: [application archives/DMGs](research/OAUTH_ONECLICK_RELEASE.json),
+[installers](research/OAUTH_ONECLICK_INSTALLERS_RELEASE.json),
+[public assets](research/OAUTH_ONECLICK_PUBLIC_ASSETS.json), and
+[APT/site deployment](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
 
 ## Historical alpha.2 release results
 
@@ -136,15 +177,15 @@ insufficient to determine the packaged application's minimum. See the official
 
 | Mac | Download |
 |---|---|
-| Apple Silicon, M-series | [LedgeSync alpha.2 ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-macos-arm64.dmg) |
-| Intel, x64 | [LedgeSync alpha.2 Intel DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-macos-amd64.dmg) |
+| Apple Silicon, M-series | [LedgeSync alpha.3 ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-arm64.dmg) |
+| Intel, x64 | [LedgeSync alpha.3 Intel DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-amd64.dmg) |
 
 1. Download the image matching the processor shown in **About This Mac**.
 2. Open the `.dmg` and drag `LedgeSync.app` to the `Applications` shortcut.
 3. Eject the image and open LedgeSync from Applications. Choose a local folder
    to browse files and preview the offline policy decisions.
 4. To authorize Google Drive, open **Connections** and follow the
-   [Desktop app OAuth setup guide](GOOGLE_DRIVE_AUTH.md). The OS Keychain must
+   [Google Drive connection guide](GOOGLE_DRIVE_AUTH.md). The OS Keychain must
    be available; authorization does not enable file transfers.
 
 The image contains the graphical app, Applications shortcut, installation
@@ -154,8 +195,8 @@ The developer-signing limits below still apply to disk-image downloads.
 
 ### Windows graphical installer
 
-Download the [alpha.2 x64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-windows-amd64-setup.exe)
-or the [alpha.2 ARM64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-windows-arm64-setup.exe).
+Download the [alpha.3 x64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe)
+or the [alpha.3 ARM64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe).
 The downloaded setup EXE opens a graphical installation wizard, rather than
 launching the portable application immediately. Follow its folder/shortcut
 steps, then open LedgeSync from the Start menu. It installs for the current
@@ -218,9 +259,9 @@ ledgesync --version
 ```
 
 The CLI package has no graphical-library dependencies and no OAuth commands.
-The published alpha.2 Debian version is `0.1.0~alpha.2-1`; the application reports
-`0.1.0-alpha.2`. The previous alpha.1 packages, binaries and notices remain
-unchanged in the archived release and repository snapshot. GitHub normalizes
+The published alpha.3 Debian version is `0.1.0~alpha.3-1`; the application reports
+`0.1.0-alpha.3`. The previous alpha.1 and alpha.2 packages, binaries and notices
+remain in their archived releases and repository snapshots. GitHub normalizes
 `~` to `.` in download filenames; the package's internal Debian version and the APT pool
 filenames retain `~`. Adjacent checksums use the actual GitHub download names.
 Package removal does not delete user

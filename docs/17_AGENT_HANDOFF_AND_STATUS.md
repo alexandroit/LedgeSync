@@ -1,7 +1,7 @@
 # 17 — Agent Handoff and Current Status
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
-**Implementation:** 0.1.0-alpha.3 in preparation; published release remains alpha.2.
+**Implementation:** 0.1.0-alpha.3, published one-click authorization developer alpha.
 
 Read [PROJECT_IDENTITY.md](../PROJECT_IDENTITY.md) first. The authoritative name
 is LedgeSync, command `ledgesync`, primary domain `ledgesync.com`. The owner
@@ -12,7 +12,7 @@ site is now live there. The owner subsequently requested Google Drive token
 authorization, then selected a bundled Desktop client with one-click browser
 consent. The current change does not enable cloud transfers.
 
-## One-click authorization follow-up (alpha.3 in preparation)
+## One-click authorization follow-up (alpha.3)
 
 The owner selected direct computer-to-Google authorization, with no end-user
 JSON import and no server token store. The supplied path still contained a Web
@@ -49,9 +49,56 @@ The correct Desktop client was configured as the canonical repository Actions
 secret via stdin, with no credential output; only trusted main native builds
 receive it. Its generated source is ignored and desktop cache export disabled.
 Desktop client metadata remains extractable from distributed binaries by OAuth
-public-client design. User tokens are never CI inputs. Native release CI,
-installer/public APT validation and publication of alpha.3 remain pending.
-Alpha.2 evidence below remains historical to that release.
+public-client design. User tokens are never CI inputs.
+
+Release validation and publication:
+
+- Application/tag source is `4da377c311b78a99b1a9fde1127d77e21e6e05ec`.
+  [Build run 36953803971](https://github.com/alexandroit/LedgeSync/actions/runs/36953803971)
+  passed all 16 jobs, including 22 frontend tests. Each of the six desktop jobs
+  passed client injection, native build and generated-source cleanup. Separately,
+  a private byte comparison matched the supplied Desktop configuration in all
+  six released graphical binaries and confirmed its absence from all six CLI
+  binaries. Client values were not printed; the report contains only results.
+  No user tokens were build inputs and no live Google consent was performed.
+- [Vault run 36953805903](https://github.com/alexandroit/LedgeSync/actions/runs/36953805903)
+  passed synthetic native credential lifecycle checks on all six runners.
+- [Installer run 36954256173](https://github.com/alexandroit/LedgeSync/actions/runs/36954256173)
+  passed all five required jobs at packaging source
+  `0ec2f3fb66624522638b69f3b7a71ef517cf5259`: both Windows wizards and
+  install/reinstall/remove flows, both Ubuntu package checks and signed local
+  APT installation. These retain exact released application bytes; they do not
+  establish cross-version migration or full Windows/Linux GUI acceptance.
+- Public APT snapshot `20261002-alpha3-0ec2f3f` is active with the existing key
+  unchanged and all 24 prior pool/by-hash files preserved.
+  [Public run 36954499569](https://github.com/alexandroit/LedgeSync/actions/runs/36954499569)
+  passed on native Ubuntu 24.04 amd64 and arm64: pinned HTTPS key/signatures,
+  tamper rejection, forced by-hash, desktop with GNOME Keyring, separate CLI and
+  removal preserving synthetic data. No application or OS package was installed
+  on the production server.
+- All 37 public alpha.3 assets passed anonymous download, size and SHA-256
+  verification. The 24 initial alpha.3 assets and all 69 alpha.1/alpha.2 assets
+  retain their original identities and bytes.
+- The canonical Ubuntu website and secondary Pages serve source
+  `5c702076b39a8170f2065c3262f5060d7b65698f`, with matching public HTML/CSS.
+  [Pages run 36954520715](https://github.com/alexandroit/LedgeSync/actions/runs/36954520715)
+  passed. HiperMusicas public/origin remain HTTP 200, PID 1521428 unchanged;
+  shared Nginx configuration hashes are unchanged.
+
+Evidence: [application archives/DMGs](research/OAUTH_ONECLICK_RELEASE.json),
+[installers](research/OAUTH_ONECLICK_INSTALLERS_RELEASE.json),
+[public assets](research/OAUTH_ONECLICK_PUBLIC_ASSETS.json), and
+[APT/site deployment](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
+Final documentation checks passed: 41 Markdown files, 132 local links, 35 JSON
+files, two schemas and five examples, with zero failures/skips; `git diff --check`
+passed. The owned local website preview and production upload staging files were
+removed; active and rollback content/APT snapshots were retained. Generated
+Desktop client source was removed from the working tree after the build.
+
+Actual Google consent, refresh/revocation and owner-controlled project audience
+remain unverified. Cloud file transfers, trusted publisher signing and
+notarization remain outside this release's acceptance. Alpha.2 evidence below
+is historical to that release.
 
 ## Implemented behavior
 
@@ -90,8 +137,8 @@ claimed. No entire P1/P2/P3/P4 milestone is marked complete.
   tested. Migration, persistence, additional adapters and full acceptance
   requirements remain open; these task IDs are not wholesale completion claims.
 - P2-01: desktop OAuth and native vault implemented under the explicit follow-up
-  request. Synthetic protocol/UI tests pass; live consent acceptance is pending
-  the owner-created client. P2-02 account identity read exists, but file listing
+  request. Synthetic protocol/UI tests pass; live consent acceptance with the
+  bundled publisher client remains pending. P2-02 account identity read exists, but file listing
   and provider capabilities remain deferred. Neither task is fully accepted.
 - P1-03A/P1-07 and remaining P2 tasks: deferred. Unsupported required sources fail
   closed. Cloud file writes and destructive capabilities remain absent.
@@ -100,7 +147,7 @@ The canonical Drive documentation was reread after the owner's update. All six
 root Markdown files and twenty technical documents were fetched and compared.
 See [the reread evidence and its limits](research/SPEC_REVIEW_0.2.1.md).
 
-## Google Drive authorization follow-up (alpha.2)
+## Historical alpha.2 — Google Drive authorization follow-up
 
 The owner explicitly asked for the missing access request, then confirmed no
 Google OAuth Desktop client exists. No personal Google authorization was
@@ -349,7 +396,7 @@ alpha. Packaging does not implement Drive connections, transfers or scheduling.
 
 ## Next dependency-ready work
 
-Finish owner-configured live OAuth acceptance, then prioritize persistent
+Finish owner-run live OAuth acceptance, then prioritize persistent
 state/migration/locking and remaining policy/provider contracts before transfers.
 Use fake providers and temporary roots for development. Real accounts and
 mutations require the corresponding explicit authorization. Keep unsupported
@@ -437,9 +484,11 @@ directories were removed; live/rollback releases and signed APT snapshots remain
 
 ## Current handoff
 
-Alpha.2 is published with desktop Google Drive authorization, native credential
-storage, DMGs, Windows installers and signed Ubuntu packages. The canonical
-website and secondary Pages are updated; alpha.2 CI and deployment evidence is
-recorded in the authorization section above. The owner must create a Desktop
-OAuth client, import its JSON and perform live consent acceptance using
-[the setup guide](GOOGLE_DRIVE_AUTH.md). Cloud file transfers remain unimplemented.
+Alpha.3 is published with the bundled Desktop OAuth client, native credential
+storage, DMGs, Windows installers and signed Ubuntu packages. Release and
+publication evidence is recorded in the one-click authorization section above.
+Both public APT architectures passed; the website and secondary Pages are current.
+The owner can now open **Connections → Connect Google Drive** and complete
+browser consent using [the connection guide](GOOGLE_DRIVE_AUTH.md); no end-user
+client creation or JSON import is required. Actual Google account acceptance
+remains pending. Cloud file transfers remain unimplemented.

@@ -42,18 +42,19 @@ reloading it: `/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx`.
 ## Verified deployment
 
 Verified on **2026-10-02 UTC**. Current source is
-`82b2f6bf05e49d7e8f25c9f5e06e2db105d25636`, which links the alpha.2 macOS DMGs,
-Windows setup EXEs, Ubuntu APT packages and Google Drive setup guide. The prior
-content release `2890e90f028c6ee038739b09423b372668e20a00` remains on the server
+`5c702076b39a8170f2065c3262f5060d7b65698f`, which links the alpha.3 macOS DMGs,
+Windows setup EXEs, Ubuntu APT packages and one-click Google Drive connection
+guide. The prior content release
+`82b2f6bf05e49d7e8f25c9f5e06e2db105d25636` remains on the server
 for rollback. The stylesheet is unchanged and retains `?v=adb26c666d23`.
 No Nginx reload or shared-vhost edit was required.
 
 Both native Ubuntu architectures passed
-[alpha.2 public APT installation tests](https://github.com/alexandroit/LedgeSync/actions/runs/36950554723).
+[alpha.3 public APT installation tests](https://github.com/alexandroit/LedgeSync/actions/runs/36954499569).
 All four desktop download links returned HTTP 200. The 37 public release asset
 hashes and preservation of prior assets are recorded in
-[public download evidence](research/OAUTH_PUBLIC_ASSETS.json); current production
-and Pages hashes are in [deployment evidence](research/OAUTH_DEPLOYMENT_VERIFICATION.json).
+[public download evidence](research/OAUTH_ONECLICK_PUBLIC_ASSETS.json); current production
+and Pages hashes are in [deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
 Routing/certificate renewal checks below were initially established during the
 original deployment; this content update rechecked public/origin content,
 Nginx configuration and the unaffected HiperMusicas service.
@@ -75,7 +76,7 @@ Nginx configuration and the unaffected HiperMusicas service.
 SHA-256:
 
 ```text
-da01fd20c5566f7883b1983fd082cf4b232ebc5c0fdc84f64d9f068bb1ba0eda  dist/index.html
+e91fba4fb5cb751d6018f87c402f66eb8d8adf3b62f9c2bf2e8dfb3dd3c9c568  dist/index.html
 adb26c666d2320bd2a826d5b5e0685404239e72c2f1585c5db2f08d2cbe931ca  dist/style.css
 ```
 
@@ -115,6 +116,6 @@ not deploy to Ubuntu. After publishing website source, dispatch the Pages
 workflow as needed to keep the secondary copy current.
 
 The latest secondary Pages publication is
-[run 36950632081](https://github.com/alexandroit/LedgeSync/actions/runs/36950632081),
+[run 36954520715](https://github.com/alexandroit/LedgeSync/actions/runs/36954520715),
 with public HTML and stylesheet bytes matching source commit
-`82b2f6bf05e49d7e8f25c9f5e06e2db105d25636`.
+`5c702076b39a8170f2065c3262f5060d7b65698f`.

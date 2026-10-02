@@ -1,0 +1,814 @@
+{
+  "applicationReleaseManifestSha256": "6cf16f47e22b7c3a2099b7d401f0aa7c8cfa45f5ee62e7ef03ac51c61e19a8fa",
+  "applicationSourceCommit": "4da377c311b78a99b1a9fde1127d77e21e6e05ec",
+  "artifacts": [
+    {
+      "applicationExecutableSha256": "e4c7d20d66ec7908f2a2502cd37267528a6c1f666ee900ad29f61898f14d0daa",
+      "architecture": "amd64",
+      "bytes": 6714184,
+      "filename": "LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe",
+      "platform": "windows",
+      "sha256": "7df7d53293a1ec80a9abb9edd4b15a291991150f1e80a165983b2b17ef00697d",
+      "sourceArchive": {
+        "name": "ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip",
+        "sha256": "8d913ae9465bac373facce27f62f51ad01735b228bfbcc51df8522090941a3dc",
+        "size": 5322085,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip"
+      }
+    },
+    {
+      "applicationExecutableSha256": "21b4b5eff57474fe2e27ef7c55dc8b97776df5c93bbb418606d4be800c80a4c6",
+      "aptFilename": "ledgesync_0.1.0~alpha.3-1_amd64.deb",
+      "architecture": "amd64",
+      "bytes": 3787816,
+      "debianVersion": "0.1.0~alpha.3-1",
+      "filename": "ledgesync_0.1.0.alpha.3-1_amd64.deb",
+      "noticeHashesVerified": 52,
+      "package": "ledgesync",
+      "platform": "ubuntu24.04",
+      "sha256": "d42eb7b42a57bdaa5a4809f472ae354e41ea444cd1ec367d5815d698e604d4e1",
+      "sourceArchive": {
+        "name": "ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz",
+        "sha256": "eacca6b848ad517f2cfbfbdd28c7e78da64364200fd7fc9f38b81705714cf617",
+        "size": 4848832,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz"
+      }
+    },
+    {
+      "applicationExecutableSha256": "52b4407d1732f36f9e21bfd31b083fce6aad411e9b0ef773d22176092197a4e9",
+      "aptFilename": "ledgesync-cli_0.1.0~alpha.3-1_amd64.deb",
+      "architecture": "amd64",
+      "bytes": 2701036,
+      "debianVersion": "0.1.0~alpha.3-1",
+      "filename": "ledgesync-cli_0.1.0.alpha.3-1_amd64.deb",
+      "noticeHashesVerified": 52,
+      "package": "ledgesync-cli",
+      "platform": "ubuntu24.04",
+      "sha256": "0d1c8d13f8669ccc1d6b9056b0170c20f1401470526a27ff69e92802516ea166",
+      "sourceArchive": {
+        "name": "ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz",
+        "sha256": "b655f5ccc904f21ad9cf722d2a90b980203100883e0d2c3ff7907e9991e7217a",
+        "size": 3044507,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz"
+      }
+    },
+    {
+      "applicationExecutableSha256": "aaa8e992da8a98c5b0a177d03a5fd685e7620e0b695bdc3ca5d71f97fa2274b6",
+      "architecture": "arm64",
+      "bytes": 6274507,
+      "filename": "LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe",
+      "platform": "windows",
+      "sha256": "e35ba89c273caba8bb5bdda6d44dac69ca8faf2a1a60a6d71d04cf7fb7b3ec56",
+      "sourceArchive": {
+        "name": "ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip",
+        "sha256": "a12edcbf620431b5f1808384dc2fb9d86fea3cbe358acfd2b4a7d00e3b49e2d1",
+        "size": 4764097,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip"
+      }
+    },
+    {
+      "applicationExecutableSha256": "b3bd49d81dae98f916ef9766aad1e76a0e2c770264f792002ab00a534de2839c",
+      "aptFilename": "ledgesync_0.1.0~alpha.3-1_arm64.deb",
+      "architecture": "arm64",
+      "bytes": 3248056,
+      "debianVersion": "0.1.0~alpha.3-1",
+      "filename": "ledgesync_0.1.0.alpha.3-1_arm64.deb",
+      "noticeHashesVerified": 52,
+      "package": "ledgesync",
+      "platform": "ubuntu24.04",
+      "sha256": "c10b5d30cac3a9880a19dba043750d75ba97310f7d8ea14052ad2a2f1b900673",
+      "sourceArchive": {
+        "name": "ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz",
+        "sha256": "646e658e2116c92146f5678ec12c4361fec1f26e9b677db59bd4998623179183",
+        "size": 4381551,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz"
+      }
+    },
+    {
+      "applicationExecutableSha256": "1deae9f5e311c17738cc88215a4c7816c3251dab91ffff6fc9de0781d3115907",
+      "aptFilename": "ledgesync-cli_0.1.0~alpha.3-1_arm64.deb",
+      "architecture": "arm64",
+      "bytes": 2411912,
+      "debianVersion": "0.1.0~alpha.3-1",
+      "filename": "ledgesync-cli_0.1.0.alpha.3-1_arm64.deb",
+      "noticeHashesVerified": 52,
+      "package": "ledgesync-cli",
+      "platform": "ubuntu24.04",
+      "sha256": "29812e8e46d22f6a1cb9d2ca0bbbdb9ed52553dc13fea50b408741e7e336c8d6",
+      "sourceArchive": {
+        "name": "ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz",
+        "sha256": "da30ffd4c5cd9dd3f819b850b2ef39b4e6cc5399b64b9dd4c78d2526292da784",
+        "size": 2789131,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz"
+      }
+    }
+  ],
+  "createdAt": "2026-10-02T02:11:10.551878+00:00",
+  "inputs": {
+    "applicationSourceCommit": "4da377c311b78a99b1a9fde1127d77e21e6e05ec",
+    "sourceDateEpoch": 1790906560,
+    "tag": "v0.1.0-alpha.3",
+    "targets": {
+      "linux-amd64": {
+        "cli": {
+          "name": "ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz",
+          "sha256": "b655f5ccc904f21ad9cf722d2a90b980203100883e0d2c3ff7907e9991e7217a",
+          "size": 3044507,
+          "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz"
+        },
+        "desktop": {
+          "name": "ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz",
+          "sha256": "eacca6b848ad517f2cfbfbdd28c7e78da64364200fd7fc9f38b81705714cf617",
+          "size": 4848832,
+          "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz"
+        }
+      },
+      "linux-arm64": {
+        "cli": {
+          "name": "ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz",
+          "sha256": "da30ffd4c5cd9dd3f819b850b2ef39b4e6cc5399b64b9dd4c78d2526292da784",
+          "size": 2789131,
+          "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz"
+        },
+        "desktop": {
+          "name": "ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz",
+          "sha256": "646e658e2116c92146f5678ec12c4361fec1f26e9b677db59bd4998623179183",
+          "size": 4381551,
+          "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz"
+        }
+      },
+      "windows-amd64": {
+        "desktop": {
+          "name": "ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip",
+          "sha256": "8d913ae9465bac373facce27f62f51ad01735b228bfbcc51df8522090941a3dc",
+          "size": 5322085,
+          "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip"
+        }
+      },
+      "windows-arm64": {
+        "desktop": {
+          "name": "ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip",
+          "sha256": "a12edcbf620431b5f1808384dc2fb9d86fea3cbe358acfd2b4a7d00e3b49e2d1",
+          "size": 4764097,
+          "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip"
+        }
+      }
+    },
+    "version": "0.1.0-alpha.3"
+  },
+  "limitations": [
+    "Windows payload identity is verified by the exact native CI install byte-comparison test; this helper does not unpack Inno Setup locally.",
+    "Ubuntu GUI verification observes process startup under Xvfb, not a complete interactive journey.",
+    "Public APT deployment/installation is a separate gate and has not been asserted by this manifest.",
+    "No live Google authorization or Drive file transfer is asserted."
+  ],
+  "packagingSourceCommit": "0ec2f3fb66624522638b69f3b7a71ef517cf5259",
+  "product": "LedgeSync",
+  "reports": {
+    "localAPT": {
+      "architecture": "amd64",
+      "baseURL": "http://127.0.0.1:33759",
+      "byHashForced": true,
+      "desktopInstalled": true,
+      "headlessCliInstalled": true,
+      "secretServiceInstalled": true,
+      "signatureVerified": true,
+      "tamperedMetadataRejected": true,
+      "uninstallPreservedUserFixture": true,
+      "version": "0.1.0~alpha.3-1"
+    },
+    "ubuntu": {
+      "amd64": {
+        "packaging": {
+          "architecture": "amd64",
+          "debianVersion": "0.1.0~alpha.3-1",
+          "distribution": "ubuntu",
+          "distributionVersion": "24.04",
+          "inputArchives": {
+            "cli": {
+              "name": "ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz",
+              "sha256": "b655f5ccc904f21ad9cf722d2a90b980203100883e0d2c3ff7907e9991e7217a"
+            },
+            "desktop": {
+              "name": "ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz",
+              "sha256": "eacca6b848ad517f2cfbfbdd28c7e78da64364200fd7fc9f38b81705714cf617"
+            }
+          },
+          "packages": [
+            {
+              "architecture": "amd64",
+              "binaryPath": "usr/bin/ledgesync-desktop",
+              "binarySha256": "21b4b5eff57474fe2e27ef7c55dc8b97776df5c93bbb418606d4be800c80a4c6",
+              "depends": "ledgesync-cli (= 0.1.0~alpha.3-1), libc6 (>= 2.34), libgdk-pixbuf-2.0-0 (>= 2.22.0), libglib2.0-0t64 (>= 2.16.0), libgtk-3-0t64 (>= 3.21.4), libjavascriptcoregtk-4.1-0, libsoup-3.0-0 (>= 2.4.0), libwebkit2gtk-4.1-0 (>= 2.39.91)",
+              "file": "ledgesync_0.1.0~alpha.3-1_amd64.deb",
+              "neededLibraries": [
+                "libc.so.6",
+                "libgdk-3.so.0",
+                "libgdk_pixbuf-2.0.so.0",
+                "libgio-2.0.so.0",
+                "libglib-2.0.so.0",
+                "libgobject-2.0.so.0",
+                "libgtk-3.so.0",
+                "libjavascriptcoregtk-4.1.so.0",
+                "libsoup-3.0.so.0",
+                "libwebkit2gtk-4.1.so.0"
+              ],
+              "noticeSha256": {
+                "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+                "NOTICE": "f0edfb4cf7c8dde80988ed1ceb5270333fc272ad58f973237df68b7196d51856",
+                "README.txt": "4886a94a80a9fa7ca53e2c68f4d6f35f4e8da28c5880ad0f6bc01f098d296a79",
+                "THIRD_PARTY_NOTICES.md": "e3a8ef6bb269270c913fb47027396bb3d801296bc3d751cba965af06979d0572",
+                "third_party/FRONTEND_LICENSES.json": "b87949cd037c2c0ec63c5c532f06f344a58f7729b93629789209a341b8b10a02",
+                "third_party/GO_RUNTIME_LICENSES.json": "b98f60765a393b3f7748548cacf2f7c00e34a62ca7c745532dfcf9998d9fefce",
+                "third_party/frontend/typescript-7.0.2/LICENSE": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+                "third_party/frontend/typescript-7.0.2/NOTICE.txt": "f5c708b59114507b8b27b48181b6883d106bbca0c1634bbee45b5e344237b66b",
+                "third_party/frontend/vite-8.3.2/LICENSE.md": "a47172e44a86a7e2cd1c16282341f7726ec60caafe3a6166fe3e0602005b6fa6",
+                "third_party/go.LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/git.sr.ht__jackmordaunt_go-toast_v2_v2.0.3/LICENSE": "1b57eeb121b97d5920085fddd4cf395e71b8b027051a367bec8228688d68292f",
+                "third_party/go_modules/github.com_bep_debounce_v1.2.1/LICENSE": "77d1b21a5460ffc70d50101e9490a44b35dd713dab8a6f847c54ce4d3e81234a",
+                "third_party/go_modules/github.com_danieljoos_wincred_v1.2.3/LICENSE": "1702a813fa31858c0d6c7788216fa3dd202472265716998024654c252fc7bb41",
+                "third_party/go_modules/github.com_go-ole_go-ole_v1.3.0/LICENSE": "d883dbca28769ff23dd4368a8edb7ad9f9f23a8f86adde2875c6e41a828aac62",
+                "third_party/go_modules/github.com_godbus_dbus_v5_v5.1.0/LICENSE": "e4646a82a976369d7ae8f6ed5c11d35dc0af18433a8ccc24c85b459ad8b95128",
+                "third_party/go_modules/github.com_google_uuid_v1.6.0/LICENSE": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d",
+                "third_party/go_modules/github.com_keybase_go-keychain_v0.0.1/LICENSE": "039c69774070226d213bced933176be4ec396c9b101cd9a13e82a2c390c6c90a",
+                "third_party/go_modules/github.com_leaanthony_go-ansi-parser_v1.6.1/LICENSE": "d0817a3112cb46c57b987f58db0d8c71ca99f26d448a351073e3d69b6702e541",
+                "third_party/go_modules/github.com_leaanthony_slicer_v1.6.0/LICENSE": "6ec71bfac83b3a260158e53408a81392f84982fe19c43b4c2b6e2b6f0b44457b",
+                "third_party/go_modules/github.com_leaanthony_u_v1.1.1/LICENSE": "ff3448b5ffd013b261466bb5d7898094a845756f8a69773331ebbf66518f4109",
+                "third_party/go_modules/github.com_pkg_browser_v0.0.0-20240102092130-5ac0b6a4141c/LICENSE": "4801bb0c5d70b980b3e1f63d1d2df8d84fec22548e3d73f03a68df1fb808791f",
+                "third_party/go_modules/github.com_pkg_errors_v0.9.1/LICENSE": "8d427fd87bc9579ea368fde3d49f9ca22eac857f91a9dec7e3004bdfab7dee86",
+                "third_party/go_modules/github.com_rivo_uniseg_v0.4.7/LICENSE.txt": "a59885f5f0f3b3c07cf9444db5fe399b6f0791eac82055f7b85cc65500551039",
+                "third_party/go_modules/github.com_samber_lo_v1.49.1/LICENSE": "adb3ac2e3e382989de6befdd489f4714785af8aca47c01193a9892e8b26b3860",
+                "third_party/go_modules/github.com_tkrajina_go-reflector_v0.5.8/LICENSE.txt": "3f1fc64a3fded0d8c44382af796cc434fb4026a5d3d56da296dd272277dc336f",
+                "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/LICENSE": "3f10f3374cf30076196eb239667ce6063c64e4275afd2b397f6343f69676bb79",
+                "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/webviewloader/LICENSE": "e2c9290019954c3c3664428b73b34186b2bb8faad9b2c50605d7cdd9df5c7177",
+                "third_party/go_modules/github.com_wailsapp_mimetype_v1.4.1/LICENSE": "4335e2ceb33d8d7e75125192466ae8604617b0a67492b919604fe52dc56018d9",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/AUTHORS": "3e6babb0262dbc81071b4d7296e6038bd3a48e6990b4d54159e11eb1dbcb3220",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/LICENSE": "bccedbce38390429aa2fbb6cdff1e5622be8cd14c2b5b6b1f522db1813cdbb46",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/go-common-file-dialog/LICENSE": "2c09e92358414ef4da9739026acadfbd0663118e590238b306d70ccf60db3159",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/typescriptify/LICENSE.txt": "e4794d2db458f14f6bcbd2958b58729c91f274a27c08068e65d9e521d2bd941d",
+                "third_party/go_modules/golang.org_x_net_v0.56.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_net_v0.56.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_modules/golang.org_x_sys_v0.46.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_sys_v0.46.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_modules/golang.org_x_text_v0.39.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_text_v0.39.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/crypto/internal/boring/LICENSE": "56210f826b8f0fbac3160dfe55c97f4019eb6cdda3963b5a0eab8a8bdb62360e",
+                "third_party/go_standard/src/vendor/golang.org/x/crypto/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/crypto/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/net/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/net/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/sys/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/sys/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/text/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/text/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/rclone.LICENSE": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+                "third_party/wails.LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d"
+              },
+              "package": "ledgesync",
+              "recommends": "gnome-keyring",
+              "sha256": "d42eb7b42a57bdaa5a4809f472ae354e41ea444cd1ec367d5815d698e604d4e1",
+              "size": 3787816,
+              "version": "0.1.0~alpha.3-1"
+            },
+            {
+              "architecture": "amd64",
+              "binaryPath": "usr/bin/ledgesync",
+              "binarySha256": "52b4407d1732f36f9e21bfd31b083fce6aad411e9b0ef773d22176092197a4e9",
+              "depends": "",
+              "file": "ledgesync-cli_0.1.0~alpha.3-1_amd64.deb",
+              "neededLibraries": [],
+              "noticeSha256": {
+                "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+                "NOTICE": "f0edfb4cf7c8dde80988ed1ceb5270333fc272ad58f973237df68b7196d51856",
+                "README.txt": "1f0374dc023cd3b101dd0558f010e7be0573d77843c3f7cd32ddb2add0b50cf4",
+                "THIRD_PARTY_NOTICES.md": "e3a8ef6bb269270c913fb47027396bb3d801296bc3d751cba965af06979d0572",
+                "third_party/FRONTEND_LICENSES.json": "b87949cd037c2c0ec63c5c532f06f344a58f7729b93629789209a341b8b10a02",
+                "third_party/GO_RUNTIME_LICENSES.json": "b98f60765a393b3f7748548cacf2f7c00e34a62ca7c745532dfcf9998d9fefce",
+                "third_party/frontend/typescript-7.0.2/LICENSE": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+                "third_party/frontend/typescript-7.0.2/NOTICE.txt": "f5c708b59114507b8b27b48181b6883d106bbca0c1634bbee45b5e344237b66b",
+                "third_party/frontend/vite-8.3.2/LICENSE.md": "a47172e44a86a7e2cd1c16282341f7726ec60caafe3a6166fe3e0602005b6fa6",
+                "third_party/go.LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/git.sr.ht__jackmordaunt_go-toast_v2_v2.0.3/LICENSE": "1b57eeb121b97d5920085fddd4cf395e71b8b027051a367bec8228688d68292f",
+                "third_party/go_modules/github.com_bep_debounce_v1.2.1/LICENSE": "77d1b21a5460ffc70d50101e9490a44b35dd713dab8a6f847c54ce4d3e81234a",
+                "third_party/go_modules/github.com_danieljoos_wincred_v1.2.3/LICENSE": "1702a813fa31858c0d6c7788216fa3dd202472265716998024654c252fc7bb41",
+                "third_party/go_modules/github.com_go-ole_go-ole_v1.3.0/LICENSE": "d883dbca28769ff23dd4368a8edb7ad9f9f23a8f86adde2875c6e41a828aac62",
+                "third_party/go_modules/github.com_godbus_dbus_v5_v5.1.0/LICENSE": "e4646a82a976369d7ae8f6ed5c11d35dc0af18433a8ccc24c85b459ad8b95128",
+                "third_party/go_modules/github.com_google_uuid_v1.6.0/LICENSE": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d",
+                "third_party/go_modules/github.com_keybase_go-keychain_v0.0.1/LICENSE": "039c69774070226d213bced933176be4ec396c9b101cd9a13e82a2c390c6c90a",
+                "third_party/go_modules/github.com_leaanthony_go-ansi-parser_v1.6.1/LICENSE": "d0817a3112cb46c57b987f58db0d8c71ca99f26d448a351073e3d69b6702e541",
+                "third_party/go_modules/github.com_leaanthony_slicer_v1.6.0/LICENSE": "6ec71bfac83b3a260158e53408a81392f84982fe19c43b4c2b6e2b6f0b44457b",
+                "third_party/go_modules/github.com_leaanthony_u_v1.1.1/LICENSE": "ff3448b5ffd013b261466bb5d7898094a845756f8a69773331ebbf66518f4109",
+                "third_party/go_modules/github.com_pkg_browser_v0.0.0-20240102092130-5ac0b6a4141c/LICENSE": "4801bb0c5d70b980b3e1f63d1d2df8d84fec22548e3d73f03a68df1fb808791f",
+                "third_party/go_modules/github.com_pkg_errors_v0.9.1/LICENSE": "8d427fd87bc9579ea368fde3d49f9ca22eac857f91a9dec7e3004bdfab7dee86",
+                "third_party/go_modules/github.com_rivo_uniseg_v0.4.7/LICENSE.txt": "a59885f5f0f3b3c07cf9444db5fe399b6f0791eac82055f7b85cc65500551039",
+                "third_party/go_modules/github.com_samber_lo_v1.49.1/LICENSE": "adb3ac2e3e382989de6befdd489f4714785af8aca47c01193a9892e8b26b3860",
+                "third_party/go_modules/github.com_tkrajina_go-reflector_v0.5.8/LICENSE.txt": "3f1fc64a3fded0d8c44382af796cc434fb4026a5d3d56da296dd272277dc336f",
+                "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/LICENSE": "3f10f3374cf30076196eb239667ce6063c64e4275afd2b397f6343f69676bb79",
+                "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/webviewloader/LICENSE": "e2c9290019954c3c3664428b73b34186b2bb8faad9b2c50605d7cdd9df5c7177",
+                "third_party/go_modules/github.com_wailsapp_mimetype_v1.4.1/LICENSE": "4335e2ceb33d8d7e75125192466ae8604617b0a67492b919604fe52dc56018d9",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/AUTHORS": "3e6babb0262dbc81071b4d7296e6038bd3a48e6990b4d54159e11eb1dbcb3220",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/LICENSE": "bccedbce38390429aa2fbb6cdff1e5622be8cd14c2b5b6b1f522db1813cdbb46",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/go-common-file-dialog/LICENSE": "2c09e92358414ef4da9739026acadfbd0663118e590238b306d70ccf60db3159",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/typescriptify/LICENSE.txt": "e4794d2db458f14f6bcbd2958b58729c91f274a27c08068e65d9e521d2bd941d",
+                "third_party/go_modules/golang.org_x_net_v0.56.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_net_v0.56.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_modules/golang.org_x_sys_v0.46.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_sys_v0.46.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_modules/golang.org_x_text_v0.39.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_text_v0.39.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/crypto/internal/boring/LICENSE": "56210f826b8f0fbac3160dfe55c97f4019eb6cdda3963b5a0eab8a8bdb62360e",
+                "third_party/go_standard/src/vendor/golang.org/x/crypto/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/crypto/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/net/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/net/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/sys/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/sys/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/text/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/text/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/rclone.LICENSE": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+                "third_party/wails.LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d"
+              },
+              "package": "ledgesync-cli",
+              "recommends": "",
+              "sha256": "0d1c8d13f8669ccc1d6b9056b0170c20f1401470526a27ff69e92802516ea166",
+              "size": 2701036,
+              "version": "0.1.0~alpha.3-1"
+            }
+          ],
+          "releaseVersion": "0.1.0-alpha.3",
+          "schemaVersion": 1,
+          "sourceDateEpoch": 1790906560,
+          "sourceManifestSha256": "4e45aeea3cc1345e2d7b4b7fc1c030fd1700351aaaaf3412574b94f847453321",
+          "sourceRevision": "4da377c311b78a99b1a9fde1127d77e21e6e05ec"
+        },
+        "smoke": {
+          "architecture": "amd64",
+          "guiLog": "deb-gui-startup-amd64.log",
+          "guiStartup": {
+            "observedSeconds": 8.02,
+            "processStayedRunning": true,
+            "scope": "Xvfb process startup only; no interactive GUI journey claimed"
+          },
+          "installed": true,
+          "packages": {
+            "ledgesync": "d42eb7b42a57bdaa5a4809f472ae354e41ea444cd1ec367d5815d698e604d4e1",
+            "ledgesync-cli": "0d1c8d13f8669ccc1d6b9056b0170c20f1401470526a27ff69e92802516ea166"
+          },
+          "payloadVerified": true,
+          "removed": true,
+          "status": "passed",
+          "version": "0.1.0~alpha.3-1"
+        }
+      },
+      "arm64": {
+        "packaging": {
+          "architecture": "arm64",
+          "debianVersion": "0.1.0~alpha.3-1",
+          "distribution": "ubuntu",
+          "distributionVersion": "24.04",
+          "inputArchives": {
+            "cli": {
+              "name": "ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz",
+              "sha256": "da30ffd4c5cd9dd3f819b850b2ef39b4e6cc5399b64b9dd4c78d2526292da784"
+            },
+            "desktop": {
+              "name": "ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz",
+              "sha256": "646e658e2116c92146f5678ec12c4361fec1f26e9b677db59bd4998623179183"
+            }
+          },
+          "packages": [
+            {
+              "architecture": "arm64",
+              "binaryPath": "usr/bin/ledgesync-desktop",
+              "binarySha256": "b3bd49d81dae98f916ef9766aad1e76a0e2c770264f792002ab00a534de2839c",
+              "depends": "ledgesync-cli (= 0.1.0~alpha.3-1), libc6 (>= 2.34), libgdk-pixbuf-2.0-0 (>= 2.22.0), libglib2.0-0t64 (>= 2.16.0), libgtk-3-0t64 (>= 3.21.4), libjavascriptcoregtk-4.1-0, libsoup-3.0-0 (>= 2.4.0), libwebkit2gtk-4.1-0 (>= 2.39.91)",
+              "file": "ledgesync_0.1.0~alpha.3-1_arm64.deb",
+              "neededLibraries": [
+                "ld-linux-aarch64.so.1",
+                "libc.so.6",
+                "libgdk-3.so.0",
+                "libgdk_pixbuf-2.0.so.0",
+                "libgio-2.0.so.0",
+                "libglib-2.0.so.0",
+                "libgobject-2.0.so.0",
+                "libgtk-3.so.0",
+                "libjavascriptcoregtk-4.1.so.0",
+                "libsoup-3.0.so.0",
+                "libwebkit2gtk-4.1.so.0"
+              ],
+              "noticeSha256": {
+                "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+                "NOTICE": "f0edfb4cf7c8dde80988ed1ceb5270333fc272ad58f973237df68b7196d51856",
+                "README.txt": "4886a94a80a9fa7ca53e2c68f4d6f35f4e8da28c5880ad0f6bc01f098d296a79",
+                "THIRD_PARTY_NOTICES.md": "e3a8ef6bb269270c913fb47027396bb3d801296bc3d751cba965af06979d0572",
+                "third_party/FRONTEND_LICENSES.json": "b87949cd037c2c0ec63c5c532f06f344a58f7729b93629789209a341b8b10a02",
+                "third_party/GO_RUNTIME_LICENSES.json": "b98f60765a393b3f7748548cacf2f7c00e34a62ca7c745532dfcf9998d9fefce",
+                "third_party/frontend/typescript-7.0.2/LICENSE": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+                "third_party/frontend/typescript-7.0.2/NOTICE.txt": "f5c708b59114507b8b27b48181b6883d106bbca0c1634bbee45b5e344237b66b",
+                "third_party/frontend/vite-8.3.2/LICENSE.md": "a47172e44a86a7e2cd1c16282341f7726ec60caafe3a6166fe3e0602005b6fa6",
+                "third_party/go.LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/git.sr.ht__jackmordaunt_go-toast_v2_v2.0.3/LICENSE": "1b57eeb121b97d5920085fddd4cf395e71b8b027051a367bec8228688d68292f",
+                "third_party/go_modules/github.com_bep_debounce_v1.2.1/LICENSE": "77d1b21a5460ffc70d50101e9490a44b35dd713dab8a6f847c54ce4d3e81234a",
+                "third_party/go_modules/github.com_danieljoos_wincred_v1.2.3/LICENSE": "1702a813fa31858c0d6c7788216fa3dd202472265716998024654c252fc7bb41",
+                "third_party/go_modules/github.com_go-ole_go-ole_v1.3.0/LICENSE": "d883dbca28769ff23dd4368a8edb7ad9f9f23a8f86adde2875c6e41a828aac62",
+                "third_party/go_modules/github.com_godbus_dbus_v5_v5.1.0/LICENSE": "e4646a82a976369d7ae8f6ed5c11d35dc0af18433a8ccc24c85b459ad8b95128",
+                "third_party/go_modules/github.com_google_uuid_v1.6.0/LICENSE": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d",
+                "third_party/go_modules/github.com_keybase_go-keychain_v0.0.1/LICENSE": "039c69774070226d213bced933176be4ec396c9b101cd9a13e82a2c390c6c90a",
+                "third_party/go_modules/github.com_leaanthony_go-ansi-parser_v1.6.1/LICENSE": "d0817a3112cb46c57b987f58db0d8c71ca99f26d448a351073e3d69b6702e541",
+                "third_party/go_modules/github.com_leaanthony_slicer_v1.6.0/LICENSE": "6ec71bfac83b3a260158e53408a81392f84982fe19c43b4c2b6e2b6f0b44457b",
+                "third_party/go_modules/github.com_leaanthony_u_v1.1.1/LICENSE": "ff3448b5ffd013b261466bb5d7898094a845756f8a69773331ebbf66518f4109",
+                "third_party/go_modules/github.com_pkg_browser_v0.0.0-20240102092130-5ac0b6a4141c/LICENSE": "4801bb0c5d70b980b3e1f63d1d2df8d84fec22548e3d73f03a68df1fb808791f",
+                "third_party/go_modules/github.com_pkg_errors_v0.9.1/LICENSE": "8d427fd87bc9579ea368fde3d49f9ca22eac857f91a9dec7e3004bdfab7dee86",
+                "third_party/go_modules/github.com_rivo_uniseg_v0.4.7/LICENSE.txt": "a59885f5f0f3b3c07cf9444db5fe399b6f0791eac82055f7b85cc65500551039",
+                "third_party/go_modules/github.com_samber_lo_v1.49.1/LICENSE": "adb3ac2e3e382989de6befdd489f4714785af8aca47c01193a9892e8b26b3860",
+                "third_party/go_modules/github.com_tkrajina_go-reflector_v0.5.8/LICENSE.txt": "3f1fc64a3fded0d8c44382af796cc434fb4026a5d3d56da296dd272277dc336f",
+                "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/LICENSE": "3f10f3374cf30076196eb239667ce6063c64e4275afd2b397f6343f69676bb79",
+                "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/webviewloader/LICENSE": "e2c9290019954c3c3664428b73b34186b2bb8faad9b2c50605d7cdd9df5c7177",
+                "third_party/go_modules/github.com_wailsapp_mimetype_v1.4.1/LICENSE": "4335e2ceb33d8d7e75125192466ae8604617b0a67492b919604fe52dc56018d9",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/AUTHORS": "3e6babb0262dbc81071b4d7296e6038bd3a48e6990b4d54159e11eb1dbcb3220",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/LICENSE": "bccedbce38390429aa2fbb6cdff1e5622be8cd14c2b5b6b1f522db1813cdbb46",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/go-common-file-dialog/LICENSE": "2c09e92358414ef4da9739026acadfbd0663118e590238b306d70ccf60db3159",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/typescriptify/LICENSE.txt": "e4794d2db458f14f6bcbd2958b58729c91f274a27c08068e65d9e521d2bd941d",
+                "third_party/go_modules/golang.org_x_net_v0.56.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_net_v0.56.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_modules/golang.org_x_sys_v0.46.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_sys_v0.46.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_modules/golang.org_x_text_v0.39.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_text_v0.39.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/crypto/internal/boring/LICENSE": "56210f826b8f0fbac3160dfe55c97f4019eb6cdda3963b5a0eab8a8bdb62360e",
+                "third_party/go_standard/src/vendor/golang.org/x/crypto/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/crypto/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/net/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/net/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/sys/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/sys/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/text/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/text/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/rclone.LICENSE": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+                "third_party/wails.LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d"
+              },
+              "package": "ledgesync",
+              "recommends": "gnome-keyring",
+              "sha256": "c10b5d30cac3a9880a19dba043750d75ba97310f7d8ea14052ad2a2f1b900673",
+              "size": 3248056,
+              "version": "0.1.0~alpha.3-1"
+            },
+            {
+              "architecture": "arm64",
+              "binaryPath": "usr/bin/ledgesync",
+              "binarySha256": "1deae9f5e311c17738cc88215a4c7816c3251dab91ffff6fc9de0781d3115907",
+              "depends": "",
+              "file": "ledgesync-cli_0.1.0~alpha.3-1_arm64.deb",
+              "neededLibraries": [],
+              "noticeSha256": {
+                "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+                "NOTICE": "f0edfb4cf7c8dde80988ed1ceb5270333fc272ad58f973237df68b7196d51856",
+                "README.txt": "1f0374dc023cd3b101dd0558f010e7be0573d77843c3f7cd32ddb2add0b50cf4",
+                "THIRD_PARTY_NOTICES.md": "e3a8ef6bb269270c913fb47027396bb3d801296bc3d751cba965af06979d0572",
+                "third_party/FRONTEND_LICENSES.json": "b87949cd037c2c0ec63c5c532f06f344a58f7729b93629789209a341b8b10a02",
+                "third_party/GO_RUNTIME_LICENSES.json": "b98f60765a393b3f7748548cacf2f7c00e34a62ca7c745532dfcf9998d9fefce",
+                "third_party/frontend/typescript-7.0.2/LICENSE": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+                "third_party/frontend/typescript-7.0.2/NOTICE.txt": "f5c708b59114507b8b27b48181b6883d106bbca0c1634bbee45b5e344237b66b",
+                "third_party/frontend/vite-8.3.2/LICENSE.md": "a47172e44a86a7e2cd1c16282341f7726ec60caafe3a6166fe3e0602005b6fa6",
+                "third_party/go.LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/git.sr.ht__jackmordaunt_go-toast_v2_v2.0.3/LICENSE": "1b57eeb121b97d5920085fddd4cf395e71b8b027051a367bec8228688d68292f",
+                "third_party/go_modules/github.com_bep_debounce_v1.2.1/LICENSE": "77d1b21a5460ffc70d50101e9490a44b35dd713dab8a6f847c54ce4d3e81234a",
+                "third_party/go_modules/github.com_danieljoos_wincred_v1.2.3/LICENSE": "1702a813fa31858c0d6c7788216fa3dd202472265716998024654c252fc7bb41",
+                "third_party/go_modules/github.com_go-ole_go-ole_v1.3.0/LICENSE": "d883dbca28769ff23dd4368a8edb7ad9f9f23a8f86adde2875c6e41a828aac62",
+                "third_party/go_modules/github.com_godbus_dbus_v5_v5.1.0/LICENSE": "e4646a82a976369d7ae8f6ed5c11d35dc0af18433a8ccc24c85b459ad8b95128",
+                "third_party/go_modules/github.com_google_uuid_v1.6.0/LICENSE": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d",
+                "third_party/go_modules/github.com_keybase_go-keychain_v0.0.1/LICENSE": "039c69774070226d213bced933176be4ec396c9b101cd9a13e82a2c390c6c90a",
+                "third_party/go_modules/github.com_leaanthony_go-ansi-parser_v1.6.1/LICENSE": "d0817a3112cb46c57b987f58db0d8c71ca99f26d448a351073e3d69b6702e541",
+                "third_party/go_modules/github.com_leaanthony_slicer_v1.6.0/LICENSE": "6ec71bfac83b3a260158e53408a81392f84982fe19c43b4c2b6e2b6f0b44457b",
+                "third_party/go_modules/github.com_leaanthony_u_v1.1.1/LICENSE": "ff3448b5ffd013b261466bb5d7898094a845756f8a69773331ebbf66518f4109",
+                "third_party/go_modules/github.com_pkg_browser_v0.0.0-20240102092130-5ac0b6a4141c/LICENSE": "4801bb0c5d70b980b3e1f63d1d2df8d84fec22548e3d73f03a68df1fb808791f",
+                "third_party/go_modules/github.com_pkg_errors_v0.9.1/LICENSE": "8d427fd87bc9579ea368fde3d49f9ca22eac857f91a9dec7e3004bdfab7dee86",
+                "third_party/go_modules/github.com_rivo_uniseg_v0.4.7/LICENSE.txt": "a59885f5f0f3b3c07cf9444db5fe399b6f0791eac82055f7b85cc65500551039",
+                "third_party/go_modules/github.com_samber_lo_v1.49.1/LICENSE": "adb3ac2e3e382989de6befdd489f4714785af8aca47c01193a9892e8b26b3860",
+                "third_party/go_modules/github.com_tkrajina_go-reflector_v0.5.8/LICENSE.txt": "3f1fc64a3fded0d8c44382af796cc434fb4026a5d3d56da296dd272277dc336f",
+                "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/LICENSE": "3f10f3374cf30076196eb239667ce6063c64e4275afd2b397f6343f69676bb79",
+                "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/webviewloader/LICENSE": "e2c9290019954c3c3664428b73b34186b2bb8faad9b2c50605d7cdd9df5c7177",
+                "third_party/go_modules/github.com_wailsapp_mimetype_v1.4.1/LICENSE": "4335e2ceb33d8d7e75125192466ae8604617b0a67492b919604fe52dc56018d9",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/AUTHORS": "3e6babb0262dbc81071b4d7296e6038bd3a48e6990b4d54159e11eb1dbcb3220",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/LICENSE": "bccedbce38390429aa2fbb6cdff1e5622be8cd14c2b5b6b1f522db1813cdbb46",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/go-common-file-dialog/LICENSE": "2c09e92358414ef4da9739026acadfbd0663118e590238b306d70ccf60db3159",
+                "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/typescriptify/LICENSE.txt": "e4794d2db458f14f6bcbd2958b58729c91f274a27c08068e65d9e521d2bd941d",
+                "third_party/go_modules/golang.org_x_net_v0.56.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_net_v0.56.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_modules/golang.org_x_sys_v0.46.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_sys_v0.46.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_modules/golang.org_x_text_v0.39.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_modules/golang.org_x_text_v0.39.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/crypto/internal/boring/LICENSE": "56210f826b8f0fbac3160dfe55c97f4019eb6cdda3963b5a0eab8a8bdb62360e",
+                "third_party/go_standard/src/vendor/golang.org/x/crypto/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/crypto/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/net/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/net/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/sys/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/sys/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/go_standard/src/vendor/golang.org/x/text/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+                "third_party/go_standard/src/vendor/golang.org/x/text/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+                "third_party/rclone.LICENSE": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+                "third_party/wails.LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d"
+              },
+              "package": "ledgesync-cli",
+              "recommends": "",
+              "sha256": "29812e8e46d22f6a1cb9d2ca0bbbdb9ed52553dc13fea50b408741e7e336c8d6",
+              "size": 2411912,
+              "version": "0.1.0~alpha.3-1"
+            }
+          ],
+          "releaseVersion": "0.1.0-alpha.3",
+          "schemaVersion": 1,
+          "sourceDateEpoch": 1790906560,
+          "sourceManifestSha256": "4e45aeea3cc1345e2d7b4b7fc1c030fd1700351aaaaf3412574b94f847453321",
+          "sourceRevision": "4da377c311b78a99b1a9fde1127d77e21e6e05ec"
+        },
+        "smoke": {
+          "architecture": "arm64",
+          "guiLog": "deb-gui-startup-arm64.log",
+          "guiStartup": {
+            "observedSeconds": 8.01,
+            "processStayedRunning": true,
+            "scope": "Xvfb process startup only; no interactive GUI journey claimed"
+          },
+          "installed": true,
+          "packages": {
+            "ledgesync": "c10b5d30cac3a9880a19dba043750d75ba97310f7d8ea14052ad2a2f1b900673",
+            "ledgesync-cli": "29812e8e46d22f6a1cb9d2ca0bbbdb9ed52553dc13fea50b408741e7e336c8d6"
+          },
+          "payloadVerified": true,
+          "removed": true,
+          "status": "passed",
+          "version": "0.1.0~alpha.3-1"
+        }
+      }
+    },
+    "windows": {
+      "amd64": {
+        "architecture": "amd64",
+        "checks": [
+          "silent current-user install; all released payload bytes; notices; Start menu; Add/Remove Programs; desktop shortcut absent by default",
+          "same-version reinstall; stable registration; optional desktop shortcut; preserved synthetic user data",
+          "silent uninstall; tracked files and shortcuts removed; registration removed; synthetic user data preserved"
+        ],
+        "expectedPayloadSha256": {
+          "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "LedgeSync.exe": "e4c7d20d66ec7908f2a2502cd37267528a6c1f666ee900ad29f61898f14d0daa",
+          "NOTICE": "f0edfb4cf7c8dde80988ed1ceb5270333fc272ad58f973237df68b7196d51856",
+          "THIRD_PARTY_NOTICES.md": "e3a8ef6bb269270c913fb47027396bb3d801296bc3d751cba965af06979d0572",
+          "third_party/FRONTEND_LICENSES.json": "b87949cd037c2c0ec63c5c532f06f344a58f7729b93629789209a341b8b10a02",
+          "third_party/GO_RUNTIME_LICENSES.json": "b98f60765a393b3f7748548cacf2f7c00e34a62ca7c745532dfcf9998d9fefce",
+          "third_party/frontend/typescript-7.0.2/LICENSE": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+          "third_party/frontend/typescript-7.0.2/NOTICE.txt": "f5c708b59114507b8b27b48181b6883d106bbca0c1634bbee45b5e344237b66b",
+          "third_party/frontend/vite-8.3.2/LICENSE.md": "a47172e44a86a7e2cd1c16282341f7726ec60caafe3a6166fe3e0602005b6fa6",
+          "third_party/go.LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_modules/git.sr.ht__jackmordaunt_go-toast_v2_v2.0.3/LICENSE": "1b57eeb121b97d5920085fddd4cf395e71b8b027051a367bec8228688d68292f",
+          "third_party/go_modules/github.com_bep_debounce_v1.2.1/LICENSE": "77d1b21a5460ffc70d50101e9490a44b35dd713dab8a6f847c54ce4d3e81234a",
+          "third_party/go_modules/github.com_danieljoos_wincred_v1.2.3/LICENSE": "1702a813fa31858c0d6c7788216fa3dd202472265716998024654c252fc7bb41",
+          "third_party/go_modules/github.com_go-ole_go-ole_v1.3.0/LICENSE": "d883dbca28769ff23dd4368a8edb7ad9f9f23a8f86adde2875c6e41a828aac62",
+          "third_party/go_modules/github.com_godbus_dbus_v5_v5.1.0/LICENSE": "e4646a82a976369d7ae8f6ed5c11d35dc0af18433a8ccc24c85b459ad8b95128",
+          "third_party/go_modules/github.com_google_uuid_v1.6.0/LICENSE": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d",
+          "third_party/go_modules/github.com_keybase_go-keychain_v0.0.1/LICENSE": "039c69774070226d213bced933176be4ec396c9b101cd9a13e82a2c390c6c90a",
+          "third_party/go_modules/github.com_leaanthony_go-ansi-parser_v1.6.1/LICENSE": "d0817a3112cb46c57b987f58db0d8c71ca99f26d448a351073e3d69b6702e541",
+          "third_party/go_modules/github.com_leaanthony_slicer_v1.6.0/LICENSE": "6ec71bfac83b3a260158e53408a81392f84982fe19c43b4c2b6e2b6f0b44457b",
+          "third_party/go_modules/github.com_leaanthony_u_v1.1.1/LICENSE": "ff3448b5ffd013b261466bb5d7898094a845756f8a69773331ebbf66518f4109",
+          "third_party/go_modules/github.com_pkg_browser_v0.0.0-20240102092130-5ac0b6a4141c/LICENSE": "4801bb0c5d70b980b3e1f63d1d2df8d84fec22548e3d73f03a68df1fb808791f",
+          "third_party/go_modules/github.com_pkg_errors_v0.9.1/LICENSE": "8d427fd87bc9579ea368fde3d49f9ca22eac857f91a9dec7e3004bdfab7dee86",
+          "third_party/go_modules/github.com_rivo_uniseg_v0.4.7/LICENSE.txt": "a59885f5f0f3b3c07cf9444db5fe399b6f0791eac82055f7b85cc65500551039",
+          "third_party/go_modules/github.com_samber_lo_v1.49.1/LICENSE": "adb3ac2e3e382989de6befdd489f4714785af8aca47c01193a9892e8b26b3860",
+          "third_party/go_modules/github.com_tkrajina_go-reflector_v0.5.8/LICENSE.txt": "3f1fc64a3fded0d8c44382af796cc434fb4026a5d3d56da296dd272277dc336f",
+          "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/LICENSE": "3f10f3374cf30076196eb239667ce6063c64e4275afd2b397f6343f69676bb79",
+          "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/webviewloader/LICENSE": "e2c9290019954c3c3664428b73b34186b2bb8faad9b2c50605d7cdd9df5c7177",
+          "third_party/go_modules/github.com_wailsapp_mimetype_v1.4.1/LICENSE": "4335e2ceb33d8d7e75125192466ae8604617b0a67492b919604fe52dc56018d9",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/AUTHORS": "3e6babb0262dbc81071b4d7296e6038bd3a48e6990b4d54159e11eb1dbcb3220",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/LICENSE": "bccedbce38390429aa2fbb6cdff1e5622be8cd14c2b5b6b1f522db1813cdbb46",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/go-common-file-dialog/LICENSE": "2c09e92358414ef4da9739026acadfbd0663118e590238b306d70ccf60db3159",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/typescriptify/LICENSE.txt": "e4794d2db458f14f6bcbd2958b58729c91f274a27c08068e65d9e521d2bd941d",
+          "third_party/go_modules/golang.org_x_net_v0.56.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_modules/golang.org_x_net_v0.56.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_modules/golang.org_x_sys_v0.46.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_modules/golang.org_x_sys_v0.46.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_modules/golang.org_x_text_v0.39.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_modules/golang.org_x_text_v0.39.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/src/crypto/internal/boring/LICENSE": "56210f826b8f0fbac3160dfe55c97f4019eb6cdda3963b5a0eab8a8bdb62360e",
+          "third_party/go_standard/src/vendor/golang.org/x/crypto/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/src/vendor/golang.org/x/crypto/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/src/vendor/golang.org/x/net/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/src/vendor/golang.org/x/net/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/src/vendor/golang.org/x/sys/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/src/vendor/golang.org/x/sys/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/src/vendor/golang.org/x/text/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/src/vendor/golang.org/x/text/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/rclone.LICENSE": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+          "third_party/wails.LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d"
+        },
+        "installerSHA256": "7df7d53293a1ec80a9abb9edd4b15a291991150f1e80a165983b2b17ef00697d",
+        "machineReadableInstalledHashReport": false,
+        "nativeOS": "Microsoft Windows NT 10.0.20348.0",
+        "status": "passed",
+        "version": "0.1.0-alpha.3",
+        "wizard": {
+          "detail": "Actual welcome window, enabled Next, next page, and cancellation exercised through Windows UI Automation.",
+          "status": "passed"
+        }
+      },
+      "arm64": {
+        "architecture": "arm64",
+        "checks": [
+          "silent current-user install; all released payload bytes; notices; Start menu; Add/Remove Programs; desktop shortcut absent by default",
+          "same-version reinstall; stable registration; optional desktop shortcut; preserved synthetic user data",
+          "silent uninstall; tracked files and shortcuts removed; registration removed; synthetic user data preserved"
+        ],
+        "expectedPayloadSha256": {
+          "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "LedgeSync.exe": "aaa8e992da8a98c5b0a177d03a5fd685e7620e0b695bdc3ca5d71f97fa2274b6",
+          "NOTICE": "f0edfb4cf7c8dde80988ed1ceb5270333fc272ad58f973237df68b7196d51856",
+          "THIRD_PARTY_NOTICES.md": "e3a8ef6bb269270c913fb47027396bb3d801296bc3d751cba965af06979d0572",
+          "third_party/FRONTEND_LICENSES.json": "b87949cd037c2c0ec63c5c532f06f344a58f7729b93629789209a341b8b10a02",
+          "third_party/GO_RUNTIME_LICENSES.json": "b98f60765a393b3f7748548cacf2f7c00e34a62ca7c745532dfcf9998d9fefce",
+          "third_party/frontend/typescript-7.0.2/LICENSE": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+          "third_party/frontend/typescript-7.0.2/NOTICE.txt": "f5c708b59114507b8b27b48181b6883d106bbca0c1634bbee45b5e344237b66b",
+          "third_party/frontend/vite-8.3.2/LICENSE.md": "a47172e44a86a7e2cd1c16282341f7726ec60caafe3a6166fe3e0602005b6fa6",
+          "third_party/go.LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_modules/git.sr.ht__jackmordaunt_go-toast_v2_v2.0.3/LICENSE": "1b57eeb121b97d5920085fddd4cf395e71b8b027051a367bec8228688d68292f",
+          "third_party/go_modules/github.com_bep_debounce_v1.2.1/LICENSE": "77d1b21a5460ffc70d50101e9490a44b35dd713dab8a6f847c54ce4d3e81234a",
+          "third_party/go_modules/github.com_danieljoos_wincred_v1.2.3/LICENSE": "1702a813fa31858c0d6c7788216fa3dd202472265716998024654c252fc7bb41",
+          "third_party/go_modules/github.com_go-ole_go-ole_v1.3.0/LICENSE": "d883dbca28769ff23dd4368a8edb7ad9f9f23a8f86adde2875c6e41a828aac62",
+          "third_party/go_modules/github.com_godbus_dbus_v5_v5.1.0/LICENSE": "e4646a82a976369d7ae8f6ed5c11d35dc0af18433a8ccc24c85b459ad8b95128",
+          "third_party/go_modules/github.com_google_uuid_v1.6.0/LICENSE": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d",
+          "third_party/go_modules/github.com_keybase_go-keychain_v0.0.1/LICENSE": "039c69774070226d213bced933176be4ec396c9b101cd9a13e82a2c390c6c90a",
+          "third_party/go_modules/github.com_leaanthony_go-ansi-parser_v1.6.1/LICENSE": "d0817a3112cb46c57b987f58db0d8c71ca99f26d448a351073e3d69b6702e541",
+          "third_party/go_modules/github.com_leaanthony_slicer_v1.6.0/LICENSE": "6ec71bfac83b3a260158e53408a81392f84982fe19c43b4c2b6e2b6f0b44457b",
+          "third_party/go_modules/github.com_leaanthony_u_v1.1.1/LICENSE": "ff3448b5ffd013b261466bb5d7898094a845756f8a69773331ebbf66518f4109",
+          "third_party/go_modules/github.com_pkg_browser_v0.0.0-20240102092130-5ac0b6a4141c/LICENSE": "4801bb0c5d70b980b3e1f63d1d2df8d84fec22548e3d73f03a68df1fb808791f",
+          "third_party/go_modules/github.com_pkg_errors_v0.9.1/LICENSE": "8d427fd87bc9579ea368fde3d49f9ca22eac857f91a9dec7e3004bdfab7dee86",
+          "third_party/go_modules/github.com_rivo_uniseg_v0.4.7/LICENSE.txt": "a59885f5f0f3b3c07cf9444db5fe399b6f0791eac82055f7b85cc65500551039",
+          "third_party/go_modules/github.com_samber_lo_v1.49.1/LICENSE": "adb3ac2e3e382989de6befdd489f4714785af8aca47c01193a9892e8b26b3860",
+          "third_party/go_modules/github.com_tkrajina_go-reflector_v0.5.8/LICENSE.txt": "3f1fc64a3fded0d8c44382af796cc434fb4026a5d3d56da296dd272277dc336f",
+          "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/LICENSE": "3f10f3374cf30076196eb239667ce6063c64e4275afd2b397f6343f69676bb79",
+          "third_party/go_modules/github.com_wailsapp_go-webview2_v1.0.22/webviewloader/LICENSE": "e2c9290019954c3c3664428b73b34186b2bb8faad9b2c50605d7cdd9df5c7177",
+          "third_party/go_modules/github.com_wailsapp_mimetype_v1.4.1/LICENSE": "4335e2ceb33d8d7e75125192466ae8604617b0a67492b919604fe52dc56018d9",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/AUTHORS": "3e6babb0262dbc81071b4d7296e6038bd3a48e6990b4d54159e11eb1dbcb3220",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/frontend/desktop/windows/winc/LICENSE": "bccedbce38390429aa2fbb6cdff1e5622be8cd14c2b5b6b1f522db1813cdbb46",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/go-common-file-dialog/LICENSE": "2c09e92358414ef4da9739026acadfbd0663118e590238b306d70ccf60db3159",
+          "third_party/go_modules/github.com_wailsapp_wails_v2_v2.14.0/internal/typescriptify/LICENSE.txt": "e4794d2db458f14f6bcbd2958b58729c91f274a27c08068e65d9e521d2bd941d",
+          "third_party/go_modules/golang.org_x_net_v0.56.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_modules/golang.org_x_net_v0.56.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_modules/golang.org_x_sys_v0.46.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_modules/golang.org_x_sys_v0.46.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_modules/golang.org_x_text_v0.39.0/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_modules/golang.org_x_text_v0.39.0/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/src/crypto/internal/boring/LICENSE": "56210f826b8f0fbac3160dfe55c97f4019eb6cdda3963b5a0eab8a8bdb62360e",
+          "third_party/go_standard/src/vendor/golang.org/x/crypto/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/src/vendor/golang.org/x/crypto/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/src/vendor/golang.org/x/net/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/src/vendor/golang.org/x/net/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/src/vendor/golang.org/x/sys/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/src/vendor/golang.org/x/sys/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/go_standard/src/vendor/golang.org/x/text/LICENSE": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+          "third_party/go_standard/src/vendor/golang.org/x/text/PATENTS": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
+          "third_party/rclone.LICENSE": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+          "third_party/wails.LICENSE": "cede95c28e6e9d67d1c1e49e8ba3c20250c7d4080c3faca1579b6732327ae40d"
+        },
+        "installerSHA256": "e35ba89c273caba8bb5bdda6d44dac69ca8faf2a1a60a6d71d04cf7fb7b3ec56",
+        "machineReadableInstalledHashReport": false,
+        "nativeOS": "Microsoft Windows NT 10.0.26200.0",
+        "status": "passed",
+        "version": "0.1.0-alpha.3",
+        "wizard": {
+          "detail": "Actual welcome window, enabled Next, next page, and cancellation exercised through Windows UI Automation.",
+          "status": "passed"
+        }
+      }
+    }
+  },
+  "schemaVersion": 1,
+  "sourceManifestSha256": "4e45aeea3cc1345e2d7b4b7fc1c030fd1700351aaaaf3412574b94f847453321",
+  "trustedPublisherSignature": false,
+  "version": "0.1.0-alpha.3",
+  "workflow": {
+    "artifacts": [
+      {
+        "files": {
+          "LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe": "e35ba89c273caba8bb5bdda6d44dac69ca8faf2a1a60a6d71d04cf7fb7b3ec56",
+          "LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe.sha256": "40f2d29f6132f9ee09e954587dbf7e7ac9e6bdc91f242787eb2790f6d43510cc",
+          "windows-arm64-install-test-install.log": "7893be572d7782c9ff8ffec9e7f5050f6fd8e205ab1cee70bcff33d51291f5db",
+          "windows-arm64-install-test-reinstall.log": "0ab315e80da0ba16d929232eadb33841948ba379fb980bd79ba920f13bd16f7a",
+          "windows-arm64-install-test-uninstall.log": "de0cbe32c99864eaf5a4b06ba0a8cb164ab62b43dd7aa60c5a01bb858e7645bc",
+          "windows-arm64-install-test-wizard.log": "3e544f8a80e36ae101537895094c3b1c94eb36e1e7733b38daae197a6c0a698c",
+          "windows-arm64-install-test.json": "ecb14acccc33fb0fb4e920fce88f111b41828ab83a2eeb2f661461a92c47b99c"
+        },
+        "id": 11205690514,
+        "name": "ledgesync-windows-installer-arm64",
+        "zipSHA256": "904d4b3220298e04df1b0448f9d223b52dbd1f9f8d1958f69c406f4a026cfe6a"
+      },
+      {
+        "files": {
+          "SHA256SUMS-amd64": "d7a82fd9b8847c6444ddaf7a18451a6f0171bf3e05f7adc616efffcc2ff9f8e9",
+          "deb-gui-startup-amd64.log": "03fd0f0cd1a41bc5a1d9abf7a84ab672f01ea583869d12be79434b83791d9d56",
+          "deb-install-test-amd64.json": "9cae70cb14edd752623f1c44be3859670ec2e698b3a4d4ca5fc46e0f0deebf38",
+          "ledgesync-cli_0.1.0~alpha.3-1_amd64.deb": "0d1c8d13f8669ccc1d6b9056b0170c20f1401470526a27ff69e92802516ea166",
+          "ledgesync-cli_0.1.0~alpha.3-1_amd64.deb.sha256": "5920a9f56fc7bc9c50c353e7c0f49f40568757a498b6e2dcfe7bf91343e72e63",
+          "ledgesync_0.1.0~alpha.3-1_amd64.deb": "d42eb7b42a57bdaa5a4809f472ae354e41ea444cd1ec367d5815d698e604d4e1",
+          "ledgesync_0.1.0~alpha.3-1_amd64.deb.sha256": "a8764ba52a3171b48c0909a3a60ee962247f182a0729b64961332c112c4f5809",
+          "packaging-amd64.json": "059b9589152008b869c348bf71ae321385897d0b555449945c3de62b9bae2ed5"
+        },
+        "id": 11205625704,
+        "name": "ledgesync-debian-amd64",
+        "zipSHA256": "6b54e17c67463b00a404b29e61746b064aa379838f8e232bf30db8c9b112ecaa"
+      },
+      {
+        "files": {
+          "SHA256SUMS-arm64": "a411611356de800fc214466df97e86d80640cd05e6f895c4ab9b41b1fb1e41d0",
+          "deb-gui-startup-arm64.log": "8c92d5bd7c08a168657bf4a49059b0e4a736e82c1f881f02bb4224cde6ae6094",
+          "deb-install-test-arm64.json": "dc4227e14e5de7154b98b79ae00b5bf81591e1a71673ab090e09d4fb718cd650",
+          "ledgesync-cli_0.1.0~alpha.3-1_arm64.deb": "29812e8e46d22f6a1cb9d2ca0bbbdb9ed52553dc13fea50b408741e7e336c8d6",
+          "ledgesync-cli_0.1.0~alpha.3-1_arm64.deb.sha256": "799f385c7cc29a39af51fb1fcfa925979bab8e7f6a705c0151831d8c191ced47",
+          "ledgesync_0.1.0~alpha.3-1_arm64.deb": "c10b5d30cac3a9880a19dba043750d75ba97310f7d8ea14052ad2a2f1b900673",
+          "ledgesync_0.1.0~alpha.3-1_arm64.deb.sha256": "b15ceafde90f132570decb2c298e5deb1ae0f01412b1219c5e2a378991212b3e",
+          "packaging-arm64.json": "d2f3b04e280db03393a58a5dc28f38a21508fac3a1be0c0fe4f7dd7b07cd829d"
+        },
+        "id": 11205615706,
+        "name": "ledgesync-debian-arm64",
+        "zipSHA256": "df2feab57294f027fbf556f1aa109403cc6e373c680ce60c18cbf541d72728c5"
+      },
+      {
+        "files": {
+          "local-amd64.json": "4d68405613c8b84ccd43ac1f635f6776907a4d757feab36f6be034aba0c386b5"
+        },
+        "id": 11205162288,
+        "name": "ledgesync-apt-repository-test",
+        "zipSHA256": "693e582f7f3965a6cd8c3b9313c23ae2ab176e2170002e2a9aad8e7f55caf0c2"
+      },
+      {
+        "files": {
+          "LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe": "7df7d53293a1ec80a9abb9edd4b15a291991150f1e80a165983b2b17ef00697d",
+          "LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe.sha256": "5040aba07ff489b3aec78ded0a094a0a0a57f3dc7f405fe57ac6c7a48f751c0b",
+          "windows-amd64-install-test-install.log": "941e3dbc1d4b152a68136e48c45ddd79aff958b121decf9488ed9598544946a0",
+          "windows-amd64-install-test-reinstall.log": "669be51de0e4ad3948c6896b145ed3efc2a0769dc1fbd3f29d31546ab712ae27",
+          "windows-amd64-install-test-uninstall.log": "69aa6d7c4d7d91a005a471b79c3a2a3832f51112af529525c3b36054323eb7cb",
+          "windows-amd64-install-test-wizard.log": "079f41e4a31a129542e04e6720eec7471a477d42e27b1b9aefb5bcd586cdf7a2",
+          "windows-amd64-install-test.json": "a3e87a01cc317496fd009a6dd1dc59938b315a000a156242be91d0baca5cde74"
+        },
+        "id": 11204898986,
+        "name": "ledgesync-windows-installer-amd64",
+        "zipSHA256": "949c644a230e3eb44c5a620115423fdc509fa2abe7b456813a85911378d8b629"
+      }
+    ],
+    "conclusion": "success",
+    "id": 36954256173,
+    "jobs": [
+      {
+        "conclusion": "success",
+        "id": 110673869948,
+        "name": "apt_repository",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36954256173/job/110673869948"
+      },
+      {
+        "conclusion": "success",
+        "id": 110673598992,
+        "name": "ubuntu (ubuntu-24.04, amd64)",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36954256173/job/110673598992"
+      },
+      {
+        "conclusion": "success",
+        "id": 110673599035,
+        "name": "ubuntu (ubuntu-24.04-arm, arm64)",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36954256173/job/110673599035"
+      },
+      {
+        "conclusion": "success",
+        "id": 110673599141,
+        "name": "windows (windows-11-arm, arm64)",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36954256173/job/110673599141"
+      },
+      {
+        "conclusion": "success",
+        "id": 110673599098,
+        "name": "windows (windows-2022, amd64)",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36954256173/job/110673599098"
+      }
+    ],
+    "sourceCommit": "0ec2f3fb66624522638b69f3b7a71ef517cf5259",
+    "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36954256173"
+  }
+}

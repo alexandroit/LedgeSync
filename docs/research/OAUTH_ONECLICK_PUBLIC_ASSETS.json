@@ -1,0 +1,1273 @@
+{
+  "schemaVersion": 1,
+  "product": "LedgeSync",
+  "version": "0.1.0-alpha.3",
+  "verifiedAt": "2026-10-02T02:12:27.365039+00:00",
+  "verificationStartedAt": "2026-10-02T02:12:25.289554+00:00",
+  "repository": "alexandroit/LedgeSync",
+  "release": {
+    "id": 401489720,
+    "tag": "v0.1.0-alpha.3",
+    "url": "https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3",
+    "sourceCommit": "4da377c311b78a99b1a9fde1127d77e21e6e05ec",
+    "tagObjectType": "commit",
+    "draft": false,
+    "prerelease": true,
+    "assetCount": 37
+  },
+  "checks": {
+    "exactLocalPublicAssetInventory": true,
+    "allGitHubDigestsAndSizesMatchLocalFiles": true,
+    "all37AssetsDownloadedAnonymously": true,
+    "anonymousDownloadsMatchAllLocalSHA256AndSizes": true,
+    "initial24AssetsPreserved": true,
+    "all69PriorAssetsPreserved": true,
+    "assetIdentitiesStableAcrossVerification": true
+  },
+  "anonymousMethod": {
+    "client": "curl",
+    "configDisabled": true,
+    "authorizationAndCookieHeadersEmpty": true,
+    "environment": "PATH and LANG only",
+    "protocols": "HTTPS initial requests and redirects",
+    "comparison": "HTTP 200, downloaded byte count, SHA-256 versus local staged bytes and GitHub API digest"
+  },
+  "initialAlpha3Snapshot": {
+    "path": "build/oauth-alpha3/initial-public-release.json",
+    "sha256": "78b457cb05cd2c4c122e8042ae89d997ae1ac8d503b495bd2dadb2bdf0a5fd4e",
+    "assetCount": 24,
+    "comparedFields": [
+      "id",
+      "name",
+      "digest",
+      "size",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  "assets": [
+    {
+      "id": 604599074,
+      "name": "INSTALLERS_RELEASE.json",
+      "digest": "sha256:75560a8330cd4935e4c8b837389c013e4f38bb5192e12cb9a43b6e3e1cf0461d",
+      "size": 68520,
+      "created_at": "2026-10-02T02:11:18Z",
+      "updated_at": "2026-10-02T02:11:18Z",
+      "localPath": "build/oauth-alpha3/installer-assets/INSTALLERS_RELEASE.json",
+      "localSHA256": "75560a8330cd4935e4c8b837389c013e4f38bb5192e12cb9a43b6e3e1cf0461d",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/INSTALLERS_RELEASE.json",
+        "httpStatus": 200,
+        "bytes": 68520,
+        "sha256": "75560a8330cd4935e4c8b837389c013e4f38bb5192e12cb9a43b6e3e1cf0461d",
+        "elapsedSeconds": 0.222
+      }
+    },
+    {
+      "id": 604593233,
+      "name": "LedgeSync-0.1.0-alpha.3-macos-amd64.dmg",
+      "digest": "sha256:ad6e204ba5670f71b406078045daaa077230b93a1c8500c4c70ebd55dd7dd3d0",
+      "size": 5363723,
+      "created_at": "2026-10-02T02:07:48Z",
+      "updated_at": "2026-10-02T02:07:49Z",
+      "localPath": "build/oauth-alpha3/assets/LedgeSync-0.1.0-alpha.3-macos-amd64.dmg",
+      "localSHA256": "ad6e204ba5670f71b406078045daaa077230b93a1c8500c4c70ebd55dd7dd3d0",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-amd64.dmg",
+        "httpStatus": 200,
+        "bytes": 5363723,
+        "sha256": "ad6e204ba5670f71b406078045daaa077230b93a1c8500c4c70ebd55dd7dd3d0",
+        "elapsedSeconds": 0.413
+      }
+    },
+    {
+      "id": 604593239,
+      "name": "LedgeSync-0.1.0-alpha.3-macos-amd64.dmg.sha256",
+      "digest": "sha256:f3b24f921470ee00ee972bebf9f62e964ca5e9ae08916a046806ba096c95d22c",
+      "size": 106,
+      "created_at": "2026-10-02T02:07:49Z",
+      "updated_at": "2026-10-02T02:07:49Z",
+      "localPath": "build/oauth-alpha3/assets/LedgeSync-0.1.0-alpha.3-macos-amd64.dmg.sha256",
+      "localSHA256": "f3b24f921470ee00ee972bebf9f62e964ca5e9ae08916a046806ba096c95d22c",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-amd64.dmg.sha256",
+        "httpStatus": 200,
+        "bytes": 106,
+        "sha256": "f3b24f921470ee00ee972bebf9f62e964ca5e9ae08916a046806ba096c95d22c",
+        "elapsedSeconds": 0.208
+      }
+    },
+    {
+      "id": 604593234,
+      "name": "LedgeSync-0.1.0-alpha.3-macos-arm64.dmg",
+      "digest": "sha256:874384c968392681a2c333630eff965f3ef42b25e8dd8110d24c714fc7e91734",
+      "size": 4830871,
+      "created_at": "2026-10-02T02:07:48Z",
+      "updated_at": "2026-10-02T02:07:49Z",
+      "localPath": "build/oauth-alpha3/assets/LedgeSync-0.1.0-alpha.3-macos-arm64.dmg",
+      "localSHA256": "874384c968392681a2c333630eff965f3ef42b25e8dd8110d24c714fc7e91734",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-arm64.dmg",
+        "httpStatus": 200,
+        "bytes": 4830871,
+        "sha256": "874384c968392681a2c333630eff965f3ef42b25e8dd8110d24c714fc7e91734",
+        "elapsedSeconds": 0.314
+      }
+    },
+    {
+      "id": 604593235,
+      "name": "LedgeSync-0.1.0-alpha.3-macos-arm64.dmg.sha256",
+      "digest": "sha256:6782130e31865541d3c22383b7e8c7c3e22fd02864a54b2ba44a4b8b5ca32d3b",
+      "size": 106,
+      "created_at": "2026-10-02T02:07:48Z",
+      "updated_at": "2026-10-02T02:07:49Z",
+      "localPath": "build/oauth-alpha3/assets/LedgeSync-0.1.0-alpha.3-macos-arm64.dmg.sha256",
+      "localSHA256": "6782130e31865541d3c22383b7e8c7c3e22fd02864a54b2ba44a4b8b5ca32d3b",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-arm64.dmg.sha256",
+        "httpStatus": 200,
+        "bytes": 106,
+        "sha256": "6782130e31865541d3c22383b7e8c7c3e22fd02864a54b2ba44a4b8b5ca32d3b",
+        "elapsedSeconds": 0.22
+      }
+    },
+    {
+      "id": 604599075,
+      "name": "LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe",
+      "digest": "sha256:7df7d53293a1ec80a9abb9edd4b15a291991150f1e80a165983b2b17ef00697d",
+      "size": 6714184,
+      "created_at": "2026-10-02T02:11:18Z",
+      "updated_at": "2026-10-02T02:11:19Z",
+      "localPath": "build/oauth-alpha3/installer-assets/LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe",
+      "localSHA256": "7df7d53293a1ec80a9abb9edd4b15a291991150f1e80a165983b2b17ef00697d",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe",
+        "httpStatus": 200,
+        "bytes": 6714184,
+        "sha256": "7df7d53293a1ec80a9abb9edd4b15a291991150f1e80a165983b2b17ef00697d",
+        "elapsedSeconds": 0.403
+      }
+    },
+    {
+      "id": 604599081,
+      "name": "LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe.sha256",
+      "digest": "sha256:97733aacc26dd12cc6f75116921996dca9f02e35bcdba2d1a06c5e345f136215",
+      "size": 114,
+      "created_at": "2026-10-02T02:11:18Z",
+      "updated_at": "2026-10-02T02:11:18Z",
+      "localPath": "build/oauth-alpha3/installer-assets/LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe.sha256",
+      "localSHA256": "97733aacc26dd12cc6f75116921996dca9f02e35bcdba2d1a06c5e345f136215",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe.sha256",
+        "httpStatus": 200,
+        "bytes": 114,
+        "sha256": "97733aacc26dd12cc6f75116921996dca9f02e35bcdba2d1a06c5e345f136215",
+        "elapsedSeconds": 0.203
+      }
+    },
+    {
+      "id": 604599076,
+      "name": "LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe",
+      "digest": "sha256:e35ba89c273caba8bb5bdda6d44dac69ca8faf2a1a60a6d71d04cf7fb7b3ec56",
+      "size": 6274507,
+      "created_at": "2026-10-02T02:11:18Z",
+      "updated_at": "2026-10-02T02:11:19Z",
+      "localPath": "build/oauth-alpha3/installer-assets/LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe",
+      "localSHA256": "e35ba89c273caba8bb5bdda6d44dac69ca8faf2a1a60a6d71d04cf7fb7b3ec56",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe",
+        "httpStatus": 200,
+        "bytes": 6274507,
+        "sha256": "e35ba89c273caba8bb5bdda6d44dac69ca8faf2a1a60a6d71d04cf7fb7b3ec56",
+        "elapsedSeconds": 0.318
+      }
+    },
+    {
+      "id": 604599077,
+      "name": "LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe.sha256",
+      "digest": "sha256:14c774694700f53a01463a2a340eb4c4a5dbda47b28a9ea773b6df27f12b2ea0",
+      "size": 114,
+      "created_at": "2026-10-02T02:11:18Z",
+      "updated_at": "2026-10-02T02:11:18Z",
+      "localPath": "build/oauth-alpha3/installer-assets/LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe.sha256",
+      "localSHA256": "14c774694700f53a01463a2a340eb4c4a5dbda47b28a9ea773b6df27f12b2ea0",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe.sha256",
+        "httpStatus": 200,
+        "bytes": 114,
+        "sha256": "14c774694700f53a01463a2a340eb4c4a5dbda47b28a9ea773b6df27f12b2ea0",
+        "elapsedSeconds": 0.214
+      }
+    },
+    {
+      "id": 604593229,
+      "name": "RELEASE.json",
+      "digest": "sha256:6cf16f47e22b7c3a2099b7d401f0aa7c8cfa45f5ee62e7ef03ac51c61e19a8fa",
+      "size": 28982,
+      "created_at": "2026-10-02T02:07:48Z",
+      "updated_at": "2026-10-02T02:07:49Z",
+      "localPath": "build/oauth-alpha3/assets/RELEASE.json",
+      "localSHA256": "6cf16f47e22b7c3a2099b7d401f0aa7c8cfa45f5ee62e7ef03ac51c61e19a8fa",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/RELEASE.json",
+        "httpStatus": 200,
+        "bytes": 28982,
+        "sha256": "6cf16f47e22b7c3a2099b7d401f0aa7c8cfa45f5ee62e7ef03ac51c61e19a8fa",
+        "elapsedSeconds": 0.206
+      }
+    },
+    {
+      "id": 604593259,
+      "name": "SHA256SUMS",
+      "digest": "sha256:f0ba609ef3d39d63516f76695975839d6f606a331fb72687288499716ea464fe",
+      "size": 1568,
+      "created_at": "2026-10-02T02:07:49Z",
+      "updated_at": "2026-10-02T02:07:49Z",
+      "localPath": "build/oauth-alpha3/assets/SHA256SUMS",
+      "localSHA256": "f0ba609ef3d39d63516f76695975839d6f606a331fb72687288499716ea464fe",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/SHA256SUMS",
+        "httpStatus": 200,
+        "bytes": 1568,
+        "sha256": "f0ba609ef3d39d63516f76695975839d6f606a331fb72687288499716ea464fe",
+        "elapsedSeconds": 0.22
+      }
+    },
+    {
+      "id": 604593272,
+      "name": "ledgesync-0.1.0-alpha.3-darwin-amd64.tar.gz",
+      "digest": "sha256:d8b043df12a83f25d45bee4216ba185647e11885a6f80bbe0d12afe9743cfe2b",
+      "size": 3086672,
+      "created_at": "2026-10-02T02:07:49Z",
+      "updated_at": "2026-10-02T02:07:49Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-0.1.0-alpha.3-darwin-amd64.tar.gz",
+      "localSHA256": "d8b043df12a83f25d45bee4216ba185647e11885a6f80bbe0d12afe9743cfe2b",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-darwin-amd64.tar.gz",
+        "httpStatus": 200,
+        "bytes": 3086672,
+        "sha256": "d8b043df12a83f25d45bee4216ba185647e11885a6f80bbe0d12afe9743cfe2b",
+        "elapsedSeconds": 0.287
+      }
+    },
+    {
+      "id": 604593273,
+      "name": "ledgesync-0.1.0-alpha.3-darwin-arm64.tar.gz",
+      "digest": "sha256:56d3d1e0aaf85c02301aff072f02931d0955d388f17c061f0cc5b7e767cfc5bf",
+      "size": 2890506,
+      "created_at": "2026-10-02T02:07:49Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-0.1.0-alpha.3-darwin-arm64.tar.gz",
+      "localSHA256": "56d3d1e0aaf85c02301aff072f02931d0955d388f17c061f0cc5b7e767cfc5bf",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-darwin-arm64.tar.gz",
+        "httpStatus": 200,
+        "bytes": 2890506,
+        "sha256": "56d3d1e0aaf85c02301aff072f02931d0955d388f17c061f0cc5b7e767cfc5bf",
+        "elapsedSeconds": 0.33
+      }
+    },
+    {
+      "id": 604593278,
+      "name": "ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz",
+      "digest": "sha256:b655f5ccc904f21ad9cf722d2a90b980203100883e0d2c3ff7907e9991e7217a",
+      "size": 3044507,
+      "created_at": "2026-10-02T02:07:49Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz",
+      "localSHA256": "b655f5ccc904f21ad9cf722d2a90b980203100883e0d2c3ff7907e9991e7217a",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz",
+        "httpStatus": 200,
+        "bytes": 3044507,
+        "sha256": "b655f5ccc904f21ad9cf722d2a90b980203100883e0d2c3ff7907e9991e7217a",
+        "elapsedSeconds": 0.268
+      }
+    },
+    {
+      "id": 604593280,
+      "name": "ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz",
+      "digest": "sha256:da30ffd4c5cd9dd3f819b850b2ef39b4e6cc5399b64b9dd4c78d2526292da784",
+      "size": 2789131,
+      "created_at": "2026-10-02T02:07:49Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz",
+      "localSHA256": "da30ffd4c5cd9dd3f819b850b2ef39b4e6cc5399b64b9dd4c78d2526292da784",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz",
+        "httpStatus": 200,
+        "bytes": 2789131,
+        "sha256": "da30ffd4c5cd9dd3f819b850b2ef39b4e6cc5399b64b9dd4c78d2526292da784",
+        "elapsedSeconds": 0.3
+      }
+    },
+    {
+      "id": 604593286,
+      "name": "ledgesync-0.1.0-alpha.3-windows-amd64.zip",
+      "digest": "sha256:a9654790d81f5e38d1554f46142c342ff1393cd72a97ab644844e7f457722df4",
+      "size": 3135266,
+      "created_at": "2026-10-02T02:07:49Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-0.1.0-alpha.3-windows-amd64.zip",
+      "localSHA256": "a9654790d81f5e38d1554f46142c342ff1393cd72a97ab644844e7f457722df4",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-windows-amd64.zip",
+        "httpStatus": 200,
+        "bytes": 3135266,
+        "sha256": "a9654790d81f5e38d1554f46142c342ff1393cd72a97ab644844e7f457722df4",
+        "elapsedSeconds": 0.301
+      }
+    },
+    {
+      "id": 604593289,
+      "name": "ledgesync-0.1.0-alpha.3-windows-arm64.zip",
+      "digest": "sha256:2914847dfe616fdbbc6f44ada266840b340e7cc995ddd502f12d2c32e4e0262a",
+      "size": 2856685,
+      "created_at": "2026-10-02T02:07:50Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-0.1.0-alpha.3-windows-arm64.zip",
+      "localSHA256": "2914847dfe616fdbbc6f44ada266840b340e7cc995ddd502f12d2c32e4e0262a",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-windows-arm64.zip",
+        "httpStatus": 200,
+        "bytes": 2856685,
+        "sha256": "2914847dfe616fdbbc6f44ada266840b340e7cc995ddd502f12d2c32e4e0262a",
+        "elapsedSeconds": 0.323
+      }
+    },
+    {
+      "id": 604599091,
+      "name": "ledgesync-cli_0.1.0.alpha.3-1_amd64.deb",
+      "digest": "sha256:0d1c8d13f8669ccc1d6b9056b0170c20f1401470526a27ff69e92802516ea166",
+      "size": 2701036,
+      "created_at": "2026-10-02T02:11:19Z",
+      "updated_at": "2026-10-02T02:11:19Z",
+      "localPath": "build/oauth-alpha3/installer-assets/ledgesync-cli_0.1.0.alpha.3-1_amd64.deb",
+      "localSHA256": "0d1c8d13f8669ccc1d6b9056b0170c20f1401470526a27ff69e92802516ea166",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-cli_0.1.0.alpha.3-1_amd64.deb",
+        "httpStatus": 200,
+        "bytes": 2701036,
+        "sha256": "0d1c8d13f8669ccc1d6b9056b0170c20f1401470526a27ff69e92802516ea166",
+        "elapsedSeconds": 0.273
+      }
+    },
+    {
+      "id": 604599092,
+      "name": "ledgesync-cli_0.1.0.alpha.3-1_amd64.deb.sha256",
+      "digest": "sha256:c685f4f1e2366900fe3db608a5c8db5c62a9bd33d3c1602b0da3a74565061e32",
+      "size": 106,
+      "created_at": "2026-10-02T02:11:19Z",
+      "updated_at": "2026-10-02T02:11:19Z",
+      "localPath": "build/oauth-alpha3/installer-assets/ledgesync-cli_0.1.0.alpha.3-1_amd64.deb.sha256",
+      "localSHA256": "c685f4f1e2366900fe3db608a5c8db5c62a9bd33d3c1602b0da3a74565061e32",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-cli_0.1.0.alpha.3-1_amd64.deb.sha256",
+        "httpStatus": 200,
+        "bytes": 106,
+        "sha256": "c685f4f1e2366900fe3db608a5c8db5c62a9bd33d3c1602b0da3a74565061e32",
+        "elapsedSeconds": 0.189
+      }
+    },
+    {
+      "id": 604599093,
+      "name": "ledgesync-cli_0.1.0.alpha.3-1_arm64.deb",
+      "digest": "sha256:29812e8e46d22f6a1cb9d2ca0bbbdb9ed52553dc13fea50b408741e7e336c8d6",
+      "size": 2411912,
+      "created_at": "2026-10-02T02:11:19Z",
+      "updated_at": "2026-10-02T02:11:19Z",
+      "localPath": "build/oauth-alpha3/installer-assets/ledgesync-cli_0.1.0.alpha.3-1_arm64.deb",
+      "localSHA256": "29812e8e46d22f6a1cb9d2ca0bbbdb9ed52553dc13fea50b408741e7e336c8d6",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-cli_0.1.0.alpha.3-1_arm64.deb",
+        "httpStatus": 200,
+        "bytes": 2411912,
+        "sha256": "29812e8e46d22f6a1cb9d2ca0bbbdb9ed52553dc13fea50b408741e7e336c8d6",
+        "elapsedSeconds": 0.316
+      }
+    },
+    {
+      "id": 604599106,
+      "name": "ledgesync-cli_0.1.0.alpha.3-1_arm64.deb.sha256",
+      "digest": "sha256:3ce8aca3338934a387f13a5c64851d8b7ae6097e1beaf93ab2412fe1d7d8b7c4",
+      "size": 106,
+      "created_at": "2026-10-02T02:11:19Z",
+      "updated_at": "2026-10-02T02:11:19Z",
+      "localPath": "build/oauth-alpha3/installer-assets/ledgesync-cli_0.1.0.alpha.3-1_arm64.deb.sha256",
+      "localSHA256": "3ce8aca3338934a387f13a5c64851d8b7ae6097e1beaf93ab2412fe1d7d8b7c4",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-cli_0.1.0.alpha.3-1_arm64.deb.sha256",
+        "httpStatus": 200,
+        "bytes": 106,
+        "sha256": "3ce8aca3338934a387f13a5c64851d8b7ae6097e1beaf93ab2412fe1d7d8b7c4",
+        "elapsedSeconds": 0.186
+      }
+    },
+    {
+      "id": 604593295,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-darwin-amd64.tar.gz",
+      "digest": "sha256:7872b535be4d554adff2b4035796dbbe3ba421335e2a10d2a4897e453d3d73fb",
+      "size": 4828089,
+      "created_at": "2026-10-02T02:07:50Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-darwin-amd64.tar.gz",
+      "localSHA256": "7872b535be4d554adff2b4035796dbbe3ba421335e2a10d2a4897e453d3d73fb",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-darwin-amd64.tar.gz",
+        "httpStatus": 200,
+        "bytes": 4828089,
+        "sha256": "7872b535be4d554adff2b4035796dbbe3ba421335e2a10d2a4897e453d3d73fb",
+        "elapsedSeconds": 0.266
+      }
+    },
+    {
+      "id": 604593297,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-darwin-amd64.tar.gz.sha256",
+      "digest": "sha256:a66dbd1c98b0d8348168224ed4eec521fdf07c378bcff0b0cf781481fb3e3a7a",
+      "size": 118,
+      "created_at": "2026-10-02T02:07:50Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-darwin-amd64.tar.gz.sha256",
+      "localSHA256": "a66dbd1c98b0d8348168224ed4eec521fdf07c378bcff0b0cf781481fb3e3a7a",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-darwin-amd64.tar.gz.sha256",
+        "httpStatus": 200,
+        "bytes": 118,
+        "sha256": "a66dbd1c98b0d8348168224ed4eec521fdf07c378bcff0b0cf781481fb3e3a7a",
+        "elapsedSeconds": 0.243
+      }
+    },
+    {
+      "id": 604593296,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-darwin-arm64.tar.gz",
+      "digest": "sha256:10acafa03a342b37bfceabf12c8527bda3ad890ee13055977f47a6a2c72e2baf",
+      "size": 4367786,
+      "created_at": "2026-10-02T02:07:50Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-darwin-arm64.tar.gz",
+      "localSHA256": "10acafa03a342b37bfceabf12c8527bda3ad890ee13055977f47a6a2c72e2baf",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-darwin-arm64.tar.gz",
+        "httpStatus": 200,
+        "bytes": 4367786,
+        "sha256": "10acafa03a342b37bfceabf12c8527bda3ad890ee13055977f47a6a2c72e2baf",
+        "elapsedSeconds": 0.345
+      }
+    },
+    {
+      "id": 604593298,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-darwin-arm64.tar.gz.sha256",
+      "digest": "sha256:3be9edf8c39a2cbbda21f67df7be823ad31f8d6cd7c9cd384aacd19927405a8d",
+      "size": 118,
+      "created_at": "2026-10-02T02:07:50Z",
+      "updated_at": "2026-10-02T02:07:50Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-darwin-arm64.tar.gz.sha256",
+      "localSHA256": "3be9edf8c39a2cbbda21f67df7be823ad31f8d6cd7c9cd384aacd19927405a8d",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-darwin-arm64.tar.gz.sha256",
+        "httpStatus": 200,
+        "bytes": 118,
+        "sha256": "3be9edf8c39a2cbbda21f67df7be823ad31f8d6cd7c9cd384aacd19927405a8d",
+        "elapsedSeconds": 0.188
+      }
+    },
+    {
+      "id": 604593299,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz",
+      "digest": "sha256:eacca6b848ad517f2cfbfbdd28c7e78da64364200fd7fc9f38b81705714cf617",
+      "size": 4848832,
+      "created_at": "2026-10-02T02:07:50Z",
+      "updated_at": "2026-10-02T02:07:51Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz",
+      "localSHA256": "eacca6b848ad517f2cfbfbdd28c7e78da64364200fd7fc9f38b81705714cf617",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz",
+        "httpStatus": 200,
+        "bytes": 4848832,
+        "sha256": "eacca6b848ad517f2cfbfbdd28c7e78da64364200fd7fc9f38b81705714cf617",
+        "elapsedSeconds": 0.305
+      }
+    },
+    {
+      "id": 604593303,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz.sha256",
+      "digest": "sha256:d2b1130914b50750a7d286e4ae9ec15561a70618d8f63cf8a9c3cd33f2827ee7",
+      "size": 117,
+      "created_at": "2026-10-02T02:07:51Z",
+      "updated_at": "2026-10-02T02:07:51Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz.sha256",
+      "localSHA256": "d2b1130914b50750a7d286e4ae9ec15561a70618d8f63cf8a9c3cd33f2827ee7",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz.sha256",
+        "httpStatus": 200,
+        "bytes": 117,
+        "sha256": "d2b1130914b50750a7d286e4ae9ec15561a70618d8f63cf8a9c3cd33f2827ee7",
+        "elapsedSeconds": 0.212
+      }
+    },
+    {
+      "id": 604593306,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz",
+      "digest": "sha256:646e658e2116c92146f5678ec12c4361fec1f26e9b677db59bd4998623179183",
+      "size": 4381551,
+      "created_at": "2026-10-02T02:07:51Z",
+      "updated_at": "2026-10-02T02:07:51Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz",
+      "localSHA256": "646e658e2116c92146f5678ec12c4361fec1f26e9b677db59bd4998623179183",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz",
+        "httpStatus": 200,
+        "bytes": 4381551,
+        "sha256": "646e658e2116c92146f5678ec12c4361fec1f26e9b677db59bd4998623179183",
+        "elapsedSeconds": 0.268
+      }
+    },
+    {
+      "id": 604593312,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz.sha256",
+      "digest": "sha256:a66eaed93aeac2fd3c45eed8dbd2796e0d1a1d218bbfa35b84a71602078760bd",
+      "size": 117,
+      "created_at": "2026-10-02T02:07:51Z",
+      "updated_at": "2026-10-02T02:07:51Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz.sha256",
+      "localSHA256": "a66eaed93aeac2fd3c45eed8dbd2796e0d1a1d218bbfa35b84a71602078760bd",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz.sha256",
+        "httpStatus": 200,
+        "bytes": 117,
+        "sha256": "a66eaed93aeac2fd3c45eed8dbd2796e0d1a1d218bbfa35b84a71602078760bd",
+        "elapsedSeconds": 0.234
+      }
+    },
+    {
+      "id": 604593314,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip",
+      "digest": "sha256:8d913ae9465bac373facce27f62f51ad01735b228bfbcc51df8522090941a3dc",
+      "size": 5322085,
+      "created_at": "2026-10-02T02:07:51Z",
+      "updated_at": "2026-10-02T02:07:51Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip",
+      "localSHA256": "8d913ae9465bac373facce27f62f51ad01735b228bfbcc51df8522090941a3dc",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip",
+        "httpStatus": 200,
+        "bytes": 5322085,
+        "sha256": "8d913ae9465bac373facce27f62f51ad01735b228bfbcc51df8522090941a3dc",
+        "elapsedSeconds": 0.328
+      }
+    },
+    {
+      "id": 604593321,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip.sha256",
+      "digest": "sha256:82ecf18bcdd0c9c95a595bbe75e2a34f5cb981fe2484f59278de7c030873b908",
+      "size": 117,
+      "created_at": "2026-10-02T02:07:51Z",
+      "updated_at": "2026-10-02T02:07:51Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip.sha256",
+      "localSHA256": "82ecf18bcdd0c9c95a595bbe75e2a34f5cb981fe2484f59278de7c030873b908",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip.sha256",
+        "httpStatus": 200,
+        "bytes": 117,
+        "sha256": "82ecf18bcdd0c9c95a595bbe75e2a34f5cb981fe2484f59278de7c030873b908",
+        "elapsedSeconds": 0.189
+      }
+    },
+    {
+      "id": 604593331,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip",
+      "digest": "sha256:a12edcbf620431b5f1808384dc2fb9d86fea3cbe358acfd2b4a7d00e3b49e2d1",
+      "size": 4764097,
+      "created_at": "2026-10-02T02:07:51Z",
+      "updated_at": "2026-10-02T02:07:51Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip",
+      "localSHA256": "a12edcbf620431b5f1808384dc2fb9d86fea3cbe358acfd2b4a7d00e3b49e2d1",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip",
+        "httpStatus": 200,
+        "bytes": 4764097,
+        "sha256": "a12edcbf620431b5f1808384dc2fb9d86fea3cbe358acfd2b4a7d00e3b49e2d1",
+        "elapsedSeconds": 0.244
+      }
+    },
+    {
+      "id": 604593333,
+      "name": "ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip.sha256",
+      "digest": "sha256:6513fa5912542c48501d1d24f9502f5ab199840798605a6df4a8549c57210859",
+      "size": 117,
+      "created_at": "2026-10-02T02:07:51Z",
+      "updated_at": "2026-10-02T02:07:51Z",
+      "localPath": "build/oauth-alpha3/assets/ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip.sha256",
+      "localSHA256": "6513fa5912542c48501d1d24f9502f5ab199840798605a6df4a8549c57210859",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip.sha256",
+        "httpStatus": 200,
+        "bytes": 117,
+        "sha256": "6513fa5912542c48501d1d24f9502f5ab199840798605a6df4a8549c57210859",
+        "elapsedSeconds": 0.219
+      }
+    },
+    {
+      "id": 604599108,
+      "name": "ledgesync_0.1.0.alpha.3-1_amd64.deb",
+      "digest": "sha256:d42eb7b42a57bdaa5a4809f472ae354e41ea444cd1ec367d5815d698e604d4e1",
+      "size": 3787816,
+      "created_at": "2026-10-02T02:11:19Z",
+      "updated_at": "2026-10-02T02:11:19Z",
+      "localPath": "build/oauth-alpha3/installer-assets/ledgesync_0.1.0.alpha.3-1_amd64.deb",
+      "localSHA256": "d42eb7b42a57bdaa5a4809f472ae354e41ea444cd1ec367d5815d698e604d4e1",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync_0.1.0.alpha.3-1_amd64.deb",
+        "httpStatus": 200,
+        "bytes": 3787816,
+        "sha256": "d42eb7b42a57bdaa5a4809f472ae354e41ea444cd1ec367d5815d698e604d4e1",
+        "elapsedSeconds": 0.304
+      }
+    },
+    {
+      "id": 604599114,
+      "name": "ledgesync_0.1.0.alpha.3-1_amd64.deb.sha256",
+      "digest": "sha256:9ddb9c718cd304e6dc49659a8513e318061d312b407edf59242844177c49030f",
+      "size": 102,
+      "created_at": "2026-10-02T02:11:19Z",
+      "updated_at": "2026-10-02T02:11:19Z",
+      "localPath": "build/oauth-alpha3/installer-assets/ledgesync_0.1.0.alpha.3-1_amd64.deb.sha256",
+      "localSHA256": "9ddb9c718cd304e6dc49659a8513e318061d312b407edf59242844177c49030f",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync_0.1.0.alpha.3-1_amd64.deb.sha256",
+        "httpStatus": 200,
+        "bytes": 102,
+        "sha256": "9ddb9c718cd304e6dc49659a8513e318061d312b407edf59242844177c49030f",
+        "elapsedSeconds": 0.222
+      }
+    },
+    {
+      "id": 604599119,
+      "name": "ledgesync_0.1.0.alpha.3-1_arm64.deb",
+      "digest": "sha256:c10b5d30cac3a9880a19dba043750d75ba97310f7d8ea14052ad2a2f1b900673",
+      "size": 3248056,
+      "created_at": "2026-10-02T02:11:19Z",
+      "updated_at": "2026-10-02T02:11:20Z",
+      "localPath": "build/oauth-alpha3/installer-assets/ledgesync_0.1.0.alpha.3-1_arm64.deb",
+      "localSHA256": "c10b5d30cac3a9880a19dba043750d75ba97310f7d8ea14052ad2a2f1b900673",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync_0.1.0.alpha.3-1_arm64.deb",
+        "httpStatus": 200,
+        "bytes": 3248056,
+        "sha256": "c10b5d30cac3a9880a19dba043750d75ba97310f7d8ea14052ad2a2f1b900673",
+        "elapsedSeconds": 0.315
+      }
+    },
+    {
+      "id": 604599122,
+      "name": "ledgesync_0.1.0.alpha.3-1_arm64.deb.sha256",
+      "digest": "sha256:c8c15160799cbd625b12f6bd28c1bd1caef2d7f4619e4c293d7fc03e89e8c7c0",
+      "size": 102,
+      "created_at": "2026-10-02T02:11:19Z",
+      "updated_at": "2026-10-02T02:11:20Z",
+      "localPath": "build/oauth-alpha3/installer-assets/ledgesync_0.1.0.alpha.3-1_arm64.deb.sha256",
+      "localSHA256": "c8c15160799cbd625b12f6bd28c1bd1caef2d7f4619e4c293d7fc03e89e8c7c0",
+      "anonymousDownload": {
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync_0.1.0.alpha.3-1_arm64.deb.sha256",
+        "httpStatus": 200,
+        "bytes": 102,
+        "sha256": "c8c15160799cbd625b12f6bd28c1bd1caef2d7f4619e4c293d7fc03e89e8c7c0",
+        "elapsedSeconds": 0.196
+      }
+    }
+  ],
+  "priorReleases": [
+    {
+      "tag": "v0.1.0-alpha.1",
+      "releaseId": 401440073,
+      "assetCount": 32,
+      "snapshotPath": "build/oauth-alpha3/v0.1.0-alpha.1-before.json",
+      "snapshotSHA256": "0ebc065aba6c764d2e67b72cd08c65fe08cec01f7bc6b8e919028ff207de0577",
+      "allAssetIdentityFieldsUnchanged": true,
+      "comparedFields": [
+        "id",
+        "name",
+        "digest",
+        "size",
+        "created_at",
+        "updated_at"
+      ],
+      "assets": [
+        {
+          "id": 604410651,
+          "name": "DMG_RELEASE.json",
+          "digest": "sha256:9740326931ce4849be0ef3580ce2303383cfe3c8e7c6d9292b3c404c20860bc6",
+          "size": 2638,
+          "created_at": "2026-10-02T00:14:15Z",
+          "updated_at": "2026-10-02T00:14:16Z"
+        },
+        {
+          "id": 604449253,
+          "name": "INSTALLERS_RELEASE.json",
+          "digest": "sha256:1c5f3fd87aa4bb60c2876e0bedb401f628b82464fb6fbdbc51bc7104c82a8ca8",
+          "size": 23591,
+          "created_at": "2026-10-02T00:41:14Z",
+          "updated_at": "2026-10-02T00:41:14Z"
+        },
+        {
+          "id": 604410652,
+          "name": "LedgeSync-0.1.0-alpha.1-macos-amd64.dmg",
+          "digest": "sha256:d5b7b7f508e141a18e5d7c2a740610c32cf8368b2052b6aa149e49baef8df487",
+          "size": 4275895,
+          "created_at": "2026-10-02T00:14:15Z",
+          "updated_at": "2026-10-02T00:14:16Z"
+        },
+        {
+          "id": 604410649,
+          "name": "LedgeSync-0.1.0-alpha.1-macos-amd64.dmg.sha256",
+          "digest": "sha256:cd856968fc2ff0ab1e10604b3b78da2212c0deff147da7ba626ba144397597a9",
+          "size": 106,
+          "created_at": "2026-10-02T00:14:15Z",
+          "updated_at": "2026-10-02T00:14:16Z"
+        },
+        {
+          "id": 604410650,
+          "name": "LedgeSync-0.1.0-alpha.1-macos-arm64.dmg",
+          "digest": "sha256:67eb13b65445c51ffd09c6e5f2db36593b3862fdeb7a01a3f2aca72cd0b77640",
+          "size": 3870763,
+          "created_at": "2026-10-02T00:14:15Z",
+          "updated_at": "2026-10-02T00:14:16Z"
+        },
+        {
+          "id": 604410648,
+          "name": "LedgeSync-0.1.0-alpha.1-macos-arm64.dmg.sha256",
+          "digest": "sha256:110f8eabc2c800f5b37658b4353bec15b75c1648f59725af1494319e95c9ea38",
+          "size": 106,
+          "created_at": "2026-10-02T00:14:15Z",
+          "updated_at": "2026-10-02T00:14:16Z"
+        },
+        {
+          "id": 604446181,
+          "name": "LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe",
+          "digest": "sha256:00f64cd4d0dfa1078ebe64a1ea77a9f81b92574d3fc1c4282d5430cacb97a42c",
+          "size": 6449703,
+          "created_at": "2026-10-02T00:39:35Z",
+          "updated_at": "2026-10-02T00:39:36Z"
+        },
+        {
+          "id": 604446185,
+          "name": "LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe.sha256",
+          "digest": "sha256:dcc18e95a74d5d9b1fcc197a71e076f130aee60d14680637ec020891958884b9",
+          "size": 115,
+          "created_at": "2026-10-02T00:39:35Z",
+          "updated_at": "2026-10-02T00:39:35Z"
+        },
+        {
+          "id": 604446178,
+          "name": "LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe",
+          "digest": "sha256:fbb10f6e16a9e5e71fb67e71f60f6033f42b8ddca27350b60a0d0b282fc14162",
+          "size": 6041514,
+          "created_at": "2026-10-02T00:39:35Z",
+          "updated_at": "2026-10-02T00:39:36Z"
+        },
+        {
+          "id": 604446182,
+          "name": "LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe.sha256",
+          "digest": "sha256:de37ba12b19d40d84855f366bcc1ec58beade2e88ae28d2bb2dc13d6c79ea67c",
+          "size": 115,
+          "created_at": "2026-10-02T00:39:35Z",
+          "updated_at": "2026-10-02T00:39:35Z"
+        },
+        {
+          "id": 604384225,
+          "name": "RELEASE.json",
+          "digest": "sha256:249d31eb7382c429bbc471d6f8bfab3df0eefd1b16eaf6887ba17c3cd4f6ea10",
+          "size": 4185,
+          "created_at": "2026-10-01T23:53:44Z",
+          "updated_at": "2026-10-01T23:53:44Z"
+        },
+        {
+          "id": 604384221,
+          "name": "SHA256SUMS",
+          "digest": "sha256:d83d3084b08eefc1a3e915c18e73493dee335d08d5ab1392f89a23942eaca168",
+          "size": 1356,
+          "created_at": "2026-10-01T23:53:44Z",
+          "updated_at": "2026-10-01T23:53:44Z"
+        },
+        {
+          "id": 604384223,
+          "name": "ledgesync-0.1.0-alpha.1-darwin-amd64.tar.gz",
+          "digest": "sha256:f7b71c8ecf304310ce22e9f0e0b7696aa1b27f304d05619d92822aadf14a80a4",
+          "size": 3086228,
+          "created_at": "2026-10-01T23:53:44Z",
+          "updated_at": "2026-10-01T23:53:45Z"
+        },
+        {
+          "id": 604384224,
+          "name": "ledgesync-0.1.0-alpha.1-darwin-arm64.tar.gz",
+          "digest": "sha256:18d1915404d0d7eb607f1dc9baff43e52ce2e6ff73137a1c149044673b23dd35",
+          "size": 2890214,
+          "created_at": "2026-10-01T23:53:44Z",
+          "updated_at": "2026-10-01T23:53:45Z"
+        },
+        {
+          "id": 604384222,
+          "name": "ledgesync-0.1.0-alpha.1-linux-amd64.tar.gz",
+          "digest": "sha256:c5b0c9bfa2303503c9cfee89facdeee4913c35e8b4181d8cdc1a224dae19d4e8",
+          "size": 3044399,
+          "created_at": "2026-10-01T23:53:44Z",
+          "updated_at": "2026-10-01T23:53:45Z"
+        },
+        {
+          "id": 604384231,
+          "name": "ledgesync-0.1.0-alpha.1-linux-arm64.tar.gz",
+          "digest": "sha256:9f2477194d0f152063c02bf5adedab380d4c4ed53615a3ff8b164d41884f6518",
+          "size": 2788517,
+          "created_at": "2026-10-01T23:53:45Z",
+          "updated_at": "2026-10-01T23:53:45Z"
+        },
+        {
+          "id": 604384232,
+          "name": "ledgesync-0.1.0-alpha.1-windows-amd64.zip",
+          "digest": "sha256:b18a1b77cab1b2c098c5af525e337d20c8104ba2e4f1052d3c9e7ce0c512d861",
+          "size": 3133160,
+          "created_at": "2026-10-01T23:53:45Z",
+          "updated_at": "2026-10-01T23:53:45Z"
+        },
+        {
+          "id": 604384233,
+          "name": "ledgesync-0.1.0-alpha.1-windows-arm64.zip",
+          "digest": "sha256:f05c64e6a3c38b0cc4c9ef332ec15223a44c55e78f9e0a4bdf19009a3b4bb8b3",
+          "size": 2854295,
+          "created_at": "2026-10-01T23:53:45Z",
+          "updated_at": "2026-10-01T23:53:46Z"
+        },
+        {
+          "id": 604446196,
+          "name": "ledgesync-cli_0.1.0.alpha.1-1_amd64.deb",
+          "digest": "sha256:c21e858f0cf8fc850a9e8bf56dcf75e96e8c23c3c8b2638f89bda4900e0adfc0",
+          "size": 2700736,
+          "created_at": "2026-10-02T00:39:35Z",
+          "updated_at": "2026-10-02T00:39:36Z"
+        },
+        {
+          "id": 604449203,
+          "name": "ledgesync-cli_0.1.0.alpha.1-1_amd64.deb.sha256",
+          "digest": "sha256:4a0f037dcb6ced0f098ecb2ad3c2470e234415235ce37a3c14dfec0f7d43fbe0",
+          "size": 106,
+          "created_at": "2026-10-02T00:41:11Z",
+          "updated_at": "2026-10-02T00:41:11Z"
+        },
+        {
+          "id": 604446205,
+          "name": "ledgesync-cli_0.1.0.alpha.1-1_arm64.deb",
+          "digest": "sha256:c460b84154fa9b0944edf048928c4791dc88744528db79c2d3e7a1d182d2a8a8",
+          "size": 2411600,
+          "created_at": "2026-10-02T00:39:36Z",
+          "updated_at": "2026-10-02T00:39:36Z"
+        },
+        {
+          "id": 604449313,
+          "name": "ledgesync-cli_0.1.0.alpha.1-1_arm64.deb.sha256",
+          "digest": "sha256:7ffa206cf4009275c8de8e051be2d352adeecc4fac2d7cf238d4608e8df7c970",
+          "size": 106,
+          "created_at": "2026-10-02T00:41:16Z",
+          "updated_at": "2026-10-02T00:41:16Z"
+        },
+        {
+          "id": 604384235,
+          "name": "ledgesync-desktop-0.1.0-alpha.1-darwin-amd64.tar.gz",
+          "digest": "sha256:b05fc353b09549f6569ae7a36661a38388bd71545ab4dc2f8603347330bd6210",
+          "size": 3853024,
+          "created_at": "2026-10-01T23:53:45Z",
+          "updated_at": "2026-10-01T23:53:45Z"
+        },
+        {
+          "id": 604384234,
+          "name": "ledgesync-desktop-0.1.0-alpha.1-darwin-arm64.tar.gz",
+          "digest": "sha256:2f144739b5573d79be36a0ba3850d46afe97e53ca3c81c4d7db217a618b8c62d",
+          "size": 3503854,
+          "created_at": "2026-10-01T23:53:45Z",
+          "updated_at": "2026-10-01T23:53:45Z"
+        },
+        {
+          "id": 604384242,
+          "name": "ledgesync-desktop-0.1.0-alpha.1-linux-amd64.tar.gz",
+          "digest": "sha256:437b10f4486fce031ec655f2c1cd378574576e852948145c24c560a506397337",
+          "size": 3910179,
+          "created_at": "2026-10-01T23:53:45Z",
+          "updated_at": "2026-10-01T23:53:46Z"
+        },
+        {
+          "id": 604384245,
+          "name": "ledgesync-desktop-0.1.0-alpha.1-linux-arm64.tar.gz",
+          "digest": "sha256:7fe49e77edfc041d50e11e1c028972c02fcdf7412bf65643e95e7796dd372243",
+          "size": 3548413,
+          "created_at": "2026-10-01T23:53:45Z",
+          "updated_at": "2026-10-01T23:53:46Z"
+        },
+        {
+          "id": 604384246,
+          "name": "ledgesync-desktop-0.1.0-alpha.1-windows-amd64.zip",
+          "digest": "sha256:0b29bcc5c86da99522a70eeef09fcb423b3d83e56efa1a82697320d3c0d76860",
+          "size": 4948464,
+          "created_at": "2026-10-01T23:53:45Z",
+          "updated_at": "2026-10-01T23:53:46Z"
+        },
+        {
+          "id": 604384255,
+          "name": "ledgesync-desktop-0.1.0-alpha.1-windows-arm64.zip",
+          "digest": "sha256:1704c7828cea85538aaf382b008f8b78f64e49bdc94ec324d838af683bee4225",
+          "size": 4432870,
+          "created_at": "2026-10-01T23:53:46Z",
+          "updated_at": "2026-10-01T23:53:46Z"
+        },
+        {
+          "id": 604446214,
+          "name": "ledgesync_0.1.0.alpha.1-1_amd64.deb",
+          "digest": "sha256:beb302668cf777ff2f07cb82243289b5ed963ad05234493ce73df169bd7ce3f2",
+          "size": 3074460,
+          "created_at": "2026-10-02T00:39:36Z",
+          "updated_at": "2026-10-02T00:39:36Z"
+        },
+        {
+          "id": 604449226,
+          "name": "ledgesync_0.1.0.alpha.1-1_amd64.deb.sha256",
+          "digest": "sha256:ba1569d03ffc1ab971f8574e902277f057faa0ffc8bab572fbd3e9c011cfaa51",
+          "size": 102,
+          "created_at": "2026-10-02T00:41:12Z",
+          "updated_at": "2026-10-02T00:41:13Z"
+        },
+        {
+          "id": 604446227,
+          "name": "ledgesync_0.1.0.alpha.1-1_arm64.deb",
+          "digest": "sha256:52fefed8635b82cc78728fce5a69f09c3468fdeec24b3bea377aa853d1d6afc7",
+          "size": 2651316,
+          "created_at": "2026-10-02T00:39:36Z",
+          "updated_at": "2026-10-02T00:39:37Z"
+        },
+        {
+          "id": 604449283,
+          "name": "ledgesync_0.1.0.alpha.1-1_arm64.deb.sha256",
+          "digest": "sha256:94781d12e9af177d8e987958cbdf99893758be2ecdd3d10478df3861f403ac65",
+          "size": 102,
+          "created_at": "2026-10-02T00:41:15Z",
+          "updated_at": "2026-10-02T00:41:15Z"
+        }
+      ]
+    },
+    {
+      "tag": "v0.1.0-alpha.2",
+      "releaseId": 401468429,
+      "assetCount": 37,
+      "snapshotPath": "build/oauth-alpha3/v0.1.0-alpha.2-before.json",
+      "snapshotSHA256": "0242e3508b97382013dd174a075e895ebb621a6ab723eb8a450f1f91f5cdbd7f",
+      "allAssetIdentityFieldsUnchanged": true,
+      "comparedFields": [
+        "id",
+        "name",
+        "digest",
+        "size",
+        "created_at",
+        "updated_at"
+      ],
+      "assets": [
+        {
+          "id": 604507657,
+          "name": "INSTALLERS_RELEASE.json",
+          "digest": "sha256:9d584a4b2c230157b59a5ac8e07f035e6d3d54dcbbde99fae4ddea023fa75666",
+          "size": 68520,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:00Z"
+        },
+        {
+          "id": 604491790,
+          "name": "LedgeSync-0.1.0-alpha.2-macos-amd64.dmg",
+          "digest": "sha256:e6a69a6af688842fad5e110c7586c1bcb82baf2aa9fd0476904536b59da1c081",
+          "size": 6405750,
+          "created_at": "2026-10-02T01:11:17Z",
+          "updated_at": "2026-10-02T01:11:17Z"
+        },
+        {
+          "id": 604491792,
+          "name": "LedgeSync-0.1.0-alpha.2-macos-amd64.dmg.sha256",
+          "digest": "sha256:26eedf86d686e50536bc25d9507161a732cb79ac9c5b98735490c8ab209756f4",
+          "size": 106,
+          "created_at": "2026-10-02T01:11:17Z",
+          "updated_at": "2026-10-02T01:11:17Z"
+        },
+        {
+          "id": 604491791,
+          "name": "LedgeSync-0.1.0-alpha.2-macos-arm64.dmg",
+          "digest": "sha256:41e668bac8a966eead33b4a69a144ba0459e26dfeb6fb9e59db544d79c6c117a",
+          "size": 4834043,
+          "created_at": "2026-10-02T01:11:17Z",
+          "updated_at": "2026-10-02T01:11:17Z"
+        },
+        {
+          "id": 604491789,
+          "name": "LedgeSync-0.1.0-alpha.2-macos-arm64.dmg.sha256",
+          "digest": "sha256:d5dabf4d92558d243686f9e64021cc30123fb0986a711507e825756e27e7aeb1",
+          "size": 106,
+          "created_at": "2026-10-02T01:11:17Z",
+          "updated_at": "2026-10-02T01:11:17Z"
+        },
+        {
+          "id": 604507655,
+          "name": "LedgeSync-0.1.0-alpha.2-windows-amd64-setup.exe",
+          "digest": "sha256:3787d0486555b59ac8bc271117f3f6ac81c2d0ab490f34deeb70b2e2fe743e28",
+          "size": 6715311,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:00Z"
+        },
+        {
+          "id": 604507662,
+          "name": "LedgeSync-0.1.0-alpha.2-windows-amd64-setup.exe.sha256",
+          "digest": "sha256:0bec282a4cf3efc95bc02868844e2430443f849f0c4451f9e8453546d2ef7120",
+          "size": 114,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:00Z"
+        },
+        {
+          "id": 604507661,
+          "name": "LedgeSync-0.1.0-alpha.2-windows-arm64-setup.exe",
+          "digest": "sha256:d6de6e19d29a5dc5e77df1597b2d159556432e26026c95151fc55600a79dd0c4",
+          "size": 6273916,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:00Z"
+        },
+        {
+          "id": 604507659,
+          "name": "LedgeSync-0.1.0-alpha.2-windows-arm64-setup.exe.sha256",
+          "digest": "sha256:b36254094e9a17457759c0a4a79689ee1c11a800cf998346fd82f2fc020322e9",
+          "size": 114,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:00Z"
+        },
+        {
+          "id": 604491794,
+          "name": "RELEASE.json",
+          "digest": "sha256:ac33958bc30e013ae32d766aaac31c766a71c5268c1b159635565fb40370569f",
+          "size": 26074,
+          "created_at": "2026-10-02T01:11:17Z",
+          "updated_at": "2026-10-02T01:11:17Z"
+        },
+        {
+          "id": 604491804,
+          "name": "SHA256SUMS",
+          "digest": "sha256:ef4a8e7ce834116b6cd45df292f1ab51a2b2ad5c2bc63fbcf40f16f8d5b24c61",
+          "size": 1568,
+          "created_at": "2026-10-02T01:11:17Z",
+          "updated_at": "2026-10-02T01:11:17Z"
+        },
+        {
+          "id": 604491803,
+          "name": "ledgesync-0.1.0-alpha.2-darwin-amd64.tar.gz",
+          "digest": "sha256:d0dffe884a1ee2dec199942e3a1973c78dbb03930f842ccf3dbeaaf923d38c4b",
+          "size": 3086669,
+          "created_at": "2026-10-02T01:11:17Z",
+          "updated_at": "2026-10-02T01:11:18Z"
+        },
+        {
+          "id": 604491805,
+          "name": "ledgesync-0.1.0-alpha.2-darwin-arm64.tar.gz",
+          "digest": "sha256:0d8be27927eaf8104d937f27ad1175c241f33ce214a3e38700fa2c03be921666",
+          "size": 2890526,
+          "created_at": "2026-10-02T01:11:17Z",
+          "updated_at": "2026-10-02T01:11:18Z"
+        },
+        {
+          "id": 604491809,
+          "name": "ledgesync-0.1.0-alpha.2-linux-amd64.tar.gz",
+          "digest": "sha256:b40e49c058687bed551b1077cad5ab3ee15e9830348ca8ee1f2b8b82fdc29402",
+          "size": 3044492,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:18Z"
+        },
+        {
+          "id": 604491812,
+          "name": "ledgesync-0.1.0-alpha.2-linux-arm64.tar.gz",
+          "digest": "sha256:8bedbe7c6eae68984136051aef558648180559ac7e5d2571d470215c1c369e54",
+          "size": 2789137,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:18Z"
+        },
+        {
+          "id": 604491814,
+          "name": "ledgesync-0.1.0-alpha.2-windows-amd64.zip",
+          "digest": "sha256:a0dcf824919c668ab073668b0d432cd73fa446043fb40d6c2d688e4df20fe8f3",
+          "size": 3135265,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:18Z"
+        },
+        {
+          "id": 604491817,
+          "name": "ledgesync-0.1.0-alpha.2-windows-arm64.zip",
+          "digest": "sha256:b152a5bbdcf2b6874e06fb638e17e9247fd401ee7a1239f04ff425f304afe250",
+          "size": 2856692,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:18Z"
+        },
+        {
+          "id": 604507667,
+          "name": "ledgesync-cli_0.1.0.alpha.2-1_amd64.deb",
+          "digest": "sha256:ef55d6100a6357eac00d8b1d742c000bbe7754c78344d101f80905fbef6aafba",
+          "size": 2701164,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:00Z"
+        },
+        {
+          "id": 604507669,
+          "name": "ledgesync-cli_0.1.0.alpha.2-1_amd64.deb.sha256",
+          "digest": "sha256:ec1addfac82f8e0bb9fec1f0b0002d71e0dafad777492cd9e81f1ec6a8f96a67",
+          "size": 106,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:00Z"
+        },
+        {
+          "id": 604507670,
+          "name": "ledgesync-cli_0.1.0.alpha.2-1_arm64.deb",
+          "digest": "sha256:a2913b5068f52e45a75e771ddfb7aa24b4ddcfb8550f840f8d3df41257cdca88",
+          "size": 2412220,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:01Z"
+        },
+        {
+          "id": 604507676,
+          "name": "ledgesync-cli_0.1.0.alpha.2-1_arm64.deb.sha256",
+          "digest": "sha256:17067f9fefdadb72dcef382e85394698cd74c26cf1be78d05d414c21bb4551c3",
+          "size": 106,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:01Z"
+        },
+        {
+          "id": 604491820,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-darwin-amd64.tar.gz",
+          "digest": "sha256:b1c89c477e0499015b332143d43b3d0f2580c9e2efb0462637def8554fc4d966",
+          "size": 4828286,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:18Z"
+        },
+        {
+          "id": 604491822,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-darwin-amd64.tar.gz.sha256",
+          "digest": "sha256:5b6df1306570a495a2f85ba82dcff9539236f24e236702c768ec89b199d6e53e",
+          "size": 118,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:18Z"
+        },
+        {
+          "id": 604491823,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-darwin-arm64.tar.gz",
+          "digest": "sha256:a3ef69bdaaf576e2a69b0279d4e8be51d8c9c742286cded077a0da7b6453c5fc",
+          "size": 4367522,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604491827,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-darwin-arm64.tar.gz.sha256",
+          "digest": "sha256:51eb6e20fbce0841c8db6b58a53807e9fcb406418515ec25c0fae6098c58df36",
+          "size": 118,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604491829,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-linux-amd64.tar.gz",
+          "digest": "sha256:f41637ceae7942fb8fd34a31655a41ae1f9ae884b0c6494bb2be9c15552eec84",
+          "size": 4848789,
+          "created_at": "2026-10-02T01:11:18Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604491831,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-linux-amd64.tar.gz.sha256",
+          "digest": "sha256:99262ca148b41341db2b5327dd9f4549e62415a539ff4f1d96f6de087701625d",
+          "size": 117,
+          "created_at": "2026-10-02T01:11:19Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604491832,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-linux-arm64.tar.gz",
+          "digest": "sha256:383af0f01127323d94df27549d1fda0e21e2a1a01d489356ddeb4215742c63c8",
+          "size": 4381284,
+          "created_at": "2026-10-02T01:11:19Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604491834,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-linux-arm64.tar.gz.sha256",
+          "digest": "sha256:4f7560e6e4918108e5fc5ae46bec51700335f0e96f1a95592fb0040c7ad0534a",
+          "size": 117,
+          "created_at": "2026-10-02T01:11:19Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604491836,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-windows-amd64.zip",
+          "digest": "sha256:a5c32b1b90700e06a8d9d734a0ebf667cd1ebf64624ed20d66d0f147bf0f6b0a",
+          "size": 5321997,
+          "created_at": "2026-10-02T01:11:19Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604491840,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-windows-amd64.zip.sha256",
+          "digest": "sha256:ba70487b797dbac812337fba0f24c136a905a5fc3aebe574cbcb0abfae1c3ce6",
+          "size": 117,
+          "created_at": "2026-10-02T01:11:19Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604491848,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-windows-arm64.zip",
+          "digest": "sha256:2d10ffd7448665a7f95f8d90410e1adde8cec9216600da864a586d986696323b",
+          "size": 4764435,
+          "created_at": "2026-10-02T01:11:19Z",
+          "updated_at": "2026-10-02T01:11:20Z"
+        },
+        {
+          "id": 604491849,
+          "name": "ledgesync-desktop-0.1.0-alpha.2-windows-arm64.zip.sha256",
+          "digest": "sha256:8bf33ef44e85a726c304d228107fbbc866b4b3e817e003eae7e29ef4e04bbc2f",
+          "size": 117,
+          "created_at": "2026-10-02T01:11:19Z",
+          "updated_at": "2026-10-02T01:11:19Z"
+        },
+        {
+          "id": 604507680,
+          "name": "ledgesync_0.1.0.alpha.2-1_amd64.deb",
+          "digest": "sha256:9f3a68453f296648bdb6ba65d472ce0fb73d804e43f0f3a0d72cad14821ce94a",
+          "size": 3788048,
+          "created_at": "2026-10-02T01:21:00Z",
+          "updated_at": "2026-10-02T01:21:01Z"
+        },
+        {
+          "id": 604507684,
+          "name": "ledgesync_0.1.0.alpha.2-1_amd64.deb.sha256",
+          "digest": "sha256:2b14b42583c538619441a8945ca09f55ea42c3be244e171d49a4734e4dac20ba",
+          "size": 102,
+          "created_at": "2026-10-02T01:21:01Z",
+          "updated_at": "2026-10-02T01:21:01Z"
+        },
+        {
+          "id": 604507687,
+          "name": "ledgesync_0.1.0.alpha.2-1_arm64.deb",
+          "digest": "sha256:db81874d1768f0c610aabe6dd047d236ea62edcc6db8e4bd401bcd63ac79dbe8",
+          "size": 3246836,
+          "created_at": "2026-10-02T01:21:01Z",
+          "updated_at": "2026-10-02T01:21:01Z"
+        },
+        {
+          "id": 604507688,
+          "name": "ledgesync_0.1.0.alpha.2-1_arm64.deb.sha256",
+          "digest": "sha256:dd5cea1dae1d4c5acf86a2a73ccfbe62c951369a66596f7f20ed26dd3221fc81",
+          "size": 102,
+          "created_at": "2026-10-02T01:21:01Z",
+          "updated_at": "2026-10-02T01:21:01Z"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "This evidence verifies public bytes and immutable asset identity, not a live Google OAuth consent flow.",
+    "Installer/native execution evidence is recorded separately in OAUTH_ONECLICK_INSTALLERS_RELEASE.json."
+  ]
+}

@@ -165,7 +165,7 @@ and the additional `DMG_RELEASE.json` records its provenance. See
 Packaging commit: `06ca1e2749e4b7ceda5fa3703495051557e7173a`. Added
 `tools/package_dmg.py` and `tools/test_package_dmg.py`; macOS CI now creates and
 verifies DMGs alongside its archives. Updated README, platform instructions,
-release notes and website downloads. The public Ubuntu site now serves
+release notes and website downloads. At this stage the Ubuntu site served
 `188ba5de5c76b5562b6b7c6afa8e14f4a20ad45f`, with matching HTML/versioned CSS
 and both direct DMG links returning HTTP 200. The previous static release is
 retained for rollback; HiperMusicas remains available.
@@ -215,3 +215,73 @@ At the next handoff record changed files, exact commands/results, failed or
 unrun checks, remaining limits and the next safe step. Never infer successful
 installation, signing, GUI runtime, live transfer or full milestone completion
 from a build or simulated destination.
+
+## Windows installers and Ubuntu APT delivery
+
+The owner required the Windows EXE to open an installation wizard and Ubuntu
+to support `apt-get install ledgesync`. This packaging follow-up is complete;
+it does not change the offline application or enable cloud synchronization.
+
+- Windows x64 and ARM64 setup EXEs are published in the existing alpha release.
+  They use pinned Inno Setup 7.1.0, retain the exact verified original desktop
+  payload/notices, install for the current user, create a Start menu shortcut,
+  optionally create a desktop shortcut and register an uninstaller. Missing
+  WebView2 is detected with Microsoft's official prerequisite address. No
+  automatic prerequisite download, service or startup task was added.
+- Ubuntu 24.04 x64 and ARM64 have `ledgesync` graphical and `ledgesync-cli`
+  headless packages at Debian version `0.1.0~alpha.1-1`. They retain the original
+  app/CLI bytes and notices. Native `dpkg-shlibdeps` derives graphical runtime
+  dependencies; the static CLI has no graphical dependencies.
+- The signed repository at `https://ledgesync.com/apt` is live on the existing
+  Ubuntu origin. Users register its scoped key/source once, then use APT.
+  The key fingerprint is `11B35F4E066806C33AA8653A51AD694F4729F5AB`. Its private
+  key remains root-only on the server; only the public key is committed.
+  Initial snapshot: `20261002-alpha1-e796bc5`. See [APT operations](APT_REPOSITORY.md).
+- The GitHub release now has 32 assets. All 19 previously published assets retain
+  the same IDs, digests, sizes and timestamps; tag/source remains
+  `89a9121a279c843f77b2d72f8b6e93dc332cb03b`. All 13 new anonymous downloads match
+  their GitHub/local digests. GitHub normalized Debian filename tildes to dots;
+  the new checksum/manifest metadata was corrected to match those names before
+  final verification. No installer or Debian payload was replaced.
+
+Evidence and limits:
+
+- [Ubuntu package run 36946272426](https://github.com/alexandroit/LedgeSync/actions/runs/36946272426):
+  both native Ubuntu jobs and the local signed APT lifecycle job passed. Overall
+  initial run failed due to Windows packaging; do not call it an all-platform pass.
+  Ubuntu checks cover byte/notice integrity, real installation/removal and eight
+  seconds of GUI process startup under Xvfb, not interactive GUI acceptance.
+- [Windows run 36946941074](https://github.com/alexandroit/LedgeSync/actions/runs/36946941074)
+  at `8bcb6966030047df483762cc29fbba7c94a4e92a`: both native jobs passed.
+  x64 used Windows Server 2022; ARM64 used Windows 11. Both exercised actual
+  wizard welcome/Next/cancel, silent install, exact payload, registration,
+  default/optional shortcuts, same-version reinstall and uninstall preserving
+  synthetic user data. Full app interaction, x64 Windows 11 execution,
+  cross-version migration and SmartScreen acceptance are not claimed.
+- [Public APT run 36946856179](https://github.com/alexandroit/LedgeSync/actions/runs/36946856179)
+  at `55bc82685eaf42c357be26609fbf11569a9abec2`: both native Ubuntu jobs passed.
+  Verified the pinned key/source, signed metadata, rejection of tampered metadata,
+  by-hash acquisition, `apt-get install ledgesync`, CLI-only installation and
+  removal preserving synthetic user data. Public package bytes independently
+  match all four verified CI packages. The native curl/APT clients work without
+  changing Cloudflare protections; the original urllib probe received error 1010.
+- Packaging guards: four Windows and eight Debian checks passed. PowerShell
+  syntax passed. Documentation validation reports zero failures; its optional
+  JSON Schema dependency is absent locally, so that separate check is skipped.
+- [Installer provenance](research/INSTALLERS_RELEASE.json) and
+  [public verification](research/INSTALLERS_PUBLIC_VERIFICATION.json) retain
+  source/archive/package identities and the bounded test results.
+
+The live website now serves source
+`2890e90f028c6ee038739b09423b372668e20a00`, with Windows setup links and Ubuntu
+commands. Public HTML/versioned CSS/key/source bytes match tracked files; origin
+HTTPS and public/origin HiperMusicas return 200. HiperMusicas still has PID 1521428
+and shared Nginx configuration hashes are unchanged. The previous website
+release remains available for rollback. No app was installed on the production
+server as a lifecycle test. Main workflows now offer Windows/Ubuntu targets and
+separate public APT verification; failed Windows runs retain diagnostics.
+
+Remaining product work and signing limitations are unchanged: offline preview
+only, no Drive account/transfer, no cross-version installer migration claim,
+no trusted Windows publisher signature, no macOS notarization, and no full
+Windows/Linux graphical application acceptance.

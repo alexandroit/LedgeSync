@@ -62,7 +62,9 @@ func TestCatalogStoresBoundedPrivateDocuments(t *testing.T) {
 
 func TestJournalMigrationKeepsPrivateBackupAndData(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "state")
-	if err := os.MkdirAll(dir, 0o700); err != nil {
+	// Create the directory exactly as the application does: Windows rejects an
+	// existing directory without the protected owner-only DACL.
+	if err := prepareStateDirectory(dir); err != nil {
 		t.Fatal(err)
 	}
 	filename := filepath.Join(dir, "transfers.sqlite")
@@ -116,7 +118,11 @@ func TestJournalMigrationKeepsPrivateBackupAndData(t *testing.T) {
 	if !privateNode(backup, st, false) {
 		t.Fatal("migration backup is not private")
 	}
-	old, err := sql.Open("sqlite", (&url.URL{Scheme: "file", Path: filepath.ToSlash(backup)}).String())
+	backupURI := filepath.ToSlash(backup)
+	if filepath.VolumeName(backup) != "" && !strings.HasPrefix(backupURI, "/") {
+		backupURI = "/" + backupURI
+	}
+	old, err := sql.Open("sqlite", (&url.URL{Scheme: "file", Path: backupURI}).String())
 	if err != nil {
 		t.Fatal(err)
 	}

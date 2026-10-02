@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0-alpha.1",
+  "applicationSourceCommit": "89a9121a279c843f77b2d72f8b6e93dc332cb03b",
+  "packagingCommit": "06ca1e2749e4b7ceda5fa3703495051557e7173a",
+  "createdAt": "2026-10-02T00:14:15.186363+00:00",
+  "packagingHost": "macOS 27.0.1 ARM64",
+  "artifacts": [
+    {
+      "architecture": "arm64",
+      "name": "LedgeSync-0.1.0-alpha.1-macos-arm64.dmg",
+      "size": 3870763,
+      "sha256": "67eb13b65445c51ffd09c6e5f2db36593b3862fdeb7a01a3f2aca72cd0b77640",
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-arm64.dmg",
+      "sourceArchive": "ledgesync-desktop-0.1.0-alpha.1-darwin-arm64.tar.gz",
+      "sourceArchiveDigest": "sha256:2f144739b5573d79be36a0ba3850d46afe97e53ca3c81c4d7db217a618b8c62d",
+      "binarySha256": "ced1b8dc5452abe990bd90c1e84cc914e4eeef173541a67e7fb73172b9f97a9e",
+      "bundleSnapshotSha256": "c6e04196158465bdc6cb565f44321d375a57593841147b31042374cee788e775"
+    },
+    {
+      "architecture": "amd64",
+      "name": "LedgeSync-0.1.0-alpha.1-macos-amd64.dmg",
+      "size": 4275895,
+      "sha256": "d5b7b7f508e141a18e5d7c2a740610c32cf8368b2052b6aa149e49baef8df487",
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-amd64.dmg",
+      "sourceArchive": "ledgesync-desktop-0.1.0-alpha.1-darwin-amd64.tar.gz",
+      "sourceArchiveDigest": "sha256:b05fc353b09549f6569ae7a36661a38388bd71545ab4dc2f8603347330bd6210",
+      "binarySha256": "842fa42c65466b45150da5c44d00da8a32824f89e1110d6597807bb878443299",
+      "bundleSnapshotSha256": "0c3073653724ef91add64f3cb621869391f51c11d262913ccd825986dea53fbc"
+    }
+  ],
+  "validation": {
+    "dmgVerify": true,
+    "readOnlyMount": true,
+    "mountedBundleMatchesSourceBytesModesAndSymlinks": true,
+    "sourceBundlesUnchanged": true,
+    "codesignDeepStrict": true,
+    "actualArchitectureMatchesPackage": true,
+    "applicationsShortcut": true,
+    "requiredNotices": true,
+    "installationReadme": true,
+    "guardTestsPassed": 4,
+    "macOSArm64NativeLaunch": "Released graphical app opened and rendered the native WebView; picker opened. Additional picker automation did not complete. Prior alpha GUI behavior evidence remains in the handoff.",
+    "intelRuntime": "Not executed on an Intel Mac in this packaging session."
+  },
+  "signing": {
+    "application": "Existing ad-hoc signature preserved",
+    "developerId": false,
+    "notarized": false
+  },
+  "preservation": "Original release tag, all 14 original assets and original checksum/manifest files are retained unchanged."
+}

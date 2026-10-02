@@ -8,8 +8,8 @@ an account, uploads files, or enables deletion.
 
 | System | Architecture | Deliverable | Validation gate |
 |---|---|---|---|
-| macOS 13+ | Apple Silicon / ARM64 | Native `.app` and CLI | Native build and local smoke; CI on macOS 15 |
-| macOS 13+ | Intel / x64 | Native `.app` and CLI | Native CI on macOS 15 Intel |
+| macOS 13+ | Apple Silicon / ARM64 | DMG containing native `.app`; separate CLI | Native build and local smoke; CI on macOS 15 |
+| macOS 13+ | Intel / x64 | DMG containing native `.app`; separate CLI | Native CI on macOS 15 Intel |
 | Ubuntu 24.04 LTS | AMD/Intel x64 and ARM64 | Desktop executable and CLI | Native CI for each architecture |
 | Ubuntu Server | AMD/Intel x64 and ARM64 | CLI | Same Linux CLI; no graphical libraries required |
 | Windows 11 | AMD/Intel x64 and ARM64 | Desktop `.exe` and CLI | Native CI; ARM64 runner uses Windows 11 |
@@ -41,6 +41,13 @@ Other desktop GUI runtime and clean installation remain unverified. The release
 includes `SHA256SUMS` and `RELEASE.json`; archive architecture and public asset
 digests were verified after downloading the CI artifacts.
 
+Two macOS DMGs were subsequently added to the same alpha release, using the
+exact apps extracted from its original verified desktop archives. The source
+tag, original archives, `SHA256SUMS` and `RELEASE.json` were preserved. Each DMG
+has a separate `.dmg.sha256` checksum; `DMG_RELEASE.json` records the source
+archive, binary and disk-image identities. These are a packaging addition,
+not new application functionality or a signed production release.
+
 Go 1.27 raises the effective macOS minimum to 13. Framework-only minimums are
 insufficient to determine the packaged application's minimum. See the official
 [Go requirements](https://go.dev/wiki/MinimumRequirements),
@@ -48,6 +55,25 @@ insufficient to determine the packaged application's minimum. See the official
 [GitHub runner matrix](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
 ## Desktop prerequisites
+
+### macOS graphical app
+
+| Mac | Download |
+|---|---|
+| Apple Silicon, M-series | [LedgeSync ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-arm64.dmg) |
+| Intel, x64 | [LedgeSync Intel DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-amd64.dmg) |
+
+1. Download the image matching the processor shown in **About This Mac**.
+2. Open the `.dmg` and drag `LedgeSync.app` to the `Applications` shortcut.
+3. Eject the image and open LedgeSync from Applications. Choose a local folder
+   to browse files and preview the offline policy decisions.
+
+The image contains the graphical app, Applications shortcut, installation
+instructions and license notices. It does not install the command-line tool.
+Check its adjacent `.dmg.sha256` file with `shasum -a 256 -c <file>.dmg.sha256`.
+The developer-signing limits below still apply to disk-image downloads.
+
+### Other systems and developer signing
 
 Ubuntu desktop needs GTK3 and WebKitGTK 4.1 (`libgtk-3-0t64` and
 `libwebkit2gtk-4.1-0` on Ubuntu 24.04). Development builds need `libgtk-3-dev`,
@@ -88,13 +114,27 @@ automatically runs `frontend/scripts/prepare-native.mjs`, generating the app's
 own icon and macOS property-list templates from tracked source. The native
 bundle identifier is `com.ledgesync.app`; the minimum macOS version is 13.0.
 
+To create the macOS disk image from an existing native app:
+
+```sh
+python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch arm64 --version 0.1.0-alpha.1 --output build/packages
+```
+
+Use `--arch amd64` for an Intel build. The script requires macOS, verifies the
+actual Mach-O architecture, preserves the app, and refuses to overwrite an
+existing output. It verifies the image and its read-only mounted contents.
+Use `--notices-root <extracted-release-directory>` when packaging an existing
+release so the notices come from that same artifact. Creating a DMG does not
+sign or notarize the app.
+
 ## CI artifacts and checksums
 
 The [build workflow](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml)
 runs core tests, static analysis, supported race checks, frontend compilation,
 native desktop builds, and CLI packaging. Successful runs attach artifacts.
 Portable CLI archives include `SHA256SUMS`; desktop archives include an adjacent
-SHA-256 file. These checksums detect corruption; they are not code signatures.
+SHA-256 file. macOS desktop jobs also produce a DMG and its separate SHA-256
+file. These checksums detect corruption; they are not code signatures.
 
 The [session handoff](17_AGENT_HANDOFF_AND_STATUS.md) records the specific
 commands and platform results actually observed. Matrix entries remain targets

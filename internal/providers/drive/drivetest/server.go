@@ -78,6 +78,7 @@ type faultRule struct {
 type session struct {
 	meta     createRequest
 	size     int64
+	crd      string
 	received []byte
 	done     *Object
 }
@@ -503,8 +504,14 @@ func (s *Server) startUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := s.nextID("session")
-	s.sessions[id] = &session{meta: meta, size: size}
-	w.Header().Set("Location", "https://www.googleapis.com/upload/drive/v3/files?"+url.Values{"uploadType": {"resumable"}, "upload_id": {id}}.Encode())
+	crd := s.nextID("crd")
+	s.sessions[id] = &session{meta: meta, size: size, crd: crd}
+	// Like Google, echo the initiation query and append the opaque session
+	// parameters upload_id and session_crd (observed in live responses).
+	echo := r.URL.Query()
+	echo.Set("upload_id", id)
+	echo.Set("session_crd", crd)
+	w.Header().Set("Location", "https://www.googleapis.com/upload/drive/v3/files?"+echo.Encode())
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -520,7 +527,7 @@ func (s *Server) putUpload(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	sess := s.sessions[r.URL.Query().Get("upload_id")]
-	if sess == nil {
+	if sess == nil || r.URL.Query().Get("session_crd") != sess.crd {
 		driveError(w, http.StatusNotFound, "notFound", "Upload session not found.")
 		return
 	}

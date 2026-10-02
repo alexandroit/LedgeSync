@@ -101,6 +101,43 @@ func TestUploadReconcilesPartialChunksLostResponseAndVerifies(t *testing.T) {
 
 const cChunkSize = 256 << 10
 
+// Live Google session URIs carry session_crd besides upload_id. Every real
+// upload failed with UNKNOWN_REMOTE_RESULT, before sending data, while the
+// session check accepted only uploadType and upload_id.
+func TestUploadAcceptsGoogleSessionParameters(t *testing.T) {
+	complete, puts := false, 0
+	c, _ := fixture(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == "POST":
+			echo := r.URL.Query()
+			if len(echo) != 1 || echo.Get("uploadType") != "resumable" {
+				t.Errorf("unexpected initiation query %v", echo)
+			}
+			echo.Set("upload_id", "PRIVATE_SESSION")
+			echo.Set("session_crd", "PRIVATE_CRD")
+			w.Header().Set("Location", "https://www.googleapis.com/upload/drive/v3/files?"+echo.Encode())
+		case r.Method == "PUT":
+			puts++
+			if q := r.URL.Query(); q.Get("upload_id") != "PRIVATE_SESSION" || q.Get("session_crd") != "PRIVATE_CRD" {
+				t.Error("the session URI was not used as issued")
+			}
+			io.Copy(io.Discard, r.Body)
+			complete = true
+			w.WriteHeader(200)
+		case strings.HasSuffix(r.URL.Path, "/parent-id"):
+			parentResponse(w)
+		case complete:
+			encode(w, object("file-id", binaryMIME, 4, digest("data")))
+		default:
+			notFound(w)
+		}
+	})
+	o, err := c.Upload(context.Background(), "account-one", "file-id", "parent-id", "source.txt", "operation-one", strings.NewReader("data"), 4, digest("data"))
+	if err != nil || o.ID != "file-id" || puts != 1 {
+		t.Fatalf("upload = %#v, %v, puts %d", o, err, puts)
+	}
+}
+
 func TestUploadEmptyFileAndVerificationFailures(t *testing.T) {
 	for _, tc := range []struct{ name, change, code string }{
 		{"empty", "", ""}, {"checksum", "checksum", "DRIVE_VERIFICATION_FAILED"}, {"size", "size", "DRIVE_VERIFICATION_FAILED"}, {"parent", "parent", "DRIVE_IDENTITY_MISMATCH"}, {"operation", "operation", "DRIVE_IDENTITY_MISMATCH"}, {"trashed", "trashed", "DRIVE_IDENTITY_MISMATCH"},
@@ -165,6 +202,8 @@ func TestUploadRejectsSessionURLWithoutSendingCredentials(t *testing.T) {
 		"https://user@www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=PRIVATE",
 		"https://www.googleapis.com/drive/v3/files?uploadType=resumable&upload_id=PRIVATE",
 		testSession + "&upload_id=SECOND", testSession + "#fragment", testSession + "&access_token=SECRET", "",
+		testSession + "&uploadType=resumable", testSession + "&key=API", testSession + "&session_crd=", testSession + "&bad-key=x",
+		"https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&upload_id=PRIVATE",
 	} {
 		t.Run(location, func(t *testing.T) {
 			puts, posts := 0, 0

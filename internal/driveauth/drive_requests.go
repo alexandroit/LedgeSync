@@ -125,7 +125,8 @@ func (s *Service) DoAuthorized(ctx context.Context, expectedAccountReference str
 		return nil, ErrBusy
 	}
 	ctx, done := s.operation(ctx)
-	requestCtx, cancel := context.WithTimeout(ctx, time.Minute)
+	limit := requestLimit(req)
+	requestCtx, cancel := context.WithTimeout(ctx, limit)
 	finish := func() { cancel(); done(); s.release() }
 	owned := true
 	defer func() {
@@ -153,7 +154,8 @@ func (s *Service) DoAuthorized(ctx context.Context, expectedAccountReference str
 		}
 		return nil
 	}
-	if !r.Credential.Expiry.After(s.now().Add(time.Minute)) {
+	// The access token must outlive the whole request, including a slow chunk.
+	if !r.Credential.Expiry.After(s.now().Add(limit + time.Minute)) {
 		if err = refresh(); err != nil {
 			_, err = s.checkFailure(requestCtx, r, err)
 			return nil, err
@@ -162,7 +164,7 @@ func (s *Service) DoAuthorized(ctx context.Context, expectedAccountReference str
 	// Retain the injected transport for local fake tests, but enforce redirect
 	// rejection and a per-chunk deadline independent of caller client settings.
 	client := *s.http
-	client.Timeout = time.Minute
+	client.Timeout = limit
 	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	for {
 		request := req.Clone(requestCtx)
@@ -333,4 +335,14 @@ func (s *Service) acquireForRequest(ctx context.Context) (bool, error) {
 		case <-timer.C:
 		}
 	}
+}
+
+// requestLimit bounds how long one request may own the credential. Metadata
+// requests are short; an upload chunk or ranged download of at most 8 MiB gets
+// enough time for slow connections (about 220 kbit/s) without becoming unbounded.
+func requestLimit(req *http.Request) time.Duration {
+	if req.Method == http.MethodPut || req.Method == http.MethodGet && req.URL != nil && req.URL.Query().Get("alt") == "media" {
+		return 5 * time.Minute
+	}
+	return time.Minute
 }

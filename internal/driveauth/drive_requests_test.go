@@ -433,3 +433,12 @@ func TestAuthorizedRequestWaitsBrieflyForShortCredentialOperations(t *testing.T)
 		t.Fatal("request did not wait before reporting busy")
 	}
 }
+
+func TestDataRequestsGetLongerCredentialBoundThanMetadata(t *testing.T) {
+	put, _ := http.NewRequest(http.MethodPut, "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=x", nil)
+	media, _ := http.NewRequest(http.MethodGet, "https://www.googleapis.com/drive/v3/files/abc?alt=media", nil)
+	meta, _ := http.NewRequest(http.MethodGet, "https://www.googleapis.com/drive/v3/files/abc?fields=id", nil)
+	if requestLimit(put) != 5*time.Minute || requestLimit(media) != 5*time.Minute || requestLimit(meta) != time.Minute {
+		t.Fatal("unexpected request bounds")
+	}
+}

@@ -71,7 +71,10 @@ Desktop binding tests and browser interaction tests exercise the confirmation
 boundary and recovery states without a personal Google account.
 
 Exact executed commands and outcomes are recorded in
-[the current handoff](../17_AGENT_HANDOFF_AND_STATUS.md). Existing alpha.3 native
+[the current handoff](../17_AGENT_HANDOFF_AND_STATUS.md) and the
+[verification report](OAUTH_HARDENING_VERIFICATION.json). All 16 CI jobs passed
+at the recorded source; the later cleanup-warning text has a targeted passing
+recovery test and a passing TypeScript/production build. Existing alpha.3 native
 vault CI evidence remains historical to that release; the local native-vault
 opt-in is not enabled against the owner's credential store.
 

@@ -61,6 +61,15 @@ Validation completed locally:
   35 JSON files, two schemas and five examples; zero failures/skips.
   `git diff --check` passed.
 
+[CI run 36955479712](https://github.com/alexandroit/LedgeSync/actions/runs/36955479712)
+passed all 16 jobs at source `ad941e345b2fc4a62cc7dce85f6a87479f8bc859`, including
+all six desktop builds, seven native core targets, contracts, all 30 frontend
+cases and the external rclone differential check. The subsequent UI copy-only
+follow-up makes the session-local cleanup warning explicit; its existing
+Playwright recovery test passed with two new assertions, and TypeScript plus
+production frontend build passed again. No backend behavior changed afterward.
+See [machine-readable verification](research/OAUTH_HARDENING_VERIFICATION.json).
+
 Native-vault lifecycle evidence for alpha.3 remains historical; the owner's
 personal native-vault integration opt-in remains disabled. Cross-process
 credential serialization, multi-account support and cloud transfer jobs are

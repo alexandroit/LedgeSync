@@ -320,7 +320,7 @@ function renderConnections(container: HTMLElement) {
   } else if (state.drive.state === 'connected') {
     actions.append(driveButton('Check connection', () => void driveAction('check'), 'check'), driveButton('Disconnect from this device', () => void driveAction('disconnect'), 'disconnect'));
   } else if (state.drive.state === 'revoked_local_cleanup_required') {
-    card.append(el('p', 'connection-guidance', 'Google confirmed revocation, but this computer’s credentials could not be removed. Unlock the system credential vault, then disconnect from this device to retry local cleanup. Connecting, checking and another revocation are blocked until cleanup succeeds.'));
+    card.append(el('p', 'connection-guidance', 'Google confirmed revocation, but this computer’s credentials could not be removed. Unlock the system credential vault, then disconnect from this device to retry local cleanup. Connecting, checking and another revocation are blocked in this session. Finish local cleanup before closing LedgeSync; this warning cannot be saved while the vault is unavailable.'));
     actions.append(driveButton('Disconnect from this device', () => void driveAction('disconnect'), 'disconnect'));
   } else if (state.drive.state === 'client_changed') {
     card.append(el('p', 'connection-guidance', 'This computer has authorization from an earlier LedgeSync configuration. Disconnect it first, then connect again to authorize this version.'));

@@ -1,0 +1,122 @@
+{
+  "reviewedAt": "2026-10-02T02:30:56.780652+00:00",
+  "scope": "Unreleased OAuth protection hardening; published alpha.3 assets unchanged",
+  "sourceCommit": "ad941e345b2fc4a62cc7dce85f6a87479f8bc859",
+  "ci": {
+    "id": 36955479712,
+    "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "contracts",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384588"
+      },
+      {
+        "name": "Desktop interaction tests",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384685"
+      },
+      {
+        "name": "Core / macos-15-intel",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384701"
+      },
+      {
+        "name": "Desktop / darwin/arm64",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384728"
+      },
+      {
+        "name": "Desktop / windows/arm64",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384753"
+      },
+      {
+        "name": "Core / ubuntu-24.04",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384795"
+      },
+      {
+        "name": "Desktop / linux/arm64",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384808"
+      },
+      {
+        "name": "Desktop / linux/amd64",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384820"
+      },
+      {
+        "name": "Pinned rclone differential",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384836"
+      },
+      {
+        "name": "Core / windows-2022",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384847"
+      },
+      {
+        "name": "Desktop / windows/amd64",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384893"
+      },
+      {
+        "name": "Core / windows-11-arm",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384904"
+      },
+      {
+        "name": "Core / macos-15",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384912"
+      },
+      {
+        "name": "Core / ubuntu-24.04-arm",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384943"
+      },
+      {
+        "name": "Core / windows-2025",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384954"
+      },
+      {
+        "name": "Desktop / darwin/amd64",
+        "conclusion": "success",
+        "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36955479712/job/110677384956"
+      }
+    ]
+  },
+  "local": {
+    "goTest": "passed: 315 test/subtest events",
+    "goRace": "passed",
+    "goVet": "passed",
+    "skippedTests": [
+      "TestNativeVaultLifecycle: personal native-vault opt-in disabled",
+      "TestRcloneDifferential: external reference not enabled locally; separate CI reference job passed"
+    ],
+    "frontendTests": 30,
+    "frontendCheckAndBuild": "passed",
+    "buildConfigurationGuards": 9,
+    "nativeMacARM64Compilation": "passed; no real OAuth client imported in the local compilation",
+    "productionUIReview": "900x620 synthetic confirmation dialog; Cancel focused; no real account action"
+  },
+  "postCIFollowup": {
+    "change": "Clarify in the cleanup failure UI that its revocation marker is session-local and cleanup should finish before closing the application. Add assertions to the existing recovery test.",
+    "files": [
+      "frontend/src/main.ts",
+      "frontend/tests/google-drive.spec.ts"
+    ],
+    "validation": [
+      "targeted Playwright recovery test: 1 passed",
+      "npm run build (includes TypeScript check): passed"
+    ]
+  },
+  "liveGoogleAuthorizationPerformed": false,
+  "liveGoogleRevocationPerformed": false,
+  "personalVaultEntriesAccessed": false,
+  "googleCloudConfigurationChanged": false,
+  "publishedReleaseAssetsChanged": false
+}

@@ -418,6 +418,8 @@ test('Google success with failed vault cleanup permits only local cleanup and ne
   await page.getByRole('dialog').getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
   await expect(page.getByText('Google access revoked; local cleanup required', { exact: true })).toBeVisible();
   await expect(page.getByRole('status')).toContainText('Google confirmed revocation.');
+  await expect(page.getByText(/Finish local cleanup before closing LedgeSync/)).toBeVisible();
+  await expect(page.getByText(/this warning cannot be saved while the vault is unavailable/)).toBeVisible();
   for (const name of ['Check connection', 'Connect Google Drive', 'Reconnect Google Drive', 'Revoke access on Google']) {
     await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
   }

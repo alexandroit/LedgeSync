@@ -119,7 +119,7 @@ They must not overwrite the actual implementation status above.
 
 ## Website deployment follow-up
 
-The website source deployed to Ubuntu is
+The initial website source deployed to Ubuntu was
 `92eb75b51d978565e1dd8ef939d6cf6320da2299`. Changed files: `dist/index.html`
 (canonical URL), `deploy/nginx/ledgesync.conf` (isolated static vhost), `README.md`,
 `docs/WEBSITE.md`, `docs/12_ADR_DECISIONS.md`,
@@ -151,6 +151,57 @@ Browser visual inspection was unavailable because the computer-use connector
 reported no browser. Website-only changes did not rerun application CI; the
 immutable alpha retains the existing 16-job validation above. Deployment,
 renewal, update and rollback procedures are in [WEBSITE.md](WEBSITE.md).
+
+## Graphical app and macOS disk-image delivery
+
+The owner requested the missing graphical download and `.dmg`. Two disk images
+were added to the existing `v0.1.0-alpha.1` release: Apple Silicon ARM64 and Intel
+x64. They contain the exact apps extracted from the original, checksum-verified
+release archives; all 14 original release assets, including their IDs, digests,
+sizes and timestamps, were verified unchanged. Each DMG has a separate checksum
+and the additional `DMG_RELEASE.json` records its provenance. See
+[the packaging evidence](research/MACOS_DMG_RELEASE.json).
+
+Packaging commit: `06ca1e2749e4b7ceda5fa3703495051557e7173a`. Added
+`tools/package_dmg.py` and `tools/test_package_dmg.py`; macOS CI now creates and
+verifies DMGs alongside its archives. Updated README, platform instructions,
+release notes and website downloads. The public Ubuntu site now serves
+`188ba5de5c76b5562b6b7c6afa8e14f4a20ad45f`, with matching HTML/versioned CSS
+and both direct DMG links returning HTTP 200. The previous static release is
+retained for rollback; HiperMusicas remains available.
+
+Observed checks:
+
+- `python3 tools/test_package_dmg.py`: four integrity/no-overwrite tests passed.
+- `python3 tools/package_dmg.py --app <verified-release>/LedgeSync.app --arch
+  <arm64|amd64> --version 0.1.0-alpha.1 --output build/dmg-release/packages
+  --notices-root <verified-release>`: both packages passed. This verifies the
+  disk image, read-only mount, full app bytes/modes/symlinks, Mach-O architecture,
+  strict ad-hoc signature, Applications shortcut, instructions and notices.
+- The first verification mount under the external synced SSD was denied by
+  macOS. Moving only the temporary mount to the local `/tmp` filesystem resolved
+  it; image publication remains atomic and refuses existing output names.
+- Anonymous downloads of all five new assets matched the local bytes and GitHub
+  digests. No `--clobber`, tag replacement or original manifest rewrite was used.
+- The ARM64 graphical app from the public archive was opened through the native
+  application connector and its WebView rendered the explorer start screen.
+  The folder picker opened, but additional picker automation did not complete;
+  the test app was closed. Earlier native GUI behavior evidence still applies.
+- Local documentation validation: zero failures, one optional JSON Schema check
+  skipped because that interpreter lacks `jsonschema`. License verification
+  passed for all 42 recorded notice hashes.
+- [CI run 36944925521](https://github.com/alexandroit/LedgeSync/actions/runs/36944925521)
+  passed all 16 jobs at packaging commit `06ca1e2749e4b7ceda5fa3703495051557e7173a`,
+  including creation and mounted-content verification of DMGs on native macOS
+  ARM64 and Intel runners. The contracts job includes the new integrity guards.
+- [Pages run 36945114075](https://github.com/alexandroit/LedgeSync/actions/runs/36945114075)
+  passed for website commit `188ba5de5c76b5562b6b7c6afa8e14f4a20ad45f`;
+  public secondary HTML and CSS match the same tracked source.
+
+Both DMGs preserve the alpha's existing ad-hoc signatures. Developer ID signing
+and notarization are absent; downloaded-app Gatekeeper acceptance and a clean
+Intel installation were not established. The app remains an offline developer
+alpha. Packaging does not implement Drive connections, transfers or scheduling.
 
 ## Next dependency-ready work
 

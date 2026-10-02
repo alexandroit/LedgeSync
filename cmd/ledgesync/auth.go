@@ -22,7 +22,7 @@ func newAuthStatusService() (authStatusService, error) {
 
 func runAuthStatus(ctx context.Context, args []string, out, errOut io.Writer, create func() (authStatusService, error)) int {
 	if len(args) != 1 || args[0] != "status" {
-		return report(errOut, domain.Fail("AUTH_REQUIRED", "Use ledgesync auth status for local connection metadata. To connect, check, disconnect or revoke, open Connections in the desktop app."))
+		return report(errOut, domain.Fail("AUTH_REQUIRED", "Use ledgesync auth status for local connection metadata, auth connect to authorize, or auth disconnect to remove this device's authorization. Connect and disconnect require an interactive terminal."))
 	}
 	if ctx.Err() != nil {
 		return report(errOut, domain.Fail("CANCELLED", "Connection status canceled."))
@@ -36,6 +36,9 @@ func runAuthStatus(ctx context.Context, args []string, out, errOut io.Writer, cr
 		// Do not forward arbitrary implementation errors or accompanying metadata.
 		if errors.Is(err, driveauth.ErrStorage) {
 			return report(errOut, domain.Fail("AUTH_STORAGE_UNAVAILABLE", "%s", driveauth.ErrStorage))
+		}
+		if errors.Is(err, driveauth.ErrBusy) {
+			return report(errOut, domain.Fail("AUTH_BUSY", "%s", driveauth.ErrBusy))
 		}
 		if ctx.Err() != nil {
 			return report(errOut, domain.Fail("CANCELLED", "Connection status canceled."))

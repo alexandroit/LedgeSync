@@ -5,8 +5,8 @@
 ## Current implementation: alpha.4 source candidate
 
 Public alpha.3 packages connect a Google account and provide local/offline
-previews. The unreleased alpha.4 source adds an explicit desktop folder-copy
-workflow: choose a local source, connect, choose My Drive or an existing folder
+previews. The unreleased alpha.4 source adds explicit desktop and interactive
+CLI folder-copy workflows. In the desktop: choose a local source, connect, choose My Drive or an existing folder
 through Google's system-browser Picker, preview, then approve **Upload folder**.
 Account and immutable destination ID are visible before approval. The candidate
 preserves `drive.file`; it does not gain visibility over all existing Drive files.
@@ -139,26 +139,37 @@ Date/time is displayed in the user's locale/timezone but persisted in UTC. Byte 
 
 ## CLI parity
 
-Every safety-relevant desktop action has a corresponding typed application service usable by the CLI, but the CLI does not dictate the product UX. CLI output supports human-readable and versioned JSON forms for automation, tests, CI, and advanced users. Headless usage must never open a browser unexpectedly; return `AUTH_REQUIRED` with an explicit authorization workflow. The CLI must not bypass safeguards that appear in the desktop.
+The alpha.4 candidate CLI uses the desktop's `connections.NewGoogleDrive`,
+`driveauth.Service`, Drive provider and `transfer.Service`. It adds explicit
+`auth connect`, `auth disconnect` and `copy` commands. See the
+[CLI and server guide](CLI.md) for local-browser and SSH-loopback instructions.
+These source capabilities do not change the already published alpha.3 binaries.
 
-The current CLI exposes local browse/explain/configuration/plan inspection and
-read-only authentication status. **There is no CLI copy/upload/apply command.**
-Drive folder selection and approved execution exist in shared typed services,
-but their headless command adapter is not implemented. This is a product
-limitation, not separate CLI transfer logic or permission to bypass the GUI's
-approval boundary. Server packages currently provide those offline tools only.
+Online commands require interactive input, output and error terminals. `copy`
+selects a source and My Drive, a previously authorized folder ID, or Google's
+browser Picker. It displays the full safe preview and requires the exact current
+plan digest before calling the shared executor. Approval remains in the same
+process, expires after 15 minutes and is revalidated before mutation. There is
+no `--yes`, serialized `apply`, service, watcher or scheduler. Ctrl+C and SIGTERM
+cancel and drain the active transfer before exit; already created copies remain.
 
-Current source adds `ledgesync auth status`, using the GUI's `connections.NewGoogleDrive`
-factory and `driveauth.Service.Status`. It returns the safe status/account DTO and
-`onlineVerified: false`; a saved connection is not evidence of a valid live grant.
-This explicit command may ask the OS to unlock its vault. Preview/help commands
-do not read credentials. Missing build configuration and vault failures return
-redacted JSON errors with exit 6; canceled status returns 130. Successful local
-status reads return 0, including disconnected/reconnect-required states.
+`auth connect` explicitly opens the native system browser. With `--no-browser`,
+it displays the Google authorization page and the ephemeral loopback port in the
+interactive terminal so an operator can forward that port over SSH. It never
+requests token import, accepts pasted OAuth callback codes, or binds a public
+network listener. Native credential vaults remain mandatory; an unavailable or
+locked vault fails closed. A Windows network logon or a Linux session without an
+unlocked Secret Service collection is not an accepted substitute for a vault.
 
-Connect/check/disconnect/revoke remain GUI actions. Those CLI subcommands return
-`AUTH_REQUIRED` and direct the user to Connections without creating the service.
-This read-only boundary avoids adding concurrent GUI/CLI token mutations before
-cross-process credential-operation locking is implemented. See
-[native CLI build configuration](OAUTH_BUILD.md); existing portable packages do
-not contain the publisher client or gain authentication through this source edit.
+`auth status` returns the safe status/account DTO and `onlineVerified: false`.
+A saved connection is not evidence of a valid live grant. Preview/help commands
+remain offline and do not read credentials. Credential transactions use a shared
+native process lock, including authorized HTTP response lifetimes. Another
+process's active transaction returns busy without claiming a cached connection.
+The transfer journal independently excludes concurrent writers.
+
+The existing browse/explain/configuration/plan commands remain local inspection
+against a fake destination. Their exported `plan.json` is not an upload approval.
+Remote revocation remains an explicitly confirmed desktop action; the CLI's
+`disconnect` removes this device's saved authorization only. Native platform and
+live Google acceptance remain separate release gates.

@@ -28,7 +28,11 @@ func (s *Service) ChooseFolder(ctx context.Context, expectedAccountReference str
 	if !validAccount(Account{Reference: expectedAccountReference}) {
 		return SelectedFolder{}, ErrIdentity
 	}
-	if !s.tryAcquire() {
+	if acquired, err := s.tryAcquire(); !acquired {
+		if err != nil {
+			_, _ = s.publish(nil, err)
+			return SelectedFolder{}, err
+		}
 		return SelectedFolder{}, ErrBusy
 	}
 	defer s.release()
@@ -112,7 +116,11 @@ func (s *Service) DoAuthorized(ctx context.Context, expectedAccountReference str
 	if ctx.Err() != nil {
 		return nil, contextError(ctx)
 	}
-	if !s.tryAcquire() {
+	if acquired, err := s.tryAcquire(); !acquired {
+		if err != nil {
+			_, _ = s.publish(nil, err)
+			return nil, err
+		}
 		return nil, ErrBusy
 	}
 	ctx, done := s.operation(ctx)

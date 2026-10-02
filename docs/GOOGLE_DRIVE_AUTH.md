@@ -87,18 +87,19 @@ The website/server distributes software and does not mediate authorization.
 |---|---|
 | macOS | Keychain |
 | Windows | Credential Manager, current user |
-| Ubuntu desktop | Secret Service over the user's local D-Bus session |
+| Ubuntu | Secret Service over the user's local D-Bus session |
 
 Ubuntu requires a running Secret Service implementation such as GNOME Keyring
 and an unlocked default collection. An SSH/headless session alone does not
-provide this. There is no plaintext fallback. Use one running app instance;
-credential operations are serialized within that process only.
+provide this. There is no plaintext fallback. Protected native process locks
+serialize credential operations across the GUI and CLI. A competing process
+reports that the connection is in use and requires a fresh status check.
 
 The candidate also keeps a per-user SQLite transfer journal outside source
 folders. It records approved plans, provider IDs, checksums and previously
 observed policy sources; it contains no OAuth tokens or upload-session URLs.
-Transfer-state writes have a process lock. That lock does not replace the
-separate, currently process-local credential-operation guard. Journal paths and
+Transfer-state writes and credential operations have separate native process
+locks. Neither lock contains credentials. Journal paths and
 filenames may be private, so do not publish the database as a diagnostic dump.
 
 The requested `https://www.googleapis.com/auth/drive.file` scope covers files
@@ -109,11 +110,12 @@ See Google's [scope description](https://developers.google.com/workspace/drive/a
 Published alpha.3 reads account identity but does not browse cloud files, select a
 remote root, upload, download, overwrite or delete Drive files. The Files screen
 still previews an empty simulated destination. CLI previews remain offline.
-The unreleased source additionally supports read-only `ledgesync auth status`
-in a [configured native build](OAUTH_BUILD.md); this does not check the grant online.
-The candidate's desktop upload workflow adds scoped destination selection and
-managed-file checks, not a browser over every pre-existing Drive file. The CLI
-has no upload/apply command yet.
+The alpha.4 native CLI supports explicit browser consent and interactive `copy`
+through the same services as the desktop. `auth status` reads safe local metadata
+without checking the grant online. See [CLI usage](CLI.md) and [native build
+configuration](OAUTH_BUILD.md). Both interfaces support scoped destination
+selection and managed-file checks, not a browser over every pre-existing Drive
+file. The offline `plan` command remains inspection-only.
 
 **Disconnect account** removes the local account credentials while retaining
 client configuration. It does not revoke Google's grant or delete Drive files.

@@ -51,6 +51,9 @@ func (s *Service) publish(r *record, err error) (Status, error) {
 	if errors.Is(err, ErrStorage) {
 		st.State = "storage_unavailable"
 	}
+	if errors.Is(err, ErrBusy) {
+		st.State = "busy"
+	}
 	if s.grantRevoked(r) {
 		st.State = "revoked_local_cleanup_required"
 		st.Message = ErrRevokedCleanup.Error()
@@ -146,7 +149,10 @@ func (s *Service) Status(ctx context.Context) (Status, error) {
 	if ctx.Err() != nil {
 		return s.cachedStatus(), contextError(ctx)
 	}
-	if !s.tryAcquire() {
+	if acquired, err := s.tryAcquire(); !acquired {
+		if err != nil {
+			return s.publish(nil, err)
+		}
 		return s.cachedStatus(), nil
 	}
 	defer s.release()
@@ -154,7 +160,10 @@ func (s *Service) Status(ctx context.Context) (Status, error) {
 	return s.publish(r, err)
 }
 func (s *Service) ConfigureClient(ctx context.Context, data []byte) (Status, error) {
-	if !s.tryAcquire() {
+	if acquired, err := s.tryAcquire(); !acquired {
+		if err != nil {
+			return s.publish(nil, err)
+		}
 		return s.cachedStatus(), ErrBusy
 	}
 	defer s.release()
@@ -201,7 +210,10 @@ func (s *Service) Cancel() {
 }
 
 func (s *Service) Connect(ctx context.Context) (Status, error) {
-	if !s.tryAcquire() {
+	if acquired, err := s.tryAcquire(); !acquired {
+		if err != nil {
+			return s.publish(nil, err)
+		}
 		return s.cachedStatus(), ErrBusy
 	}
 	defer s.release()
@@ -249,7 +261,10 @@ func (s *Service) Connect(ctx context.Context) (Status, error) {
 }
 
 func (s *Service) Check(ctx context.Context) (Status, error) {
-	if !s.tryAcquire() {
+	if acquired, err := s.tryAcquire(); !acquired {
+		if err != nil {
+			return s.publish(nil, err)
+		}
 		return s.cachedStatus(), ErrBusy
 	}
 	defer s.release()
@@ -321,18 +336,54 @@ func (s *Service) checkFailure(ctx context.Context, r *record, err error) (Statu
 	return s.publish(r, err)
 }
 
-// tryAcquire/release serialize reads and mutations while giving lifecycle
-// operations a cancellable completion signal instead of polling a mutex.
-func (s *Service) tryAcquire() bool {
+// tryAcquire/release serialize reads and mutations locally and across processes.
+// A false/nil result means a local operation owns the current cached status;
+// an external lock failure must never report that cache as a current vault read.
+func (s *Service) tryAcquire() (bool, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	if s.stopping || !s.op.TryLock() {
-		return false
+		s.mu.Unlock()
+		return false, nil
 	}
 	s.operationDone = make(chan struct{})
-	return true
+	s.mu.Unlock()
+	if err := s.acquireProcess(); err != nil {
+		s.release()
+		return false, err
+	}
+	return true, nil
 }
+
+func (s *Service) acquireProcess() error {
+	if s.processLock == nil {
+		return nil
+	}
+	release, err := s.processLock()
+	if err != nil || release == nil {
+		if release != nil {
+			release()
+		}
+		if errors.Is(err, ErrBusy) {
+			return ErrBusy
+		}
+		return ErrStorage
+	}
+	s.mu.Lock()
+	s.processRelease = release
+	s.mu.Unlock()
+	return nil
+}
+
 func (s *Service) release() {
+	s.mu.Lock()
+	release := s.processRelease
+	s.processRelease = nil
+	s.mu.Unlock()
+	// Keep the local gate closed until kernel ownership has been released. A
+	// draining lifecycle operation must not begin cleanup before this completes.
+	if release != nil {
+		release()
+	}
 	s.mu.Lock()
 	done := s.operationDone
 	s.operationDone = nil
@@ -384,6 +435,11 @@ func (s *Service) drain(ctx context.Context) (func(), error) {
 	}
 	s.operationDone = make(chan struct{})
 	s.mu.Unlock()
+	if err := s.acquireProcess(); err != nil {
+		s.release()
+		reset()
+		return nil, err
+	}
 	return func() { s.release(); reset() }, nil
 }
 
@@ -400,6 +456,11 @@ func grantBinding(r *record) string {
 	return hex.EncodeToString(hash[:])
 }
 func (s *Service) grantRevoked(r *record) bool {
+	// A lock failure publishes a nil record after releasing the operation gate.
+	// Do not read the gate-protected tombstone without a credential to compare.
+	if r == nil || r.Client == nil || r.Credential == nil {
+		return false
+	}
 	return s.revokedBinding != "" && s.revokedBinding == grantBinding(r)
 }
 func (s *Service) disconnectedRecord(r *record) *record {
@@ -419,6 +480,9 @@ func (s *Service) Disconnect(ctx context.Context) (Status, error) {
 	defer cancel()
 	release, err := s.drain(ctx)
 	if err != nil {
+		if errors.Is(err, ErrBusy) || errors.Is(err, ErrStorage) {
+			return s.publish(nil, err)
+		}
 		return s.cachedStatus(), err
 	}
 	defer release()
@@ -448,6 +512,9 @@ func (s *Service) Revoke(ctx context.Context, expectedAccountReference string, c
 	defer cancel()
 	release, err := s.drain(ctx)
 	if err != nil {
+		if errors.Is(err, ErrBusy) || errors.Is(err, ErrStorage) {
+			return s.publish(nil, err)
+		}
 		return s.cachedStatus(), err
 	}
 	defer release()

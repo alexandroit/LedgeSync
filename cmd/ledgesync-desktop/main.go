@@ -42,10 +42,18 @@ func main() {
 	}
 	bridge := desktop.NewWithGoogleDriveAndTransfers(local,
 		func() (string, error) {
-			return runtime.OpenDirectoryDialog(getContext(), runtime.OpenDialogOptions{Title: "Choose a local source folder"})
+			selected, err := runtime.OpenDirectoryDialog(getContext(), runtime.OpenDialogOptions{Title: "Choose a local source folder"})
+			if err == nil && selected != "" {
+				err = connections.ValidateSourceSelection(selected, false)
+			}
+			return selected, err
 		},
 		func() (string, error) {
-			return runtime.OpenFileDialog(getContext(), runtime.OpenDialogOptions{Title: "Open LedgeSync configuration", Filters: []runtime.FileFilter{{DisplayName: "LedgeSync JSON configuration", Pattern: "*.json"}}})
+			selected, err := runtime.OpenFileDialog(getContext(), runtime.OpenDialogOptions{Title: "Open LedgeSync configuration", Filters: []runtime.FileFilter{{DisplayName: "LedgeSync JSON configuration", Pattern: "*.json"}}})
+			if err == nil && selected != "" {
+				err = connections.ValidateSourceSelection(selected, true)
+			}
+			return selected, err
 		},
 		google,
 		func() {

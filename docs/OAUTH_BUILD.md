@@ -38,21 +38,26 @@ parser: client ID, client secret, authorization/token endpoints and loopback
 redirect list. The source project's `project_id` and certificate URL are validated
 but omitted from generated source and binaries. It does not copy the raw JSON.
 
-For a native CLI with read-only connection status, use the same generated source
-and `go build -tags oauth -o build/ledgesync ./cmd/ledgesync`, then clean it.
-macOS requires CGO for Keychain. `ledgesync auth status` reads the same service and
-vault as the GUI; it does not verify the grant online or open a browser. Existing
-portable CLI CI packages remain unconfigured (and CGO-free), so they fail closed
-for this command. No publisher secret was added to those packaging jobs.
+The alpha.4 native CLI uses the same generated source with the `oauth` build
+tag. Package it on its matching operating system/architecture using, for example,
+`python3 tools/package_cli.py --platform darwin/arm64 --native --require-oauth-client`.
+macOS requires CGO for Keychain; Linux and Windows use their native vault backends
+without CGO. Clean the generated source after both builds. `ledgesync auth status`
+reads connection metadata; it does not verify the grant online or open a browser.
+Browser consent and approved copy commands are separate explicit operations.
+Portable developer builds without `--native` remain unconfigured and cannot
+package an injected client. They fail closed for online commands.
 
 ## Official CI builds
 
 The canonical repository stores the Desktop JSON in the Actions secret
-`GOOGLE_DESKTOP_CLIENT_JSON`. Only trusted main-branch push/manual desktop jobs
+`GOOGLE_DESKTOP_CLIENT_JSON`. Only trusted main-branch push/manual native jobs
 receive it, scoped to the configuration helper step. Pull requests, forks and
 other branches do not receive this value. Official main builds fail if the
 configuration is missing or invalid. Generated source is removed after the
-native build, and desktop build caches are not uploaded.
+desktop and CLI builds, and native build caches are not uploaded. Each of the
+six target jobs packages its CLI before removing the generated source, so the
+macOS CLI retains Keychain support instead of using a cross-compiled stub.
 
 Do not pass client JSON in compiler flags: build metadata and command logs can
 retain those values. Never provide access tokens, refresh tokens or account

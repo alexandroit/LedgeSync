@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/alexandroit/LedgeSync/internal/app"
 	"github.com/alexandroit/LedgeSync/internal/config"
@@ -19,7 +20,7 @@ import (
 )
 
 const version = "0.1.0-alpha.4"
-const usage = `LedgeSync 0.1.0-alpha.4 — local policy explorer
+const usage = `LedgeSync 0.1.0-alpha.4 — approved folder copies and local policy previews
 
 Usage:
   ledgesync browse --root DIRECTORY --json
@@ -30,19 +31,25 @@ Usage:
   ledgesync plan inspect --plan plan.json
   ledgesync capabilities
   ledgesync auth status
+  ledgesync auth connect [--no-browser]
+  ledgesync auth disconnect
+  ledgesync copy --root DIRECTORY --destination root|picker|FOLDER_ID
+  ledgesync copy --config project.json --pick-destination [--no-browser]
   ledgesync --version
 
-All CLI previews use a fake empty destination. Explicit auth status reads only
-connection metadata through the shared native vault service in configured builds.
-It never opens a browser or checks the grant online. Google authorization is available
-in the desktop app's Connections screen with its bundled Desktop OAuth client.
-The desktop app supports explicitly approved Google Drive folder uploads.
-CLI transfer, apply, deletion and scheduling commands are not implemented.
+Browse/explain/plan remain offline previews against a fake destination.
+Auth status reads local connection metadata, without checking the grant online.
+Configured builds support browser authorization and manually approved Google Drive
+folder copies through the same services and native credential vault as the desktop.
+Connect, disconnect, and copy require an interactive terminal. Copy displays a fresh
+preview and requires its exact digest before upload. No automatic approval, serialized
+apply, deletion, watcher, scheduling, or service is enabled.
+For SSH servers, --no-browser displays loopback forwarding instructions for your browser.
 Git policy is patterns-only; no Git or rclone executable is needed at runtime.
 `
 
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	os.Exit(run(ctx, os.Args[1:], os.Stdout, os.Stderr))
 }
@@ -66,6 +73,9 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) int {
 			return report(errOut, domain.Fail("CONFIG_INVALID", "unexpected arguments"))
 		}
 		return report(errOut, output(out, policy.Capabilities()))
+	}
+	if args[0] == "copy" || (args[0] == "auth" && len(args) > 1 && (args[1] == "connect" || args[1] == "disconnect")) {
+		return runOnline(ctx, args, os.Stdin, out, errOut, interactiveTerminal(os.Stdin, out, errOut), newOnlineServices)
 	}
 	if args[0] == "auth" {
 		return runAuthStatus(ctx, args[1:], out, errOut, newAuthStatusService)

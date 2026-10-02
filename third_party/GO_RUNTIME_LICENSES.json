@@ -20,12 +20,12 @@
     },
     {
       "target": "linux/amd64",
-      "packages": 307,
+      "packages": 308,
       "cgo_enabled": true
     },
     {
       "target": "linux/arm64",
-      "packages": 306,
+      "packages": 307,
       "cgo_enabled": true
     },
     {
@@ -271,6 +271,8 @@
       "targets": [
         "darwin/amd64",
         "darwin/arm64",
+        "linux/amd64",
+        "linux/arm64",
         "windows/amd64",
         "windows/arm64"
       ],

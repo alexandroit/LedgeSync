@@ -62,7 +62,7 @@ def main():
             "Verified copies are reused; changed files keep both versions. No overwrite or deletion.\n"
             "Keep the app open. After cancellation or restart, preview again to reconcile and continue.\n"
             "No scheduler, watcher, shared-drive upload or background service is enabled.\n"
-            "The separate CLI provides offline previews, not uploads. Auth status requires a configured native CLI build.\n"
+            "The native CLI uses the same approval/copy engine and OS credential vault for interactive server use.\n"
             "Guide: https://github.com/alexandroit/LedgeSync/blob/main/docs/GOOGLE_DRIVE_AUTH.md\n"
             "Developer builds are unsigned and are not notarized.\n"
             "See https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md\n",

@@ -51,6 +51,12 @@ type Store interface {
 	Delete(key string) error
 }
 
+// ProcessLock tries to acquire exclusive ownership of the account's local
+// credential transaction without waiting. Return ErrBusy for contention and
+// ErrStorage when native protection is unavailable. The returned release must
+// remain valid through all vault calls and any authorized response body.
+type ProcessLock func() (release func(), err error)
+
 type Account struct {
 	Reference   string `json:"reference"`
 	DisplayName string `json:"displayName"`
@@ -86,6 +92,8 @@ type record struct {
 // Connect/Check wait on a browser or network. It never logs callback URLs or bodies.
 type Service struct {
 	store                                  Store
+	processLock                            ProcessLock
+	processRelease                         func()
 	openURL                                func(string) error
 	op                                     sync.Mutex
 	mu                                     sync.Mutex
@@ -123,5 +131,21 @@ func NewWithClient(store Store, openURL func(string) error, clientJSON []byte) (
 	s := New(store, openURL)
 	s.bundled = client
 	s.cached = Status{State: "disconnected", ClientConfigured: true, Scope: Scope, Message: "Ready to request access in your system browser."}
+	return s, nil
+}
+
+// NewWithClientAndLock adds cross-process credential serialization. Construction
+// is lazy: it neither acquires the lock nor reads the native vault. Production
+// wiring must provide this port; New/NewWithClient remain usable by synthetic
+// tests without a native filesystem or credential store.
+func NewWithClientAndLock(store Store, openURL func(string) error, clientJSON []byte, lock ProcessLock) (*Service, error) {
+	if lock == nil {
+		return nil, ErrStorage
+	}
+	s, err := NewWithClient(store, openURL, clientJSON)
+	if err != nil {
+		return nil, err
+	}
+	s.processLock = lock
 	return s, nil
 }

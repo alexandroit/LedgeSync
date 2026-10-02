@@ -24,9 +24,11 @@ The OAuth/Picker protocol and bridge checks are recorded in
 
 The desktop uses **Connect Google Drive → choose destination → Preview folder
 upload → Upload folder**. The same shared services handle local policy preview,
-account authorization, native provider calls and approved execution. The CLI
-currently provides offline browse/explain/plan inspection and optional local
-`auth status`; it has no upload/apply command.
+account authorization, native provider calls and approved execution. The native
+CLI shares those services through `auth connect`, `auth status`, `auth disconnect`
+and interactive `copy`, with an exact in-process preview confirmation. The
+offline `plan` output remains a separate inspection surface and cannot be applied.
+See [CLI usage and headless prerequisites](../CLI.md).
 
 The local root becomes one app-managed child folder within My Drive or a chosen
 existing My Drive parent. It is not flattened into the parent. Included regular
@@ -49,7 +51,10 @@ of granting permission to overwrite or recreate a previously verified object.
 Transfer state resides in a private per-user SQLite journal outside upload
 roots. It stores identifiers, plans, checksums and observed rule sources, not
 OAuth tokens, upload-session URLs or uploaded file payloads. Its process lock protects
-the transfer journal; it does not imply a cross-process OAuth transaction lock.
+the transfer journal. A separate protected kernel lock serializes OAuth vault
+reads, refresh, browser authorization, authorized request bodies and credential
+cleanup across GUI/CLI processes. Contention requires retry and never assumes
+that a cached account is still current.
 Do not export the database casually: paths, filenames and account references
 can still be private.
 
@@ -135,6 +140,15 @@ a compile, Xvfb startup, mocked Wails bridge or browser-only screenshot is not
 equivalent to a native journey. Check installed-package behavior, vault access,
 Picker return, Unicode/space names, cancellation and the native close dialog.
 Windows Server/headless packages remain CLI-only for this candidate workflow.
+
+For CLI acceptance, repeat preview, first copy, unchanged repeat, keep-both and
+interruption/recovery from an interactive terminal. Verify exact digest approval,
+Ctrl-C/SIGTERM draining and refusal of piped/unattended approval. On an explicitly
+authorized SSH test host, verify the printed loopback tunnel and browser return
+without exposing a public callback listener. An unavailable native vault must
+block online operations. Start another GUI/CLI process during authorization or
+an active authorized response and verify safe contention, then fresh status after
+release. Automated fake tests do not establish these real server/session results.
 
 Before publication, record the passing build/test/packaging runs and immutable
 artifact identities, then verify the actual new download/installation path.

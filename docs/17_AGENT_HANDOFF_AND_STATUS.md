@@ -6,8 +6,10 @@
 Read [PROJECT_IDENTITY.md](../PROJECT_IDENTITY.md) first. The authoritative name
 is LedgeSync, command `ledgesync`, primary domain `ledgesync.com`. The owner
 requested public Apache-2.0 source, a website and desktop/server platform builds.
-The owner subsequently requested that DNS records be prepared only; activation
-is deferred. No live account connection or cloud synchronization was requested.
+After initially deferring DNS activation, the owner explicitly requested
+publication on the existing Ubuntu server hosting HiperMusicas. The canonical
+site is now live there. No live Drive account connection or cloud synchronization
+was requested.
 
 ## Implemented behavior
 
@@ -86,10 +88,11 @@ upload, overwrite, recovery or deletion paths have been tested.
 ## Public delivery and platform evidence
 
 The public repository is <https://github.com/alexandroit/LedgeSync>, licensed
-Apache-2.0 with retained third-party notices. The public provisional site is
-<https://alexandroit.github.io/LedgeSync/>. It was verified after the identity
-correction and returns HTTP 200 with the stylesheet. See [platforms](PLATFORMS.md) and
-[prepared DNS records](WEBSITE.md). The separate Sites preview remains private.
+Apache-2.0 with retained third-party notices. The canonical public site is
+<https://ledgesync.com/> on the owner's Ubuntu server. It returns HTTP 200 with
+the matching stylesheet and valid HTTPS. GitHub Pages remains a secondary copy
+at <https://alexandroit.github.io/LedgeSync/>. See [platforms](PLATFORMS.md) and
+[website deployment](WEBSITE.md). The separate Sites preview remains private.
 
 [Release v0.1.0-alpha.1](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1)
 is public and marked prerelease. Its immutable source commit is
@@ -113,6 +116,41 @@ installation, accessibility or GUI runtime acceptance on those systems.
 
 Source audit and documentation-only historical results remain in document 18.
 They must not overwrite the actual implementation status above.
+
+## Website deployment follow-up
+
+The website source deployed to Ubuntu is
+`92eb75b51d978565e1dd8ef939d6cf6320da2299`. Changed files: `dist/index.html`
+(canonical URL), `deploy/nginx/ledgesync.conf` (isolated static vhost), `README.md`,
+`docs/WEBSITE.md`, `docs/12_ADR_DECISIONS.md`,
+`docs/15_RISKS_AND_OPEN_DECISIONS.md` and this handoff. The GitHub repository
+homepage now points to the canonical website. No application or alpha release
+artifact was changed.
+
+Verified commands and outcomes:
+
+- `sudo nginx -t`: passed before each graceful reload.
+- `curl --silent --show-error --dump-header - https://ledgesync.com/` and the
+  equivalent stylesheet request: HTTP 200; bodies match tracked SHA-256 hashes.
+- Direct origin `curl --resolve ledgesync.com:443:127.0.0.1 https://ledgesync.com/`
+  on the server: HTTP 200 with certificate validation enabled.
+- HTTP and www requests: redirect to canonical HTTPS; missing path 404 and
+  `.git/config` 403. Direct origin www redirect preserves path/query.
+- `openssl x509 -in /etc/letsencrypt/live/ledgesync.com/cert.pem -noout -dates
+  -ext subjectAltName`: both names covered; expires December 30, 2026.
+- `systemctl is-active nginx certbot.timer`: both active. Existing HiperMusicas
+  public and origin requests return 200, its Supervisor PID is unchanged, and
+  both shared Nginx configuration hashes match the pre-deployment baseline.
+- `sudo certbot renew --cert-name ledgesync.com --dry-run --non-interactive
+  --run-deploy-hooks`: simulated renewal passed, including Nginx validation
+  and reload. This did not replace the live certificate.
+
+The first immediate HTTP probe after the bootstrap reload returned an empty
+reply; the subsequent origin probe and all final HTTPS probes succeeded.
+Browser visual inspection was unavailable because the computer-use connector
+reported no browser. Website-only changes did not rerun application CI; the
+immutable alpha retains the existing 16-job validation above. Deployment,
+renewal, update and rollback procedures are in [WEBSITE.md](WEBSITE.md).
 
 ## Next dependency-ready work
 

@@ -9,12 +9,12 @@
 **Implementation status:** offline developer alpha; no production release or live Drive transfers. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
 
 **Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
-[Website](https://alexandroit.github.io/LedgeSync/) ·
+[Website](https://ledgesync.com/) ·
 [Download offline alpha](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1) ·
 [Builds](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml) ·
 [Apache-2.0 license](LICENSE).
-The [DNS records for ledgesync.com](docs/WEBSITE.md) are prepared; domain
-activation is deferred at the owner's request.
+The website is live on the owner's Ubuntu server with HTTPS. See
+[deployment and renewal details](docs/WEBSITE.md).
 
 ## Try the offline alpha
 

@@ -85,6 +85,9 @@ func (s *blockedService) PreviewRoot(ctx context.Context, _ string) (app.Preview
 func (s *blockedService) Preview(ctx context.Context, path string) (app.Preview, error) {
 	return s.PreviewRoot(ctx, path)
 }
+func (s *blockedService) Scan(ctx context.Context, c config.Config) (app.Preview, error) {
+	return s.PreviewRoot(ctx, c.Source.Root)
+}
 
 func TestCancellationAndConcurrentRequests(t *testing.T) {
 	service := &blockedService{started: make(chan struct{})}

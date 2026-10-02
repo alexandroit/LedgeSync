@@ -3,6 +3,7 @@ package driveauth
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -116,7 +117,7 @@ func (s *Service) DoAuthorized(ctx context.Context, expectedAccountReference str
 	if ctx.Err() != nil {
 		return nil, contextError(ctx)
 	}
-	if acquired, err := s.tryAcquire(); !acquired {
+	if acquired, err := s.acquireForRequest(ctx); !acquired {
 		if err != nil {
 			_, _ = s.publish(nil, err)
 			return nil, err
@@ -294,4 +295,42 @@ func (b *authorizedBody) Close() error {
 		close(b.closed)
 	})
 	return nil
+}
+
+// SetRequestWait lets authorized Drive requests wait up to d for a short
+// credential operation, such as a status read, instead of failing as busy.
+// A browser authorization or lifecycle change still makes requests fail busy.
+func (s *Service) SetRequestWait(d time.Duration) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.requestWait = d
+}
+
+func (s *Service) acquireForRequest(ctx context.Context) (bool, error) {
+	s.mu.Lock()
+	wait := s.requestWait
+	s.mu.Unlock()
+	deadline := time.Now().Add(wait)
+	for {
+		acquired, err := s.tryAcquire()
+		if acquired {
+			return true, nil
+		}
+		if err != nil && !errors.Is(err, ErrBusy) {
+			return false, err
+		}
+		s.mu.Lock()
+		stopping := s.stopping
+		s.mu.Unlock()
+		if wait <= 0 || stopping || !time.Now().Before(deadline) {
+			return false, err
+		}
+		timer := time.NewTimer(25 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return false, contextError(ctx)
+		case <-timer.C:
+		}
+	}
 }

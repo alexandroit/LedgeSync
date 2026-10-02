@@ -402,3 +402,34 @@ func TestAuthorizedWrongAccountNeverContactsProvider(t *testing.T) {
 		t.Fatal("account binding ignored")
 	}
 }
+
+func TestAuthorizedRequestWaitsBrieflyForShortCredentialOperations(t *testing.T) {
+	f := newBundledFixture(t)
+	connected := f.connect()
+	driveTransport(f, func(r *http.Request) (*http.Response, error) { return driveResponse(200, `{"id":"waited"}`), nil })
+	f.service.SetRequestWait(2 * time.Second)
+	// Hold the credential gate as a status read would, then release it shortly.
+	if acquired, err := f.service.tryAcquire(); !acquired || err != nil {
+		t.Fatal("could not hold the gate")
+	}
+	go func() { time.Sleep(100 * time.Millisecond); f.service.release() }()
+	response, err := f.service.DoAuthorized(context.Background(), connected.Account.Reference, driveRequest(http.MethodGet))
+	if err != nil {
+		t.Fatalf("request did not wait for a short operation: %v", err)
+	}
+	_, _ = io.ReadAll(response.Body)
+	_ = response.Body.Close()
+	// A long operation still makes the request fail busy after the bound.
+	f.service.SetRequestWait(150 * time.Millisecond)
+	if acquired, err := f.service.tryAcquire(); !acquired || err != nil {
+		t.Fatal("could not hold the gate")
+	}
+	defer f.service.release()
+	started := time.Now()
+	if _, err = f.service.DoAuthorized(context.Background(), connected.Account.Reference, driveRequest(http.MethodGet)); !errors.Is(err, ErrBusy) {
+		t.Fatalf("held gate did not report busy: %v", err)
+	}
+	if time.Since(started) < 100*time.Millisecond {
+		t.Fatal("request did not wait before reporting busy")
+	}
+}

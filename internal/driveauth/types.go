@@ -108,6 +108,7 @@ type Service struct {
 	runtime                                *record // access tokens are process-local, never serialized
 	now                                    func() time.Time
 	bundled                                *clientConfig // immutable application client; never supplied by the frontend
+	requestWait                            time.Duration // bounded wait of Drive requests for short credential operations
 }
 
 func New(store Store, openURL func(string) error) *Service {

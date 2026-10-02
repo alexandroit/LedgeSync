@@ -47,6 +47,15 @@ func (f *fakeTransfer) Preview(_ context.Context, source string, isConfig bool) 
 	f.source, f.config = source, isConfig
 	return transfer.Plan{PlanDigest: "approved-digest"}, nil
 }
+func (f *fakeTransfer) RestoreDestination(ctx context.Context, d transfer.Destination) (*transfer.Destination, error) {
+	return f.SetDestination(ctx, d.ID, d.AccountReference)
+}
+func (f *fakeTransfer) PreviewSource(ctx context.Context, src transfer.Source) (transfer.Plan, error) {
+	if src.ConfigPath != "" {
+		return f.Preview(ctx, src.ConfigPath, true)
+	}
+	return f.Preview(ctx, src.Root, false)
+}
 func (f *fakeTransfer) Start(ctx context.Context, digest string) (transfer.Status, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()

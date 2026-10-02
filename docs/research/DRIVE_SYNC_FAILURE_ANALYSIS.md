@@ -145,6 +145,6 @@ started, created its private state (`catalog.sqlite`, mode 0600) and exited
 cleanly; it also ran with the hardened runtime and no entitlement exceptions.
 These are build and startup checks, not live Google acceptance.
 
-After the alpha.6 fixes (`a8c7a5d`), the same `go test`, `go test -race` and
+After the alpha.6 fixes (`c1e00b1`), the same `go test`, `go test -race` and
 `go vet` commands pass for all 17 packages, and the live acceptance passes all
 14 steps.

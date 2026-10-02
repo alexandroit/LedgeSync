@@ -15,16 +15,18 @@ A redacted diagnostic build found two defects that the emulator did not model:
 - **Detected media types.** Drive stores the media type it detects
   (`README.md` → `text/markdown`), and verification required the uploaded type.
 
-Both are fixed (`1eb3e71`, `a8c7a5d`; [ADR-033](12_ADR_DECISIONS.md)), and the
-emulator now models them. With the fixes, the live acceptance passed all 14
-steps: first copy, independent SHA-256 restore, unchanged repeat, keep-both,
+Both are fixed in `c1e00b1` ([pull request 3](https://github.com/alexandroit/LedgeSync/pull/3);
+[ADR-033](12_ADR_DECISIONS.md)), and the emulator now models them. With the
+fixes, LedgeSync 0.1.0-alpha.6 built from `c1e00b1` passed all 14 live steps: first copy, independent SHA-256 restore, unchanged repeat, keep-both,
 `kill -9` and resume, network loss and continuation, and automatic copy with a
 pause on rule change. Details are in the
 [failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md#live-acceptance-findings-alpha6)
 and the [live acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md).
 
 Alpha.5 assets stay immutable, and alpha.6 replaces them. Publication identities
-are recorded below once complete. Still pending from the owner: the desktop
+are recorded below once complete. The repository history was rewritten on
+2026-10-02; earlier evidence cites previous commit IDs, mapped in the
+[commit ID map](COMMIT_ID_MAP.md). Still pending from the owner: the desktop
 Picker pass and publisher signing material.
 
 ## Alpha.5 published — superseded by alpha.6 (uploads fail against real Drive)

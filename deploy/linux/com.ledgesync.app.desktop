@@ -2,8 +2,8 @@
 Version=1.0
 Type=Application
 Name=LedgeSync
-GenericName=File policy explorer
-Comment=Browse local files and preview file selection
+GenericName=Google Drive folder copy
+Comment=Preview and approve local folder copies to Google Drive
 Exec=ledgesync-desktop
 TryExec=ledgesync-desktop
 Icon=ledgesync

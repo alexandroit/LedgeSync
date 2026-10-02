@@ -38,7 +38,7 @@ def validate_package(archive: Path, record: dict, architecture: str, work: Path)
         raise ValueError("Debian package does not match its packaging report")
     expected = {"Package": record["package"], "Version": record["version"],
                 "Architecture": architecture, "Depends": record["depends"],
-                "Recommends": record["recommends"]}
+                "Recommends": record["recommends"], "Suggests": record["suggests"]}
     for field, value in expected.items():
         actual = command(["dpkg-deb", "--field", str(archive), field]).stdout.strip()
         if actual != value:

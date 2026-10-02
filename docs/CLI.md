@@ -1,5 +1,10 @@
 # LedgeSync CLI and server copies
 
+**0.1.0-alpha.5 candidate.** Adds saved sync pairs, approved pair copies,
+opt-in automatic copies for servers and restore to a new folder (see
+[Saved pairs, automatic copies and restore](#saved-pairs-automatic-copies-and-restore)).
+The alpha.4 description below remains the published release.
+
 **LedgeSync 0.1.0-alpha.4** provides manual Google Drive copies through the same
 authorization, provider, filtering, approval and journal services as the desktop.
 The [release's native CLI archives](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4)
@@ -142,6 +147,52 @@ ledgesync auth disconnect
 Type `disconnect` when prompted. Drive files and remote Google authorization are
 not deleted. Google-side revocation remains a separate confirmed desktop action.
 
+## Saved pairs, automatic copies and restore
+
+Saved pairs are shared with the desktop application (same private catalog and
+journal). An approved desktop upload saves its pair automatically.
+
+```sh
+ledgesync pairs add --root "./local-folder" --destination root --name "Server data"
+ledgesync pairs list
+ledgesync copy --pair PAIR_ID
+```
+
+`copy --pair` previews the pair with its saved policy and requires the exact
+digest, like `copy`. Changed approved files are skipped and reported (exit `3`);
+files added after the preview wait for the next copy.
+
+Automatic copies are off until you authorize them from a reviewed preview:
+
+```sh
+ledgesync automatic enable --pair PAIR_ID --every 15          # or add --watch
+ledgesync automatic run                                       # due pairs, once
+ledgesync automatic watch                                     # foreground loop
+ledgesync automatic disable --pair PAIR_ID
+```
+
+`automatic enable` requires an interactive terminal and the preview's digest. The
+authorization binds the account, destination, source identity, configuration,
+ignore rules and conflict policy. `automatic run` and `automatic watch` execute
+only authorized, unpaused pairs and only create-only work. A changed account,
+destination, source volume, configuration or rule set, or earlier copies missing
+in Drive, pauses the pair until a new authorization; an offline network or an
+unmounted source is retried later. Nothing is installed as a service: use a
+cron entry or a user systemd timer that runs `ledgesync automatic run` in a
+session where the credential vault is available (`automatic run` exits `6` with
+`AUTOMATION_ATTENTION` when a pair is paused or waiting).
+
+Restore downloads a pair's verified copy into a new empty folder:
+
+```sh
+ledgesync restore --pair PAIR_ID --to "./restored-copy"
+```
+
+Only journal-recorded, verified objects are downloaded; each file must match
+Drive's MD5 and the recorded SHA-256. The target must be empty and outside the
+source and LedgeSync's private data. Existing files are never overwritten; items
+missing or changed in Drive are reported (exit `3`).
+
 ## Offline inspection and exit status
 
 `browse`, `explain`, `config validate`, `plan`, `plan inspect`, `capabilities` and
@@ -149,9 +200,11 @@ help/version remain local inspection commands. Their fake-destination plan files
 cannot be applied to Drive. Online copy approval is created and consumed in one
 process; saved transfer history assists recovery, not automatic approval.
 
-Exit codes: `0` completed; `2` invalid arguments/configuration; `4` conflict or
-review required; `6` unavailable capability, vault/provider/output failure or
-other stopped operation; `130` canceled or unconfirmed. Progress JSON contains
+Exit codes: `0` completed; `2` invalid arguments/configuration; `3` partial
+(approved files changed after preview, or restore items unavailable); `4`
+conflict or review required; `6` unavailable capability, vault/provider/output
+failure or other stopped operation; `130` canceled or unconfirmed. Errors are
+JSON objects with a stable `code` and a redacted `message`. Progress JSON contains
 safe status and escaped paths, never tokens or upload-session URLs. Live Google,
 native installation and headless-session acceptance are recorded separately in
 the [acceptance checklist](research/DRIVE_UPLOAD_ACCEPTANCE.md) and

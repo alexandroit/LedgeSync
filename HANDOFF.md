@@ -2,7 +2,11 @@
 
 **Updated:** 2026-10-02, America/Toronto. **Product:** LedgeSync.
 **Priority:** the owner reports that the application is not synchronizing files.
-**Status:** unresolved user-visible failure; no successful live upload is established.
+**Status (end of this session):** the failure was reproduced and fixed in source
+on branch `fix/drive-sync-recovery` (alpha.5 candidate); live Google acceptance
+and publisher signing await owner steps. Current dispositions, commands and
+blockers are in [current status](docs/17_AGENT_HANDOFF_AND_STATUS.md); the
+original brief below is retained for context.
 
 This is the single continuation entrypoint. Read [project identity](PROJECT_IDENTITY.md)
 and [shared engineering rules](AGENTS.md), then follow this document. Work in the

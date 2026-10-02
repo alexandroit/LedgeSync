@@ -54,13 +54,8 @@ jobs:
       - name: Go formatting
         shell: bash
         run: test -z "$(gofmt -l cmd internal)"
-      - name: Portable CLI packages
-        run: python tools/package_cli.py --version 0.1.0-alpha.4
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: ledgesync-portable-cli
-          path: build/releases/
-          if-no-files-found: error
+      - name: Native CLI packaging guards
+        run: python tools/test_package_cli.py
   reference:
     name: Pinned rclone differential
     runs-on: ubuntu-24.04
@@ -159,6 +154,16 @@ jobs:
           CGO_CFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
           CGO_LDFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
         run: go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -tags "$LEDGESYNC_TAGS" -nosyncgomod -m -trimpath -platform "$LEDGESYNC_PLATFORM"
+      - name: Package native CLI with the same publisher configuration
+        env:
+          LEDGESYNC_PLATFORM: ${{ matrix.platform }}
+          LEDGESYNC_OFFICIAL: ${{ github.repository == 'alexandroit/LedgeSync' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+          CGO_CFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
+          CGO_LDFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
+        run: |
+          options=()
+          if [ "$LEDGESYNC_OFFICIAL" = true ]; then options+=(--require-oauth-client); fi
+          python tools/package_cli.py --platform "$LEDGESYNC_PLATFORM" --native --version 0.1.0-alpha.4 --output build/packages "${options[@]}"
       - name: Remove generated OAuth client source
         if: always()
         run: python tools/configure_oauth_client.py --clean

@@ -104,8 +104,20 @@ Drive contents or recursively authorize an existing parent. Read the [workflow
 and acceptance checklist](docs/research/DRIVE_UPLOAD_ACCEPTANCE.md) before testing
 the candidate with a disposable folder.
 
-The secondary CLI uses the same local preview service; it has no copy/apply
-command yet:
+The alpha.4 native CLI uses the same authorization, approval and copy services.
+Online commands require an interactive terminal and the user's native vault:
+
+```sh
+ledgesync auth connect
+ledgesync copy --root /path/to/project --destination picker
+```
+
+Review the complete preview and type its exact digest to approve it. For a
+server reached through SSH, use `--no-browser` and the loopback tunnel shown in
+the terminal. See the [CLI guide](docs/CLI.md) for native vault prerequisites and
+recovery. There is no unattended `apply` command or plaintext credential fallback.
+
+The following development commands remain useful without publisher configuration:
 
 ```sh
 go run ./cmd/ledgesync --help
@@ -118,7 +130,8 @@ go run ./cmd/ledgesync capabilities
 go run ./cmd/ledgesync auth status
 ```
 
-CLI previews still use a fake destination and cannot be applied. `auth status`
+The offline `plan` command still uses a fake destination and cannot be applied.
+The real `copy` command creates its own fresh approval in the same process. `auth status`
 reads safe local connection metadata only in a configured native build; it does
 not verify Google access online or open a browser. Configuration examples include
 future contract fields that the current copy workflow does not enable. JSON

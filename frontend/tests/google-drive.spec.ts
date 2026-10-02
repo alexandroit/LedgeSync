@@ -78,6 +78,19 @@ test('an unconfigured build directs users to the official app without exposing d
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
 });
 
+test('another process using authorization exposes only retry and recovers fresh identity', async ({ page }) => {
+  await start(page, { state: 'busy', clientConfigured: true, message: 'Another LedgeSync process is using Google Drive authorization. Retry after it finishes.', scope });
+  const card = page.getByRole('article', { name: 'Google Drive connection' });
+  await expect(card.getByText('Connection in use', { exact: true })).toBeVisible();
+  await expect(card.getByRole('button')).toHaveCount(1);
+  await expect(card.getByRole('button', { name: 'Retry connection status', exact: true })).toBeEnabled();
+  await expect(card.getByText('fixture@example.invalid', { exact: true })).toHaveCount(0);
+  await page.evaluate(result => window.driveHarness.setStatus(result), connected);
+  await card.getByRole('button', { name: 'Retry connection status', exact: true }).click();
+  await expect(card.getByText('Connected', { exact: true })).toBeVisible();
+  await expect(card.getByText('fixture@example.invalid', { exact: true })).toBeVisible();
+});
+
 test('legacy authorization retains identity until explicit disconnect then offers the new one-click flow', async ({ page }) => {
   const legacy: DriveConnectionStatus = { ...connected, state: 'client_changed', message: 'The saved authorization belongs to a different app configuration.' };
   await start(page, legacy);

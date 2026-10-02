@@ -6,7 +6,8 @@ folder uploads. The published download baseline is still alpha.3 until the
 release evidence below is updated.
 
 **Source follow-up:** OAuth hardening, native destination Picker, durable copy
-journal, resumable binary uploads and desktop approval/progress are implemented.
+journal, resumable binary uploads, desktop approval/progress and interactive
+server CLI copies are implemented.
 Public alpha.3 assets remain immutable.
 
 Read [PROJECT_IDENTITY.md](../PROJECT_IDENTITY.md) first. The authoritative name
@@ -49,6 +50,28 @@ the 63 notice hash checks. New native CI and immutable installers are still
 required before alpha.4 publication. No live Google acceptance was inferred
 from these checks.
 
+The security follow-up commit `daf8b1047cbbb8642fd081824e3a61c3a5d3ed2f`
+subsequently passed all 16 jobs in build run `36962530879` and all six native
+vault jobs in `36962530784`. This includes actual native ACL/permission tests
+and the Linux peer-identity check. Those intermediate binaries are not the
+final release inputs: the subsequent CLI/shared OAuth lock changes require
+their own exact-commit build and vault runs.
+
+The CLI follow-up adds native publisher-configured builds on all six targets
+(macOS CGO/Keychain, Linux and Windows native vaults without CGO), interactive
+preview/digest approval, browser/SSH loopback consent, and cancellation draining.
+A separate native process lock protects the shared OAuth lifecycle, including
+authorized response bodies. External contention produces a safe `busy` state
+without stale account controls. Shared source selection rejects application
+settings and their parents before creating lock files. A targeted race test
+exposed and now guards nil-record status publication during concurrent revocation.
+
+Latest local checks: full Go race suite and vet passed; 46 frontend interaction
+tests and its production build passed; 9 OAuth helper, 6 CLI packaging, 11 Debian
+and 4 Windows packaging guard tests passed. Documentation validated 52 Markdown
+files and 179 local links with zero failures/skips; 63 notice hashes passed.
+No personal account, real cloud write or live SSH consent was used by these tests.
+
 ### Copy behavior
 
 The Files screen now exposes a real destination, selected through Google's native
@@ -58,8 +81,12 @@ a new app-managed child folder on the first run. Active ignore rules apply.
 Later runs reuse that managed hierarchy, verify and skip unchanged content, and
 create a separate suffixed copy for changed files. No overwrite, deletion,
 automatic watcher, background scheduler or shared-drive support was added.
-The CLI retains local previews and configured native read-only auth status;
-there is no separate headless upload implementation.
+The CLI now invokes the same services for native browser authorization and
+interactive approved copies. It prints the full preview and requires its exact
+digest in the same process. Headless consent uses an explicitly requested
+loopback SSH tunnel and the server user's available native vault. There is no
+unattended apply command, credential-file fallback or independently implemented
+CLI provider. See [CLI usage](CLI.md).
 
 The backend binds approvals to source/rules/configuration, account, destination,
 remote observations and journal state; unstarted previews expire after 15 minutes.

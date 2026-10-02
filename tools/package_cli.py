@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build portable offline CLI archives without installing global tools."""
+"""Build native or unconfigured portable CLI archives without global tools."""
 import argparse
 import hashlib
 import os
@@ -15,28 +15,80 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGETS = [(system, arch) for system in ("darwin", "linux", "windows") for arch in ("amd64", "arm64")]
 
 
+def build_environment(system, arch, native, host):
+    if native and (system, arch) != tuple(host):
+        raise ValueError("native CLI packaging requires the matching host OS and architecture")
+    return {**os.environ, "GOOS": system, "GOARCH": arch,
+            "CGO_ENABLED": "1" if native and system == "darwin" else "0",
+            "GOTOOLCHAIN": "go1.27.1"}
+
+
+def readme(version, native, configured):
+    text = f"LedgeSync {version} CLI\n\n"
+    if native and configured:
+        text += (
+            "Connect Google Drive with browser consent, then preview and explicitly approve a folder copy.\n"
+            "Use ledgesync --help for authentication, destination selection and copy commands.\n"
+            "Copies use the same engine as the desktop: source files are read-only, unchanged copies\n"
+            "are verified and skipped, and changed files keep both versions. No overwrite or deletion.\n"
+            "No unattended scheduler, watcher or system service is installed.\n"
+            "Credentials require macOS Keychain, Windows Credential Manager or Linux Secret Service.\n"
+            "A locked/unavailable vault blocks authorization; there is no plaintext fallback.\n"
+            "A headless server needs an interactive user session, native vault and browser loopback\n"
+            "access through a local SSH tunnel. See the CLI guide before connecting.\n"
+        )
+    else:
+        text += (
+            "Unconfigured developer build. Local inspection and offline previews are available.\n"
+            "Google authentication and copies require a configured native build with an available OS vault.\n"
+        )
+    return text + (
+        "\nUsage: ledgesync --help\n"
+        "Documentation: https://github.com/alexandroit/LedgeSync\n"
+        "License: Apache-2.0; third-party components retain their own licenses.\n"
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="0.1.0-alpha.3")
+    parser.add_argument("--version", default="0.1.0-alpha.4")
+    parser.add_argument("--platform", choices=["/".join(t) for t in TARGETS])
+    parser.add_argument("--native", action="store_true", help="build with the native credential vault, on a matching host")
+    parser.add_argument("--require-oauth-client", action="store_true", help="fail if publisher client injection is missing")
+    parser.add_argument("--output", type=Path, default=ROOT / "build" / "releases")
     args = parser.parse_args()
     if not all(c.isalnum() or c in ".-" for c in args.version):
         parser.error("version must contain only letters, digits, dots, and hyphens")
+    if args.native and not args.platform:
+        parser.error("--native requires an explicit --platform")
+    configured = (ROOT / "internal/connections/oauth_client_generated.go").is_file()
+    if args.require_oauth_client and (not args.native or not configured):
+        parser.error("official CLI packaging requires a configured native build")
+    if configured and not args.native:
+        parser.error("remove generated OAuth configuration before portable developer packaging")
+    host = subprocess.check_output(["go", "env", "GOHOSTOS", "GOHOSTARCH"], cwd=ROOT, text=True).split()
     verify_notices(ROOT)
-    output = ROOT / "build" / "releases"
+    output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     archives = []
-    for system, arch in TARGETS:
+    for system, arch in ([tuple(args.platform.split("/"))] if args.platform else TARGETS):
         name = f"ledgesync-{args.version}-{system}-{arch}"
         with tempfile.TemporaryDirectory(prefix="ledgesync-package-") as tmp:
             stage = Path(tmp) / name
             stage.mkdir()
             exe = "ledgesync.exe" if system == "windows" else "ledgesync"
-            env = {**os.environ, "GOOS": system, "GOARCH": arch, "CGO_ENABLED": "0", "GOTOOLCHAIN": "go1.27.1"}
-            subprocess.run(["go", "build", "-trimpath", "-o", str(stage / exe), "./cmd/ledgesync"], cwd=ROOT, env=env, check=True)
+            try:
+                env = build_environment(system, arch, args.native, host)
+            except ValueError as error:
+                parser.error(str(error))
+            command = ["go", "build", "-trimpath"]
+            if args.native:
+                command += ["-tags", "oauth"]
+            subprocess.run(command + ["-o", str(stage / exe), "./cmd/ledgesync"], cwd=ROOT, env=env, check=True)
             for filename in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"):
                 shutil.copy2(ROOT / filename, stage / filename)
             shutil.copytree(ROOT / "third_party", stage / "third_party")
-            (stage / "README.txt").write_text("LedgeSync offline alpha CLI\n\nThis build inspects local files and creates previews against a fake destination.\nIt does not connect to Google Drive, upload, overwrite, delete, or run as a service.\n\nUsage: ledgesync --help\nDocumentation: https://github.com/alexandroit/LedgeSync\nLicense: Apache-2.0; third-party components retain their own licenses.\n", encoding="utf-8")
+            (stage / "README.txt").write_text(readme(args.version, args.native, configured), encoding="utf-8")
             if system == "windows":
                 archive = output / (name + ".zip")
                 with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:

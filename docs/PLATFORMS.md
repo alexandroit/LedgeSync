@@ -35,10 +35,13 @@ in memory, so an unfinished file may restart after the process exits. The native
 close prompt defaults to **Keep Open** during a transfer.
 
 No scheduler, file watcher, background service, shared-drive upload, download,
-mirror deletion or bidirectional synchronization is enabled. CLI previews remain
-offline; the source adds read-only `ledgesync auth status` for configured native
-builds, but no CLI copy/apply command. The current public CLI packages remain
-the alpha.3 artifacts described below.
+mirror deletion or bidirectional synchronization is enabled. The native CLI now
+shares browser authorization, folder selection and the approved copy engine.
+`copy` requires an interactive terminal and confirmation of the complete preview;
+offline `plan` output cannot be applied. A server needs an available native vault
+in the user's session; SSH authorization uses an explicit local loopback tunnel.
+See [CLI usage](CLI.md). The current public packages remain alpha.3 until the
+new application and installer release gates pass.
 
 The owner reports Production OAuth, enabled Picker API and successful account
 connection. New live Picker/upload acceptance, candidate native installer checks,

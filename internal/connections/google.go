@@ -3,9 +3,12 @@ package connections
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 
 	"github.com/alexandroit/LedgeSync/internal/credentialvault"
 	"github.com/alexandroit/LedgeSync/internal/driveauth"
+	"github.com/alexandroit/LedgeSync/internal/transferstate"
 )
 
 // Official builds set this from a generated, untracked source file. Desktop
@@ -15,7 +18,22 @@ var bundledClientJSON string
 
 // NewGoogleDrive never opens a vault or reads credentials until an explicit call.
 func NewGoogleDrive(openURL func(string) error) (*driveauth.Service, error) {
-	return driveauth.NewWithClient(vaultAdapter{credentialvault.New()}, openURL, []byte(bundledClientJSON))
+	return driveauth.NewWithClientAndLock(vaultAdapter{credentialvault.New()}, openURL, []byte(bundledClientJSON), googleDriveProcessLock)
+}
+
+func googleDriveProcessLock() (func(), error) {
+	directory, err := os.UserConfigDir()
+	if err != nil {
+		return nil, driveauth.ErrStorage
+	}
+	release, err := transferstate.AcquireProcessLock(filepath.Join(directory, "LedgeSync", "auth-lock"))
+	if errors.Is(err, transferstate.ErrLockBusy) {
+		return nil, driveauth.ErrBusy
+	}
+	if err != nil {
+		return nil, driveauth.ErrStorage
+	}
+	return release, nil
 }
 
 type vaultAdapter struct{ credentialvault.Store }

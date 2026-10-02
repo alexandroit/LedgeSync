@@ -34,7 +34,7 @@ export interface Preview {
   entries: Entry[]; plan: Plan; capabilities: Capability[];
 }
 export interface DriveConnectionStatus {
-  state: 'setup_required' | 'disconnected' | 'connecting' | 'connected' | 'reconnect_required' | 'client_changed' | 'storage_unavailable' | 'revoked_local_cleanup_required';
+  state: 'setup_required' | 'disconnected' | 'connecting' | 'connected' | 'reconnect_required' | 'client_changed' | 'storage_unavailable' | 'busy' | 'revoked_local_cleanup_required';
   clientConfigured: boolean;
   account?: { reference: string; displayName: string; email: string };
   message: string;

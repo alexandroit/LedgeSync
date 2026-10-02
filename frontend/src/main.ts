@@ -541,7 +541,7 @@ function renderConnections(container: HTMLElement) {
   const card = el('article', 'connection-card'); card.setAttribute('aria-label', 'Google Drive connection');
   const cardHeading = el('div', 'connection-heading');
   const provider = el('div', 'connection-provider'); provider.append(icon('cloud'), el('h2', '', 'Google Drive'));
-  const labels: Record<DriveConnectionStatus['state'], string> = { setup_required: 'Connection unavailable', disconnected: 'Not connected', connecting: 'Waiting for authorization', connected: 'Connected', reconnect_required: 'Reconnect required', client_changed: 'New authorization required', storage_unavailable: 'Credential vault unavailable', revoked_local_cleanup_required: 'Google access revoked; local cleanup required' };
+  const labels: Record<DriveConnectionStatus['state'], string> = { setup_required: 'Connection unavailable', disconnected: 'Not connected', connecting: 'Waiting for authorization', connected: 'Connected', reconnect_required: 'Reconnect required', client_changed: 'New authorization required', storage_unavailable: 'Credential vault unavailable', busy: 'Connection in use', revoked_local_cleanup_required: 'Google access revoked; local cleanup required' };
   cardHeading.append(provider, badge(state.driveBusy === 'connect' ? labels.connecting : state.driveBusy === 'revoke' ? 'Revoking Google access' : state.driveBusy === 'disconnect' ? 'Removing local access' : state.drive ? labels[state.drive.state] : 'Not checked', state.drive?.state === 'connected' && !state.driveBusy ? 'connected' : ''));
   card.append(cardHeading);
   const status = el('div', 'connection-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.setAttribute('aria-atomic', 'true');
@@ -562,7 +562,7 @@ function renderConnections(container: HTMLElement) {
   if (pending) {
     const cancel = driveButton(state.driveCancelling ? 'Cancelling…' : 'Cancel authorization', () => void cancelDrive(), 'cancel');
     cancel.disabled = state.driveCancelling; actions.append(cancel);
-  } else if (!state.drive || state.drive.state === 'storage_unavailable') {
+  } else if (!state.drive || state.drive.state === 'storage_unavailable' || state.drive.state === 'busy') {
     actions.append(driveButton('Retry connection status', () => void driveAction('status'), 'status'));
   } else if (state.drive.state === 'connected') {
     actions.append(driveButton('Check connection', () => void driveAction('check'), 'check'), driveButton('Disconnect from this device', () => void driveAction('disconnect'), 'disconnect'));

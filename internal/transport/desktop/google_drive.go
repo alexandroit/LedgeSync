@@ -35,8 +35,9 @@ func (a *App) GoogleDriveStatus() (driveauth.Status, error) {
 	}
 	status, err := a.google.Status(a.connectionContext)
 	// Wails rejects an error result and drops its accompanying value. A locked
-	// vault is an expected display state; preserve that safe DTO for recovery.
-	if errors.Is(err, driveauth.ErrStorage) && status.State == "storage_unavailable" {
+	// vault or another process owning authorization is an expected display state;
+	// preserve the safe DTO rather than leaving stale connected controls enabled.
+	if errors.Is(err, driveauth.ErrStorage) && status.State == "storage_unavailable" || errors.Is(err, driveauth.ErrBusy) && status.State == "busy" {
 		return status, nil
 	}
 	return status, err

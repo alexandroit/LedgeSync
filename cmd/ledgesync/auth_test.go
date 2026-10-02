@@ -97,3 +97,16 @@ func TestCLIAuthCancellationAndBuildFailure(t *testing.T) {
 		t.Fatal("unsafe configuration error")
 	}
 }
+
+func TestCLIStatusExternalLockContentionDoesNotReadVaultOrClaimConnection(t *testing.T) {
+	vault := &statusVault{err: errors.New("must-not-read")}
+	service, err := driveauth.NewWithClientAndLock(vault, nil, []byte(syntheticClient), func() (func(), error) { return nil, driveauth.ErrBusy })
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out, errOut bytes.Buffer
+	code := runAuthStatus(context.Background(), []string{"status"}, &out, &errOut, func() (authStatusService, error) { return service, nil })
+	if code != 6 || out.Len() != 0 || vault.reads != 0 || !strings.Contains(errOut.String(), "AUTH_BUSY") {
+		t.Fatalf("busy status unsafe: %d %s", code, &errOut)
+	}
+}

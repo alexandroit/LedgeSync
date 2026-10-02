@@ -144,6 +144,15 @@ func TestGoogleBridgeStorageStatusSurvivesWailsErrorContract(t *testing.T) {
 	}
 }
 
+func TestGoogleBridgeOtherProcessStatusSurvivesWailsErrorContract(t *testing.T) {
+	g := &fakeGoogleDrive{status: driveauth.Status{State: "busy", Message: driveauth.ErrBusy.Error()}, err: driveauth.ErrBusy}
+	b := NewWithGoogleDrive(nil, nil, nil, g, nil)
+	status, err := b.GoogleDriveStatus()
+	if err != nil || status.State != "busy" || status.Account != nil {
+		t.Fatal("other-process contention did not expose a safe retry state")
+	}
+}
+
 func TestGoogleBridgeOperationsAndShutdown(t *testing.T) {
 	g := &fakeGoogleDrive{status: driveauth.Status{State: "connected"}}
 	b := NewWithGoogleDrive(nil, nil, nil, g, nil)

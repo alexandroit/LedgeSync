@@ -1,0 +1,102 @@
+{
+  "verifiedAt": "2026-10-02T00:41:33.928784+00:00",
+  "release": "https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1",
+  "immutableApplicationTag": "89a9121a279c843f77b2d72f8b6e93dc332cb03b",
+  "previousAssetCount": 19,
+  "previousAssetIDsDigestsSizesTimestampsUnchanged": true,
+  "totalAssetCount": 32,
+  "anonymousHTTPSDownloadsMatched": [
+    {
+      "name": "INSTALLERS_RELEASE.json",
+      "id": "RA_kwDOU36oTM4kBynl",
+      "digest": "sha256:1c5f3fd87aa4bb60c2876e0bedb401f628b82464fb6fbdbc51bc7104c82a8ca8",
+      "size": 23591,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/INSTALLERS_RELEASE.json"
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe",
+      "id": "RA_kwDOU36oTM4kBx3l",
+      "digest": "sha256:00f64cd4d0dfa1078ebe64a1ea77a9f81b92574d3fc1c4282d5430cacb97a42c",
+      "size": 6449703,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe"
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe.sha256",
+      "id": "RA_kwDOU36oTM4kBx3p",
+      "digest": "sha256:dcc18e95a74d5d9b1fcc197a71e076f130aee60d14680637ec020891958884b9",
+      "size": 115,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe.sha256"
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe",
+      "id": "RA_kwDOU36oTM4kBx3i",
+      "digest": "sha256:fbb10f6e16a9e5e71fb67e71f60f6033f42b8ddca27350b60a0d0b282fc14162",
+      "size": 6041514,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe"
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe.sha256",
+      "id": "RA_kwDOU36oTM4kBx3m",
+      "digest": "sha256:de37ba12b19d40d84855f366bcc1ec58beade2e88ae28d2bb2dc13d6c79ea67c",
+      "size": 115,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe.sha256"
+    },
+    {
+      "name": "ledgesync-cli_0.1.0.alpha.1-1_amd64.deb",
+      "id": "RA_kwDOU36oTM4kBx30",
+      "digest": "sha256:c21e858f0cf8fc850a9e8bf56dcf75e96e8c23c3c8b2638f89bda4900e0adfc0",
+      "size": 2700736,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-cli_0.1.0.alpha.1-1_amd64.deb"
+    },
+    {
+      "name": "ledgesync-cli_0.1.0.alpha.1-1_amd64.deb.sha256",
+      "id": "RA_kwDOU36oTM4kBymz",
+      "digest": "sha256:4a0f037dcb6ced0f098ecb2ad3c2470e234415235ce37a3c14dfec0f7d43fbe0",
+      "size": 106,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-cli_0.1.0.alpha.1-1_amd64.deb.sha256"
+    },
+    {
+      "name": "ledgesync-cli_0.1.0.alpha.1-1_arm64.deb",
+      "id": "RA_kwDOU36oTM4kBx39",
+      "digest": "sha256:c460b84154fa9b0944edf048928c4791dc88744528db79c2d3e7a1d182d2a8a8",
+      "size": 2411600,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-cli_0.1.0.alpha.1-1_arm64.deb"
+    },
+    {
+      "name": "ledgesync-cli_0.1.0.alpha.1-1_arm64.deb.sha256",
+      "id": "RA_kwDOU36oTM4kByoh",
+      "digest": "sha256:7ffa206cf4009275c8de8e051be2d352adeecc4fac2d7cf238d4608e8df7c970",
+      "size": 106,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-cli_0.1.0.alpha.1-1_arm64.deb.sha256"
+    },
+    {
+      "name": "ledgesync_0.1.0.alpha.1-1_amd64.deb",
+      "id": "RA_kwDOU36oTM4kBx4G",
+      "digest": "sha256:beb302668cf777ff2f07cb82243289b5ed963ad05234493ce73df169bd7ce3f2",
+      "size": 3074460,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync_0.1.0.alpha.1-1_amd64.deb"
+    },
+    {
+      "name": "ledgesync_0.1.0.alpha.1-1_amd64.deb.sha256",
+      "id": "RA_kwDOU36oTM4kBynK",
+      "digest": "sha256:ba1569d03ffc1ab971f8574e902277f057faa0ffc8bab572fbd3e9c011cfaa51",
+      "size": 102,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync_0.1.0.alpha.1-1_amd64.deb.sha256"
+    },
+    {
+      "name": "ledgesync_0.1.0.alpha.1-1_arm64.deb",
+      "id": "RA_kwDOU36oTM4kBx4T",
+      "digest": "sha256:52fefed8635b82cc78728fce5a69f09c3468fdeec24b3bea377aa853d1d6afc7",
+      "size": 2651316,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync_0.1.0.alpha.1-1_arm64.deb"
+    },
+    {
+      "name": "ledgesync_0.1.0.alpha.1-1_arm64.deb.sha256",
+      "id": "RA_kwDOU36oTM4kByoD",
+      "digest": "sha256:94781d12e9af177d8e987958cbdf99893758be2ecdd3d10478df3861f403ac65",
+      "size": 102,
+      "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync_0.1.0.alpha.1-1_arm64.deb.sha256"
+    }
+  ],
+  "publicationNote": "GitHub normalized Debian filename tildes to dots. New checksum/manifest metadata was corrected before final verification; no installer or package bytes were replaced."
+}

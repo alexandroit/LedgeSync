@@ -8,7 +8,7 @@
   <title>LedgeSync — Know what goes.</title>
   <link rel="canonical" href="https://ledgesync.com/">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=80e624735462">
+  <link rel="stylesheet" href="style.css?v=adb26c666d23">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -56,10 +56,35 @@
         <p class="install-note"><strong>Install:</strong> Open the downloaded disk image, drag <strong>LedgeSync.app</strong> to <strong>Applications</strong>, then open LedgeSync. Choose Apple Silicon for a Mac with an Apple M-series chip; choose Intel for an Intel Mac.</p>
       </article>
       <div class="platform-grid desktop-download-grid">
-        <article><span class="platform-symbol" aria-hidden="true">⊞</span><h3>Windows 11</h3><p>Graphical desktop app · ZIP archive</p><div class="archive-links"><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-windows-amd64.zip">Download x64 <span aria-hidden="true">↓</span></a><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-windows-arm64.zip">Download ARM64 <span aria-hidden="true">↓</span></a></div><p class="archive-install">Extract the ZIP and open <strong>LedgeSync.exe</strong>. Requires Microsoft Edge WebView2 Runtime.</p></article>
-        <article><span class="platform-symbol" aria-hidden="true">&gt;_</span><h3>Ubuntu 24.04</h3><p>Graphical desktop app · tar.gz archive</p><div class="archive-links"><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-linux-amd64.tar.gz">Download x64 <span aria-hidden="true">↓</span></a><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-linux-arm64.tar.gz">Download ARM64 <span aria-hidden="true">↓</span></a></div><p class="archive-install">Extract the archive and launch <strong>LedgeSync</strong>. Requires GTK3 and WebKitGTK 4.1; see <a href="https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md#desktop-prerequisites">installation prerequisites</a>.</p></article>
+        <article><span class="platform-symbol" aria-hidden="true">⊞</span><h3>Windows 11</h3><p>Graphical desktop app · .exe installer</p><div class="archive-links"><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe">Download x64 <span aria-hidden="true">↓</span></a><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe">Download ARM64 <span aria-hidden="true">↓</span></a></div><p class="archive-install">Open the downloaded <strong>setup.exe</strong> and follow the installation wizard. Remove LedgeSync through <strong>Settings → Apps → Installed apps</strong>. Requires Microsoft Edge WebView2 Runtime. Installers are unsigned.</p></article>
+        <article><span class="platform-symbol" aria-hidden="true">&gt;_</span><h3>Ubuntu 24.04</h3><p>Graphical desktop app · Signed APT repository</p><div class="archive-links"><a href="#ubuntu-apt">Install with APT <span aria-hidden="true">↓</span></a></div><p class="archive-install">Add the LedgeSync repository once, then install <strong>ledgesync</strong> with APT. Packages are available for AMD/Intel x64 and ARM64. APT installs the desktop dependencies.</p></article>
       </div>
-      <div class="download-notice"><span class="badge">OFFLINE DEVELOPER ALPHA</span><p>Local browsing and simulated previews only. Google Drive transfers are in development. These builds have no trusted publisher signature; macOS builds are not notarized, so your operating system may prevent launch. Keep its security protections enabled. <a href="https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md#build-from-source">Build from reviewed source</a> for development.</p></div>
+      <article id="ubuntu-apt" class="apt-install" aria-labelledby="apt-title">
+        <div class="apt-heading"><p class="eyebrow">UBUNTU DESKTOP &amp; SERVER</p><h3 id="apt-title">Install through your package manager.</h3><p>Use these commands on Ubuntu 24.04. The repository supports x64 (amd64) and ARM64; APT selects the package for your system.</p></div>
+        <details class="apt-setup">
+          <summary>1. Add the repository <span>First installation only</span></summary>
+          <p>Download the repository key and source definition, then install them for APT. The key applies only to the LedgeSync repository.</p>
+          <pre tabindex="0" aria-label="Add the LedgeSync APT repository"><code>sudo apt-get update &amp;&amp;
+sudo apt-get install ca-certificates curl &amp;&amp;
+sudo install -d -m 0755 /etc/apt/keyrings &amp;&amp;
+sudo curl --fail --show-error --silent --location \
+  --output /etc/apt/keyrings/ledgesync-archive-keyring.gpg \
+  https://ledgesync.com/apt/ledgesync-archive-keyring.gpg &amp;&amp;
+sudo chmod 0644 /etc/apt/keyrings/ledgesync-archive-keyring.gpg &amp;&amp;
+sudo curl --fail --show-error --silent --location \
+  --output /etc/apt/sources.list.d/ledgesync.sources \
+  https://ledgesync.com/apt/ledgesync.sources &amp;&amp;
+sudo chmod 0644 /etc/apt/sources.list.d/ledgesync.sources</code></pre>
+          <p class="apt-repository-links">Review the <a href="https://ledgesync.com/apt/ledgesync.sources">repository definition</a> or download the <a href="https://ledgesync.com/apt/ledgesync-archive-keyring.gpg">public signing key</a>.</p>
+        </details>
+        <div class="apt-packages">
+          <div><h4>2. Install the desktop app</h4><pre tabindex="0" aria-label="Install LedgeSync desktop"><code>sudo apt-get update &amp;&amp;
+sudo apt-get install ledgesync</code></pre><p>Open <strong>LedgeSync</strong> from your applications menu. This installs the graphical interface.</p></div>
+          <div><h4>Ubuntu Server or terminal only</h4><pre tabindex="0" aria-label="Install LedgeSync command line"><code>sudo apt-get update &amp;&amp;
+sudo apt-get install ledgesync-cli</code></pre><p>Use the same repository setup above, then install <strong>ledgesync-cli</strong>. It provides the <code>ledgesync</code> command without a graphical interface.</p></div>
+        </div>
+      </article>
+      <div class="download-notice"><span class="badge">OFFLINE DEVELOPER ALPHA</span><p>Local browsing and simulated previews only. Google Drive transfers are in development. Windows installers have no publisher signature, and macOS apps are not notarized, so your operating system may prevent launch. Keep its security protections enabled. <a href="https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md#build-from-source">Build from reviewed source</a> for development.</p></div>
       <p class="platform-note">Need a terminal or server version? <a href="https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1">Separate CLI downloads and checksums</a> are available in the release. See the <a href="https://github.com/alexandroit/LedgeSync/actions/runs/36942481310">passing build results</a> and <a href="https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md">platform matrix</a> for validation and installation limits.</p>
     </section>
     <section id="status" class="status-section">

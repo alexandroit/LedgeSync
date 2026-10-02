@@ -108,7 +108,13 @@ jobs:
           - {runner: windows-2022, platform: windows/amd64, tags: desktop}
           - {runner: windows-11-arm, platform: windows/arm64, tags: desktop}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
+    timeout-minutes: 60
+    env:
+      # Publisher signing runs only for official main builds whose signing
+      # material is configured; every other build is a labeled developer build.
+      LEDGESYNC_OFFICIAL_BUILD: ${{ github.repository == 'alexandroit/LedgeSync' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+      HAS_APPLE_SIGNING: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE != '' && secrets.APPLE_NOTARY_API_KEY != '' }}
+      HAS_WINDOWS_SIGNING: ${{ secrets.ARTIFACT_SIGNING_CLIENT_SECRET != '' }}
     defaults:
       run:
         shell: bash
@@ -123,6 +129,45 @@ jobs:
           node-version: '24.20.0'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - name: Import Developer ID identity into a temporary keychain
+        if: runner.os == 'macOS' && env.LEDGESYNC_OFFICIAL_BUILD == 'true' && env.HAS_APPLE_SIGNING == 'true'
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
+          NOTARY_KEY: ${{ secrets.APPLE_NOTARY_API_KEY }}
+          NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER }}
+          IDENTITY: ${{ vars.APPLE_DEVELOPER_ID_IDENTITY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          keychain="$RUNNER_TEMP/ledgesync-signing.keychain-db"
+          password="$(openssl rand -hex 24)"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 7200 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          printf '%s' "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          security import "$RUNNER_TEMP/developer-id.p12" -k "$keychain" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/developer-id.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" >/dev/null
+          existing=()
+          while IFS= read -r entry; do
+            entry="${entry#"${entry%%[![:space:]]*}"}"; entry="${entry#\"}"; entry="${entry%\"}"
+            [ -n "$entry" ] && existing+=("$entry")
+          done < <(security list-keychains -d user)
+          security list-keychains -d user -s "$keychain" "${existing[@]}"
+          printf '%s' "$NOTARY_KEY" | base64 --decode > "$RUNNER_TEMP/notary-key.p8"
+          {
+            echo "LEDGESYNC_SIGNING_KEYCHAIN=$keychain"
+            echo "LEDGESYNC_MACOS_IDENTITY=$IDENTITY"
+            echo "LEDGESYNC_NOTARY_KEY_FILE=$RUNNER_TEMP/notary-key.p8"
+            echo "LEDGESYNC_NOTARY_KEY_ID=$NOTARY_KEY_ID"
+            echo "LEDGESYNC_NOTARY_ISSUER=$NOTARY_ISSUER"
+          } >> "$GITHUB_ENV"
+      - name: Install the pinned Artifact Signing client
+        if: runner.os == 'Windows' && env.LEDGESYNC_OFFICIAL_BUILD == 'true' && env.HAS_WINDOWS_SIGNING == 'true'
+        shell: pwsh
+        run: ./tools/install_signing_client.ps1 -Endpoint '${{ vars.ARTIFACT_SIGNING_ENDPOINT }}' -Account '${{ vars.ARTIFACT_SIGNING_ACCOUNT }}' -Profile '${{ vars.ARTIFACT_SIGNING_PROFILE }}'
       - name: OAuth build-client guards
         run: python tools/test_configure_oauth_client.py
       - name: Linux native dependencies
@@ -154,8 +199,24 @@ jobs:
           CGO_CFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
           CGO_LDFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
         run: go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -tags "$LEDGESYNC_TAGS" -nosyncgomod -m -trimpath -platform "$LEDGESYNC_PLATFORM"
+      - name: Sign the Windows desktop executable
+        if: runner.os == 'Windows' && env.LEDGESYNC_WINDOWS_SIGNING != ''
+        shell: pwsh
+        env:
+          AZURE_TENANT_ID: ${{ secrets.ARTIFACT_SIGNING_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.ARTIFACT_SIGNING_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.ARTIFACT_SIGNING_CLIENT_SECRET }}
+        run: ./tools/sign_windows.ps1 -Path build/bin/LedgeSync.exe
+      - name: Sign, notarize and staple the macOS app and disk image
+        if: runner.os == 'macOS' && env.LEDGESYNC_MACOS_IDENTITY != ''
+        env:
+          LEDGESYNC_DMG_ARCH: ${{ matrix.runner == 'macos-15' && 'arm64' || 'amd64' }}
+        run: python3 tools/sign_macos.py --app build/bin/LedgeSync.app --dmg-arch "$LEDGESYNC_DMG_ARCH" --version 0.1.0-alpha.5 --output build/packages --report "build/packages/macos-signing-$LEDGESYNC_DMG_ARCH.json"
       - name: Package native CLI with the same publisher configuration
         env:
+          AZURE_TENANT_ID: ${{ secrets.ARTIFACT_SIGNING_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.ARTIFACT_SIGNING_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.ARTIFACT_SIGNING_CLIENT_SECRET }}
           LEDGESYNC_PLATFORM: ${{ matrix.platform }}
           LEDGESYNC_OFFICIAL: ${{ github.repository == 'alexandroit/LedgeSync' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
           CGO_CFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
@@ -169,11 +230,24 @@ jobs:
         run: python tools/configure_oauth_client.py --clean
       - name: Archive desktop bundle
         run: python tools/package_desktop.py --runner "${{ matrix.runner }}" --version 0.1.0-alpha.5
-      - name: Package and verify macOS disk image
-        if: runner.os == 'macOS'
+      - name: Package and verify unsigned developer disk image
+        if: runner.os == 'macOS' && env.LEDGESYNC_MACOS_IDENTITY == ''
         env:
           LEDGESYNC_DMG_ARCH: ${{ matrix.runner == 'macos-15' && 'arm64' || 'amd64' }}
         run: python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch "$LEDGESYNC_DMG_ARCH" --version 0.1.0-alpha.5 --output build/packages
+      - name: Record publisher signing state
+        env:
+          SIGNED: ${{ env.LEDGESYNC_MACOS_IDENTITY != '' || env.LEDGESYNC_WINDOWS_SIGNING != '' }}
+        run: |
+          if [ "$SIGNED" = true ]; then state=publisher-signed; else state=unsigned-developer-build; fi
+          printf '%s\n' "$state" > build/packages/SIGNING-STATE.txt
+          echo "Signing state: $state"
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          if [ -n "${LEDGESYNC_SIGNING_KEYCHAIN:-}" ]; then security delete-keychain "$LEDGESYNC_SIGNING_KEYCHAIN" || true; fi
+          rm -f "${RUNNER_TEMP:-/nonexistent}/notary-key.p8"
+          rm -rf build/signing
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ledgesync-desktop-${{ matrix.runner }}

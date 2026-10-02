@@ -39,6 +39,12 @@ LicenseFile={#PayloadDir}\LICENSE
 InfoBeforeFile={#PayloadDir}\INSTALL.txt
 Compression=lzma2
 SolidCompression=yes
+#ifdef SignInstaller
+; The packaging script defines the "ledgesign" tool (tools/sign_windows.ps1).
+; Inno signs the setup executable and its embedded uninstaller with a timestamp.
+SignTool=ledgesign
+SignedUninstaller=yes
+#endif
 WizardStyle=modern
 CloseApplications=yes
 RestartApplications=no

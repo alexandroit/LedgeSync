@@ -142,6 +142,28 @@ def create_icon(output: Path) -> None:
     output.write_bytes(directory + b"".join(images))
 
 
+def signing_configured() -> bool:
+    return os.environ.get("LEDGESYNC_WINDOWS_SIGNING") in ("artifact-signing", "thumbprint")
+
+
+def signing_notice() -> str:
+    if signing_configured():
+        return ("This installer, its uninstaller and LedgeSync.exe carry Authenticode\n"
+                "signatures with a trusted timestamp. A new release can still show a\n"
+                "Microsoft SmartScreen reputation prompt until it gains reputation.\n"
+                "Do not disable operating-system security protections.\n\n")
+    return ("Developer distribution: this installer and app have no trusted publisher\n"
+            "signature. Windows security policies may prevent running them.\n"
+            "Do not disable operating-system security protections.\n\n")
+
+
+def verify_authenticode(path: Path) -> None:
+    script = ROOT / "tools" / "sign_windows.ps1"
+    result = subprocess.run(["pwsh", "-NoProfile", "-File", str(script), "-Path", str(path), "-VerifyOnly"], capture_output=True, text=True, timeout=300)
+    if result.returncode != 0:
+        raise ValueError(f"Authenticode verification failed for {path.name}")
+
+
 def publish_pair(installer: Path, digest: Path, destination: Path, checksum: Path) -> None:
     # Staging lives on the same filesystem; hard links provide no-replace semantics.
     os.link(digest, checksum)
@@ -208,9 +230,7 @@ def package(desktop_root: Path, architecture: str, version: str, output: Path, i
             "fallback is provided. Source folders remain read-only.\n"
             "No shared-drive support, startup item, service, scheduled task,\n"
             "preauthorized account, or CLI is installed.\n\n"
-            "Developer distribution: this installer and app have no trusted publisher\n"
-            "signature. Windows security policies may prevent running them.\n"
-            "Do not disable operating-system security protections.\n\n"
+            + signing_notice() +
             "Website: https://ledgesync.com\n"
             "Source: https://github.com/alexandroit/LedgeSync\n"
             "Application: Apache-2.0; bundled dependency notices accompany this app.\n"
@@ -229,11 +249,20 @@ def package(desktop_root: Path, architecture: str, version: str, output: Path, i
         }
         if any(any(c in str(value) for c in ('"', '\r', '\n')) for value in definitions.values()):
             raise ValueError("Packaging paths must not contain quotes or line breaks")
-        subprocess.run([str(iscc), "/Qp", *(f"/D{key}={value}" for key, value in definitions.items()), str(ROOT / "deploy/windows/LedgeSync.iss")], check=True, timeout=600)
+        signing = []
+        if signing_configured():
+            # The packaged LedgeSync.exe must already carry a valid signature.
+            verify_authenticode(desktop_root / "LedgeSync.exe")
+            definitions["SignInstaller"] = "1"
+            script = ROOT / "tools" / "sign_windows.ps1"
+            signing = [f'/Sledgesign=pwsh -NoProfile -File "{script}" -Path $f']
+        subprocess.run([str(iscc), "/Qp", *signing, *(f"/D{key}={value}" for key, value in definitions.items()), str(ROOT / "deploy/windows/LedgeSync.iss")], check=True, timeout=1800)
         generated = work / installer.name
         if not generated.is_file() or generated.stat().st_size == 0:
             raise ValueError("Compiler did not produce the requested installer")
         verify_pe(generated, "amd64")  # Inno's installer is x64; ARM64 payload runs natively.
+        if signing_configured():
+            verify_authenticode(generated)
         if selected_files(desktop_root) != original or selected_files(stage) != original:
             raise ValueError("Source or staged release changed while compiling")
         digest = work / checksum.name

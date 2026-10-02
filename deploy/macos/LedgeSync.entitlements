@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- LedgeSync runs with the hardened runtime and requests no exceptions:
+     no JIT, unsigned memory, library-validation or debugging entitlements. -->
+<plist version="1.0">
+<dict/>
+</plist>

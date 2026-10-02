@@ -101,7 +101,23 @@ The `.com` domain is the requested canonical destination. Temporary GitHub Pages
 and private preview URLs do not establish domain ownership, DNS setup or a
 working custom domain; those require separate observed hosting evidence.
 
-The owner subsequently requested preparation of the DNS records only. The
-public provisional site remains on GitHub Pages; [WEBSITE.md](WEBSITE.md)
-records the prepared values and activation checks. No DNS change is required
-for this session's delivery.
+The owner initially requested preparation of the DNS records only. At that
+stage, GitHub Pages was the provisional public site. The later instruction
+recorded in ADR-025 supersedes that hosting decision.
+
+## ADR-025 — Canonical website on the existing Ubuntu origin
+
+**Accepted and deployed, 2026-10-01 America/Toronto.** The owner explicitly
+requested publishing ledgesync.com on the Ubuntu server hosting HiperMusicas,
+confirmed that DNS already points there, and instructed use of existing access.
+The static website now has its own Nginx vhost, immutable release directory and
+current symlink. Existing shared vhosts and application services were preserved.
+GitHub Pages remains a secondary copy; the Sites deployment remains a private
+preview. Neither service is the requested production origin.
+
+The existing Cloudflare routing was retained. Let's Encrypt issuance used the
+existing server-side DNS authenticator, with transient validation TXT records
+and automatic renewal. Public and origin HTTPS, redirects, matching HTML/CSS
+hashes and continued HiperMusicas availability were verified. See
+[deployment evidence and rollback](WEBSITE.md). This website deployment does
+not change the offline alpha's product capabilities or release artifacts.

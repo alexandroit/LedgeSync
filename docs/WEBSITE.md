@@ -20,6 +20,9 @@ It needs no application process, Node service, database or backend.
 - Immutable content: `/var/www/ledgesync/releases/<full-source-commit>/`.
 - Active content: `/var/www/ledgesync/current`, a symlink to a release directory.
 - Logs: `/var/log/nginx/ledgesync.access.log` and `ledgesync.error.log`.
+- APT: separate `/apt/` location serving `/var/lib/ledgesync-apt/public/`; see
+  [signed repository operations](APT_REPOSITORY.md). Website switches cannot
+  remove APT snapshots or expose the private signing-key directory.
 - ACME webroot: `/var/www/ledgesync/acme`.
 - TLS certificate: `/etc/letsencrypt/live/ledgesync.com/fullchain.pem` and its
   private key, managed only on the server. Never copy credentials into Git.
@@ -39,11 +42,18 @@ reloading it: `/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx`.
 ## Verified deployment
 
 Verified on **2026-10-01 America/Toronto (2026-10-02 UTC)**. The deployed website
-source is commit `188ba5de5c76b5562b6b7c6afa8e14f4a20ad45f`, which adds
-prominent graphical desktop downloads and the two published macOS DMGs.
-The previous release `92eb75b51d978565e1dd8ef939d6cf6320da2299` remains on the
-server as the content rollback target. This content-only update required no
-Nginx reload. Its CSS URL includes a content version to avoid stale CDN styling.
+source is commit `2890e90f028c6ee038739b09423b372668e20a00`, which adds
+Windows x64/ARM64 setup downloads and signed Ubuntu APT installation instructions
+alongside the macOS DMGs. The previous release
+`188ba5de5c76b5562b6b7c6afa8e14f4a20ad45f` remains on the server as the content
+rollback target. The content switch required no Nginx reload. Its CSS URL uses
+`?v=adb26c666d23` to avoid stale CDN styling. Adding the isolated APT location
+previously passed `nginx -t` before a graceful reload. Shared vhosts were unchanged.
+
+Both native Ubuntu architectures passed [public APT installation tests](https://github.com/alexandroit/LedgeSync/actions/runs/36946856179).
+The website's Windows setup links resolve to the validated release assets;
+[public download evidence](research/INSTALLERS_PUBLIC_VERIFICATION.json) records
+all new hashes and preservation of previous assets.
 
 | Check | Observed result |
 |---|---|
@@ -62,8 +72,8 @@ Nginx reload. Its CSS URL includes a content version to avoid stale CDN styling.
 SHA-256:
 
 ```text
-354c2c41bb9d3640de4cf853ae2c6ecabb1f6d5480f3b5a25ab8a1d4261446f1  dist/index.html
-80e62473546283aac7165934a4426bebded1d8b8cd44b6f35dd9bb4edc47279f  dist/style.css
+2bb92fb73abad13be1ab59137acdc103206d92f979a00075c77d55c2f5fff66b  dist/index.html
+adb26c666d2320bd2a826d5b5e0685404239e72c2f1585c5db2f08d2cbe931ca  dist/style.css
 ```
 
 ## Updates and rollback

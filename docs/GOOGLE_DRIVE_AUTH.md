@@ -4,8 +4,8 @@ Official LedgeSync desktop releases starting with alpha.3 include the project's
 Google OAuth Desktop client. You do not create a Google Cloud project, download
 credentials, import JSON or paste tokens into the app.
 
-**Release status:** alpha.3 is being prepared; the published alpha.2 still uses
-manual client import. The steps below describe the new alpha.3 behavior.
+**Release status:** [alpha.3 is published](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3)
+with the bundled Desktop client. The steps below apply to that release.
 
 ## Connect your account
 

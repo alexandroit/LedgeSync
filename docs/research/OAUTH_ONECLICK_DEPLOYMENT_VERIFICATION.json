@@ -1,0 +1,141 @@
+{
+  "version": "0.1.0-alpha.3",
+  "aptSnapshot": "20261002-alpha3-0ec2f3f",
+  "previousSnapshotRetained": "20261002-alpha2-ad2cddf",
+  "previousPoolAndByHashFilesPreserved": 24,
+  "signingFingerprint": "11B35F4E066806C33AA8653A51AD694F4729F5AB",
+  "keySHA256": "94303c3848c110843c8b36f403bef80b5035d2657fea3e3f5f55f991dc61b7fb",
+  "packages": {
+    "ledgesync_0.1.0~alpha.3-1_arm64.deb": "c10b5d30cac3a9880a19dba043750d75ba97310f7d8ea14052ad2a2f1b900673",
+    "ledgesync_0.1.0~alpha.3-1_amd64.deb": "d42eb7b42a57bdaa5a4809f472ae354e41ea444cd1ec367d5815d698e604d4e1",
+    "ledgesync-cli_0.1.0~alpha.3-1_amd64.deb": "0d1c8d13f8669ccc1d6b9056b0170c20f1401470526a27ff69e92802516ea166",
+    "ledgesync-cli_0.1.0~alpha.3-1_arm64.deb": "29812e8e46d22f6a1cb9d2ca0bbbdb9ed52553dc13fea50b408741e7e336c8d6"
+  },
+  "verifiedAt": "2026-10-02T02:13:23.784688+00:00",
+  "publicAPTRun": {
+    "id": 36954499569,
+    "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36954499569",
+    "headSha": "5c702076b39a8170f2065c3262f5060d7b65698f",
+    "conclusion": "success"
+  },
+  "reports": [
+    {
+      "baseURL": "https://ledgesync.com/apt",
+      "architecture": "amd64",
+      "version": "0.1.0~alpha.3-1",
+      "signatureVerified": true,
+      "tamperedMetadataRejected": true,
+      "byHashForced": true,
+      "desktopInstalled": true,
+      "secretServiceInstalled": true,
+      "headlessCliInstalled": true,
+      "uninstallPreservedUserFixture": true
+    },
+    {
+      "baseURL": "https://ledgesync.com/apt",
+      "architecture": "arm64",
+      "version": "0.1.0~alpha.3-1",
+      "signatureVerified": true,
+      "tamperedMetadataRejected": true,
+      "byHashForced": true,
+      "desktopInstalled": true,
+      "secretServiceInstalled": true,
+      "headlessCliInstalled": true,
+      "uninstallPreservedUserFixture": true
+    }
+  ],
+  "ciArtifactVerification": [
+    {
+      "id": 11205560947,
+      "name": "ledgesync-public-apt-ubuntu-24.04-arm",
+      "size_in_bytes": 343,
+      "digest": "sha256:927032b42eb6aad1d003ad74e7675b1a5dc9ad5e69d5bd4c414deceffcfc67e8"
+    },
+    {
+      "id": 11205337056,
+      "name": "ledgesync-public-apt-ubuntu-24.04",
+      "size_in_bytes": 343,
+      "digest": "sha256:77abc5566ef53d53e1372acf7194a4574ebdcfbd11df639d07afba5368d61b19"
+    }
+  ],
+  "website": {
+    "sourceCommit": "5c702076b39a8170f2065c3262f5060d7b65698f",
+    "previousSourceRetained": "82b2f6bf05e49d7e8f25c9f5e06e2db105d25636",
+    "canonical": "https://ledgesync.com/",
+    "pagesRun": 36954520715,
+    "pagesConclusion": "success",
+    "htmlSHA256": "e91fba4fb5cb751d6018f87c402f66eb8d8adf3b62f9c2bf2e8dfb3dd3c9c568",
+    "cssSHA256": "adb26c666d2320bd2a826d5b5e0685404239e72c2f1585c5db2f08d2cbe931ca",
+    "canonicalAndPagesBodiesMatch": true,
+    "checks": [
+      {
+        "name": "canonical-html",
+        "url": "https://ledgesync.com/",
+        "status": 200,
+        "sha256": "e91fba4fb5cb751d6018f87c402f66eb8d8adf3b62f9c2bf2e8dfb3dd3c9c568",
+        "redirect": null
+      },
+      {
+        "name": "canonical-css",
+        "url": "https://ledgesync.com/style.css?v=adb26c666d23",
+        "status": 200,
+        "sha256": "adb26c666d2320bd2a826d5b5e0685404239e72c2f1585c5db2f08d2cbe931ca",
+        "redirect": null
+      },
+      {
+        "name": "origin-html",
+        "url": "https://ledgesync.com/",
+        "status": 200,
+        "sha256": "e91fba4fb5cb751d6018f87c402f66eb8d8adf3b62f9c2bf2e8dfb3dd3c9c568",
+        "redirect": null
+      },
+      {
+        "name": "http-redirect",
+        "url": "http://ledgesync.com/",
+        "status": 301,
+        "sha256": null,
+        "redirect": "https://ledgesync.com/"
+      },
+      {
+        "name": "www-redirect",
+        "url": "https://www.ledgesync.com/",
+        "status": 308,
+        "sha256": null,
+        "redirect": "https://ledgesync.com/"
+      },
+      {
+        "name": "missing",
+        "url": "https://ledgesync.com/alpha3-not-a-real-page",
+        "status": 404,
+        "sha256": null,
+        "redirect": null
+      },
+      {
+        "name": "hidden-git",
+        "url": "https://ledgesync.com/.git/config",
+        "status": 403,
+        "sha256": null,
+        "redirect": null
+      },
+      {
+        "name": "hipermusicas-public",
+        "url": "https://hipermusicas.com/",
+        "status": 200,
+        "sha256": null,
+        "redirect": null
+      },
+      {
+        "name": "hipermusicas-origin",
+        "url": "https://hipermusicas.com/",
+        "status": 200,
+        "sha256": null,
+        "redirect": null
+      }
+    ],
+    "hipermusicasPublicAndOriginStatus": 200,
+    "hipermusicasPID": 1521428,
+    "hipermusicasPIDUnchanged": true,
+    "sharedNginxHashesUnchanged": true,
+    "nginxReloadRequired": false
+  }
+}

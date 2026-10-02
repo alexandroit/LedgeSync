@@ -47,7 +47,7 @@ renewal/publication is not an application auto-update service.
 4. Run `tools/build_apt_repository.py` with `--packages`, a new `--output`
    snapshot path, the protected `--gnupghome`, and the full public `--key`
    fingerprint. Supply the exact Debian package version explicitly, for example
-   `--version '0.1.0~alpha.2-1'`; all four input packages must match it. For
+   `--version '0.1.0~alpha.3-1'`; all four input packages must match it. For
    subsequent publications pass `--previous` with the prior
    public snapshot to retain old pool files and by-hash indexes. The tool signs
    with the existing server key and verifies the resulting signature. It never
@@ -56,7 +56,7 @@ renewal/publication is not an application auto-update service.
    symlink to the verified new snapshot and replace `public` atomically. Preserve
    previous snapshots for rollback. Content-only updates need no Nginx reload.
 6. Dispatch `installers.yml` with `verify_public_apt=true` and the expected
-   application `version` (for example `0.1.0-alpha.2`). Both native Ubuntu
+   application `version` (for example `0.1.0-alpha.3`). Both native Ubuntu
    runners fetch the HTTPS public key, check it against the pinned key, reject
    tampered signed metadata, force by-hash fetching, run `apt-get install
    ledgesync`, remove it, install the headless CLI separately and verify removal
@@ -84,9 +84,9 @@ Cloudflare rejects the default Python urllib client with error 1010; onboarding
 uses unmodified curl, as documented, followed by the real unmodified APT client.
 No Cloudflare protection or TLS/signature validation was disabled.
 
-## Alpha.2 publication
+## Historical alpha.2 publication
 
-Current snapshot: `20261002-alpha2-ad2cddf`, Debian version `0.1.0~alpha.2-1`.
+Historical snapshot: `20261002-alpha2-ad2cddf`, Debian version `0.1.0~alpha.2-1`.
 The existing signing key is unchanged. The prior snapshot and all twelve prior
 pool/by-hash files remain available; immutable package bytes were not replaced.
 The repository builder now requires an explicit Debian version and rejects a
@@ -99,3 +99,21 @@ passed on amd64 and arm64 against `https://ledgesync.com/apt`. Both installed
 alpha.2 desktop with its GNOME Keyring recommendation, then tested the separate
 CLI and removal preserving synthetic user data. See
 [deployment evidence](research/OAUTH_DEPLOYMENT_VERIFICATION.json).
+
+## Current alpha.3 publication
+
+Current snapshot: `20261002-alpha3-0ec2f3f`, Debian version `0.1.0~alpha.3-1`.
+It includes the bundled Desktop OAuth client in the graphical packages. The
+existing signing key and all 24 previous pool/by-hash files are unchanged.
+The alpha.2 snapshot remains available for rollback. No application package was
+installed on the production server and no Nginx reload was needed.
+
+[Installer run 36954256173](https://github.com/alexandroit/LedgeSync/actions/runs/36954256173)
+passed both native Ubuntu package checks and the local signed APT lifecycle.
+[Public run 36954499569](https://github.com/alexandroit/LedgeSync/actions/runs/36954499569)
+passed on native amd64 and arm64 against the public HTTPS repository. Both
+reports confirm the pinned key, signed metadata, tamper rejection, forced
+by-hash indexes, desktop installation with Secret Service, separate headless
+CLI installation and removal preserving synthetic user data. The downloaded
+reports were checked against GitHub's artifact ZIP digests. See
+[alpha.3 deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).

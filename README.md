@@ -6,11 +6,11 @@
 **CLI command:** `ledgesync`.
 **Primary website/domain:** `ledgesync.com`.
 **Specification version:** 0.2.1 · **Prepared:** 2026-10-01.
-**Implementation status:** 0.1.0-alpha.3 source adds a bundled Desktop OAuth client and one-click Google Drive authorization. Alpha.3 release validation/publication is in progress; published alpha.2 still uses manual client import. Cloud browsing and file transfers are not implemented. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
+**Implementation status:** 0.1.0-alpha.3 includes a bundled Desktop OAuth client and one-click Google Drive authorization. Cloud browsing and file transfers are not implemented. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
 
 **Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
 [Website](https://ledgesync.com/) ·
-[Download alpha.2](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.2) ·
+[Download alpha.3](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.3) ·
 [Builds](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml) ·
 [Apache-2.0 license](LICENSE).
 The website is live on the owner's Ubuntu server with HTTPS. See
@@ -18,20 +18,20 @@ The website is live on the owner's Ubuntu server with HTTPS. See
 
 ## Try the desktop authorization alpha
 
-**Alpha.2 is published** for macOS, Windows and Ubuntu. Native builds, credential
+**Alpha.3 is published** for macOS, Windows and Ubuntu. Native builds, credential
 vaults, installers and public APT installation passed their respective checks.
 See [the release evidence and limits](docs/PLATFORMS.md).
 
 **Download the graphical app for macOS:**
-[Apple Silicon (ARM64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-macos-arm64.dmg) ·
-[Intel (x64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-macos-amd64.dmg).
+[Apple Silicon (ARM64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-arm64.dmg) ·
+[Intel (x64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-macos-amd64.dmg).
 Open the disk image and drag `LedgeSync.app` to `Applications`. Requires macOS
 13 or later. These developer builds are not Developer ID signed or notarized;
 macOS may block downloaded apps. See [installation and validation limits](docs/PLATFORMS.md).
 For Windows and Ubuntu, use the [desktop download section](https://ledgesync.com/#downloads).
 
-**Windows:** download the [x64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-windows-amd64-setup.exe)
-or [ARM64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-windows-arm64-setup.exe).
+**Windows:** download the [x64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-amd64-setup.exe)
+or [ARM64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/LedgeSync-0.1.0-alpha.3-windows-arm64-setup.exe).
 Opening it starts the installation wizard. It installs for the current user,
 creates a Start menu entry and registers an uninstaller in Windows Settings.
 These alpha installers are not Authenticode signed.
@@ -43,11 +43,11 @@ project's own repository, not Ubuntu's default package archive.
 Google Drive authorization on Ubuntu desktop requires a running, unlocked
 Secret Service credential store such as GNOME Keyring in the graphical session.
 
-**Google Drive in alpha.3 source:** open **Connections → Connect Google Drive**,
+**Connect Google Drive:** open **Connections → Connect Google Drive**,
 authorize in the system browser and return to LedgeSync. No end-user client
 setup or JSON import is required. The application communicates directly with
-Google and stores each account's refresh token in the OS vault; access tokens
-remain in memory. Check, reconnect, cancel and disconnect are available.
+Google and stores the connected account's refresh token in the OS vault; access
+tokens remain in memory. Check, reconnect, cancel and disconnect are available.
 See [account connection](docs/GOOGLE_DRIVE_AUTH.md) and
 [maintainer build configuration](docs/OAUTH_BUILD.md). Live consent still needs
 owner acceptance; Google project publication controls eligible accounts.
@@ -63,13 +63,13 @@ and required unsupported sources stop preview rather than being skipped.
 
 The desktop is the primary interface. Build instructions for macOS, Ubuntu,
 Windows 11 and headless servers are in [PLATFORMS.md](docs/PLATFORMS.md).
-Release 0.1.0-alpha.2 includes macOS DMGs, Windows setup EXEs, Ubuntu packages,
+Release 0.1.0-alpha.3 includes macOS DMGs, Windows setup EXEs, Ubuntu packages,
 and separate desktop/CLI archives with checksums and retained license notices.
-[All 16 build jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36949133758),
-[six native vault jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36949135946),
-[installer lifecycle checks](https://github.com/alexandroit/LedgeSync/actions/runs/36950139047),
-and [public APT checks](https://github.com/alexandroit/LedgeSync/actions/runs/36950554723)
-passed. The previous alpha.1 release remains unchanged.
+[All 16 build jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36953803971),
+[six native vault jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36953805903),
+[installer lifecycle checks](https://github.com/alexandroit/LedgeSync/actions/runs/36954256173),
+and [public APT checks](https://github.com/alexandroit/LedgeSync/actions/runs/36954499569)
+passed. The previous alpha.1 and alpha.2 assets remain unchanged.
 Open a folder in the app to explore it with the default `.gitignore` policy,
 or open a project JSON configuration to select multiple rule sources.
 

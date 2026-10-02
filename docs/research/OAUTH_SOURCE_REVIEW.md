@@ -16,7 +16,7 @@ No upstream configuration, credential store, application identity or live remote
 was loaded. This continuation deliberately retains the already selected stable
 baseline; it does not claim to have selected a newer release.
 
-## Observations and decisions
+## Initial alpha.2 observations and decisions
 
 | Pinned source evidence | Observed behavior | LedgeSync decision |
 | --- | --- | --- |
@@ -36,7 +36,7 @@ were inspected but not run; LedgeSync's own fake-provider tests were run.
 
 ## Provider contract checked against official documentation
 
-- [Google native-app OAuth](https://developers.google.com/identity/protocols/oauth2/native-app): system browser, authorization code, PKCE S256, loopback redirect, offline access and token refresh. A Desktop app OAuth client must first exist in Google Cloud. A desktop client secret is not a confidential-server secret; the application still keeps imported configuration backend-only in its vault.
+- [Google native-app OAuth](https://developers.google.com/identity/protocols/oauth2/native-app): system browser, authorization code, PKCE S256, loopback redirect, offline access and token refresh. A Desktop app OAuth client must first exist in Google Cloud. A desktop client secret is not a confidential-server secret. Alpha.2 imported client configuration into its backend vault; alpha.3 embeds publisher configuration at build time as described below.
 - [Drive `about.get`](https://developers.google.com/workspace/drive/api/reference/rest/v3/about/get): account lookup with the explicit `user(displayName,emailAddress,permissionId)` fields mask. The provider ID is hashed with a versioned LedgeSync domain separator into the UI's account reference.
 
 Only `https://www.googleapis.com/auth/drive.file` is requested and accepted.
@@ -46,7 +46,7 @@ broader or different grant fails closed; there is no automatic escalation.
 `about.get` is the only Drive API operation in this slice. It does not list,
 create, modify, synchronize or delete files.
 
-## Local verification and limits
+## Initial alpha.2 verification and limits
 
 `go test -race ./internal/driveauth` and `go vet ./internal/driveauth` pass using
 synthetic credentials, an in-memory fake vault, local HTTP servers and local
@@ -65,9 +65,9 @@ account check repopulates the labels. A credential still exceeding that bound
 fails closed. Mutations are serialized within the service instance; there is no
 claim of a cross-process credential transaction manager.
 
-A real OAuth client was not available, and no real Google authorization or token
-exchange was performed. Google consent-screen publishing/verification, headless
-remote authorization, multiple simultaneous accounts, cloud namespace
+During alpha.2 implementation, a real OAuth client was not available, and no
+real Google authorization or token exchange was performed. Google consent-screen
+publishing/verification, headless remote authorization, multiple simultaneous accounts, cloud namespace
 selection and synchronization remain separate gates. Native OS-vault round trips
 subsequently passed on six disposable runners in
 [run 36949135946](https://github.com/alexandroit/LedgeSync/actions/runs/36949135946).
@@ -127,3 +127,17 @@ same-client grants remain usable; changed-client grants retain their account
 and are blocked until explicit local disconnect. Synthetic regressions cover
 failed consent, restart refresh, changed ID/secret, failed disconnect and vault
 errors. No Google account authorization was performed during this update.
+
+Alpha.3 application source `4da377c311b78a99b1a9fde1127d77e21e6e05ec` passed
+[all 16 build jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36953803971),
+including 22 frontend cases, and [six native vault jobs](https://github.com/alexandroit/LedgeSync/actions/runs/36953805903).
+The six native desktop jobs passed publisher-client injection, compilation and
+generated-source cleanup. A separate private byte comparison verified the
+owner-supplied Desktop configuration in all six released graphical binaries and
+its absence from the six CLI binaries. The report records only results, without
+client values; no user tokens were build inputs. The local macOS ARM64 WebView
+displayed the connect action without JSON import or setup controls.
+No real Google consent, token exchange,
+refresh or revocation was tested. See [alpha.3 release evidence](OAUTH_ONECLICK_RELEASE.json)
+and [the current handoff](../17_AGENT_HANDOFF_AND_STATUS.md) for publication and
+remaining acceptance boundaries.

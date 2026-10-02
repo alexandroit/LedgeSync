@@ -1,51 +1,51 @@
 {
-  "version": "0.1.0-alpha.2",
-  "tag": "v0.1.0-alpha.2",
-  "applicationSourceCommit": "42474b558d3b1557318f9cb0ae714748869f90b3",
-  "sourceDateEpoch": 1790903046,
+  "version": "0.1.0-alpha.3",
+  "tag": "v0.1.0-alpha.3",
+  "applicationSourceCommit": "4da377c311b78a99b1a9fde1127d77e21e6e05ec",
+  "sourceDateEpoch": 1790906560,
   "targets": {
     "linux-amd64": {
       "cli": {
-        "name": "ledgesync-0.1.0-alpha.2-linux-amd64.tar.gz",
-        "sha256": "b40e49c058687bed551b1077cad5ab3ee15e9830348ca8ee1f2b8b82fdc29402",
-        "size": 3044492,
-        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/ledgesync-0.1.0-alpha.2-linux-amd64.tar.gz"
+        "name": "ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz",
+        "sha256": "b655f5ccc904f21ad9cf722d2a90b980203100883e0d2c3ff7907e9991e7217a",
+        "size": 3044507,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-linux-amd64.tar.gz"
       },
       "desktop": {
-        "name": "ledgesync-desktop-0.1.0-alpha.2-linux-amd64.tar.gz",
-        "sha256": "f41637ceae7942fb8fd34a31655a41ae1f9ae884b0c6494bb2be9c15552eec84",
-        "size": 4848789,
-        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/ledgesync-desktop-0.1.0-alpha.2-linux-amd64.tar.gz"
+        "name": "ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz",
+        "sha256": "eacca6b848ad517f2cfbfbdd28c7e78da64364200fd7fc9f38b81705714cf617",
+        "size": 4848832,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-amd64.tar.gz"
       }
     },
     "linux-arm64": {
       "cli": {
-        "name": "ledgesync-0.1.0-alpha.2-linux-arm64.tar.gz",
-        "sha256": "8bedbe7c6eae68984136051aef558648180559ac7e5d2571d470215c1c369e54",
-        "size": 2789137,
-        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/ledgesync-0.1.0-alpha.2-linux-arm64.tar.gz"
+        "name": "ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz",
+        "sha256": "da30ffd4c5cd9dd3f819b850b2ef39b4e6cc5399b64b9dd4c78d2526292da784",
+        "size": 2789131,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-0.1.0-alpha.3-linux-arm64.tar.gz"
       },
       "desktop": {
-        "name": "ledgesync-desktop-0.1.0-alpha.2-linux-arm64.tar.gz",
-        "sha256": "383af0f01127323d94df27549d1fda0e21e2a1a01d489356ddeb4215742c63c8",
-        "size": 4381284,
-        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/ledgesync-desktop-0.1.0-alpha.2-linux-arm64.tar.gz"
+        "name": "ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz",
+        "sha256": "646e658e2116c92146f5678ec12c4361fec1f26e9b677db59bd4998623179183",
+        "size": 4381551,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-linux-arm64.tar.gz"
       }
     },
     "windows-amd64": {
       "desktop": {
-        "name": "ledgesync-desktop-0.1.0-alpha.2-windows-amd64.zip",
-        "sha256": "a5c32b1b90700e06a8d9d734a0ebf667cd1ebf64624ed20d66d0f147bf0f6b0a",
-        "size": 5321997,
-        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/ledgesync-desktop-0.1.0-alpha.2-windows-amd64.zip"
+        "name": "ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip",
+        "sha256": "8d913ae9465bac373facce27f62f51ad01735b228bfbcc51df8522090941a3dc",
+        "size": 5322085,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-amd64.zip"
       }
     },
     "windows-arm64": {
       "desktop": {
-        "name": "ledgesync-desktop-0.1.0-alpha.2-windows-arm64.zip",
-        "sha256": "2d10ffd7448665a7f95f8d90410e1adde8cec9216600da864a586d986696323b",
-        "size": 4764435,
-        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/ledgesync-desktop-0.1.0-alpha.2-windows-arm64.zip"
+        "name": "ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip",
+        "sha256": "a12edcbf620431b5f1808384dc2fb9d86fea3cbe358acfd2b4a7d00e3b49e2d1",
+        "size": 4764097,
+        "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.3/ledgesync-desktop-0.1.0-alpha.3-windows-arm64.zip"
       }
     }
   }

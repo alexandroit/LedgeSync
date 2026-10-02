@@ -18,6 +18,14 @@ The website is live on the owner's Ubuntu server with HTTPS. See
 
 ## Try the offline alpha
 
+**Download the graphical app for macOS:**
+[Apple Silicon (ARM64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-arm64.dmg) ·
+[Intel (x64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-amd64.dmg).
+Open the disk image and drag `LedgeSync.app` to `Applications`. Requires macOS
+13 or later. These developer builds are not Developer ID signed or notarized;
+macOS may block downloaded apps. See [installation and validation limits](docs/PLATFORMS.md).
+For Windows and Ubuntu, use the [desktop download section](https://ledgesync.com/#downloads).
+
 The first implementation browses local folders, explains policy decisions and
 creates plans against an explicitly simulated, empty destination. Plans are
 deterministic for the same snapshots and creation time.
@@ -27,8 +35,10 @@ and required unsupported sources stop preview rather than being skipped.
 
 The desktop is the primary interface. Build instructions for macOS, Ubuntu,
 Windows 11 and headless servers are in [PLATFORMS.md](docs/PLATFORMS.md).
-Release 0.1.0-alpha.1 provides six desktop and six CLI archives, with checksums
-and retained license notices. All 16 jobs passed in the
+Release 0.1.0-alpha.1 provides two macOS desktop DMGs plus six desktop and six
+CLI archives, with checksums and retained license notices. The DMGs contain the
+same previously published apps; no original release asset was replaced.
+All 16 jobs passed in the
 [release CI run](https://github.com/alexandroit/LedgeSync/actions/runs/36942481310).
 Open a folder in the app to explore it with the default `.gitignore` policy,
 or open a project JSON configuration to select multiple rule sources.

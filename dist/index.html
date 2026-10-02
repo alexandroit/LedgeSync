@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="LedgeSync is an open-source, policy-aware file explorer. Inspect your files, understand exclusions, and preview a copy before it happens. Apache 2.0.">
+  <meta name="description" content="Download the LedgeSync graphical desktop app for macOS, Windows and Ubuntu. Browse local files, understand exclusions, and preview a copy. Open source, Apache 2.0.">
   <meta name="theme-color" content="#101f31">
   <title>LedgeSync — Know what goes.</title>
   <link rel="canonical" href="https://ledgesync.com/">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=80e624735462">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
   <header class="nav wrap">
     <a class="brand" href="#" aria-label="LedgeSync home"><span class="mark" aria-hidden="true">✓</span> LedgeSync</a>
-    <nav aria-label="Main navigation"><a href="#platforms">Platforms</a><a href="#status">Project status</a><a class="github" href="https://github.com/alexandroit/LedgeSync">GitHub <span aria-hidden="true">↗</span></a></nav>
+    <nav aria-label="Main navigation"><a href="#downloads">Downloads</a><a href="#status">Project status</a><a class="github" href="https://github.com/alexandroit/LedgeSync">GitHub <span aria-hidden="true">↗</span></a></nav>
   </header>
   <main id="main">
     <section class="hero wrap">
@@ -22,8 +22,8 @@
         <p class="eyebrow">OPEN SOURCE · APACHE 2.0</p>
         <h1>Know<br>what goes.</h1>
         <p class="lead">Your files. Your rules. A clear preview before the next copy.</p>
-        <p class="description">A local-first file explorer built around the ignore rules your projects already use. See what is selected, what is excluded, and exactly why.</p>
-        <div class="actions"><a class="button" href="https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1">Download offline alpha <span aria-hidden="true">↗</span></a><a class="text-link" href="#status">What works today</a></div>
+        <p class="description">A graphical desktop app for macOS, Windows and Ubuntu. Browse local files, see what is selected or excluded, and inspect the rules behind every decision.</p>
+        <div class="actions"><a class="button" href="#downloads">Download desktop app <span aria-hidden="true">↓</span></a><a class="text-link" href="#status">What works today</a></div>
         <p class="alpha"><span class="badge">OFFLINE ALPHA</span> Google Drive transfers are in development.</p>
       </div>
       <div class="specimen" aria-label="Illustrative policy preview, not a live application">
@@ -45,14 +45,22 @@
       <article><span class="index">02 / DELIBERATE</span><h2>Preview comes first.</h2><p>Selection and transfer are separate steps. An excluded file is never a request to delete a remote copy.</p></article>
       <article><span class="index">03 / YOURS</span><h2>Keep control locally.</h2><p>No application account, telemetry, or required rclone installation. The desktop and CLI share one Go core.</p></article>
     </section>
-    <section id="platforms" class="platforms wrap">
-      <div class="section-intro"><p class="eyebrow">ONE CORE. MORE PLACES.</p><h2>Desktop to server.</h2><p>ARM64 and x64 targets. Native desktop builds and a separate CLI for headless environments.</p></div>
-      <div class="platform-grid">
-        <article><span class="platform-symbol" aria-hidden="true">⌘</span><h3>macOS</h3><p>Apple Silicon · Intel</p><span class="platform-detail">Native desktop + CLI</span></article>
-        <article><span class="platform-symbol" aria-hidden="true">&gt;_</span><h3>Ubuntu</h3><p>ARM64 · AMD / Intel x64</p><span class="platform-detail">Desktop + Server CLI</span></article>
-        <article><span class="platform-symbol" aria-hidden="true">⊞</span><h3>Windows</h3><p>Windows 11 · Server</p><span class="platform-detail">x64 + ARM64 CLI targets</span></article>
+    <section id="downloads" class="platforms downloads wrap" aria-labelledby="platforms">
+      <div class="section-intro"><p class="eyebrow">DESKTOP APP · 0.1.0-ALPHA.1</p><h2 id="platforms">Get the desktop app.</h2><p>Open a folder in the graphical interface. Explore files, inspect exclusions, and preview changes against a simulated destination.</p></div>
+      <article class="mac-download" aria-labelledby="mac-download-title">
+        <div class="mac-copy"><span class="platform-symbol" aria-hidden="true">⌘</span><h3 id="mac-download-title">Download for macOS</h3><p>macOS 13 or later · Graphical desktop app</p></div>
+        <div class="mac-download-actions">
+          <a class="button" href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-arm64.dmg"><span>Apple Silicon <small>ARM64 · .dmg</small></span><span aria-hidden="true">↓</span></a>
+          <a class="button secondary" href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-amd64.dmg"><span>Intel Mac <small>x64 · .dmg</small></span><span aria-hidden="true">↓</span></a>
+        </div>
+        <p class="install-note"><strong>Install:</strong> Open the downloaded disk image, drag <strong>LedgeSync.app</strong> to <strong>Applications</strong>, then open LedgeSync. Choose Apple Silicon for a Mac with an Apple M-series chip; choose Intel for an Intel Mac.</p>
+      </article>
+      <div class="platform-grid desktop-download-grid">
+        <article><span class="platform-symbol" aria-hidden="true">⊞</span><h3>Windows 11</h3><p>Graphical desktop app · ZIP archive</p><div class="archive-links"><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-windows-amd64.zip">Download x64 <span aria-hidden="true">↓</span></a><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-windows-arm64.zip">Download ARM64 <span aria-hidden="true">↓</span></a></div><p class="archive-install">Extract the ZIP and open <strong>LedgeSync.exe</strong>. Requires Microsoft Edge WebView2 Runtime.</p></article>
+        <article><span class="platform-symbol" aria-hidden="true">&gt;_</span><h3>Ubuntu 24.04</h3><p>Graphical desktop app · tar.gz archive</p><div class="archive-links"><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-linux-amd64.tar.gz">Download x64 <span aria-hidden="true">↓</span></a><a href="https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-linux-arm64.tar.gz">Download ARM64 <span aria-hidden="true">↓</span></a></div><p class="archive-install">Extract the archive and launch <strong>LedgeSync</strong>. Requires GTK3 and WebKitGTK 4.1; see <a href="https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md#desktop-prerequisites">installation prerequisites</a>.</p></article>
       </div>
-      <p class="platform-note">Desktop and CLI developer archives are available for all six OS/architecture targets. Check the <a href="https://github.com/alexandroit/LedgeSync/actions/runs/36942481310">passing build results</a> and <a href="https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md">platform matrix</a> for runtime validation and installation limits.</p>
+      <div class="download-notice"><span class="badge">OFFLINE DEVELOPER ALPHA</span><p>Local browsing and simulated previews only. Google Drive transfers are in development. These builds have no trusted publisher signature; macOS builds are not notarized, so your operating system may prevent launch. Keep its security protections enabled. <a href="https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md#build-from-source">Build from reviewed source</a> for development.</p></div>
+      <p class="platform-note">Need a terminal or server version? <a href="https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1">Separate CLI downloads and checksums</a> are available in the release. See the <a href="https://github.com/alexandroit/LedgeSync/actions/runs/36942481310">passing build results</a> and <a href="https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md">platform matrix</a> for validation and installation limits.</p>
     </section>
     <section id="status" class="status-section">
       <div class="wrap status-layout"><div><p class="eyebrow">BUILT IN THE OPEN</p><h2>A careful start.<br>A clear direction.</h2><p>LedgeSync is at the beginning of its implementation. Follow the code, run the offline alpha, and help shape what comes next.</p><a class="button light" href="https://github.com/alexandroit/LedgeSync/blob/main/CONTRIBUTING.md">Contribute <span aria-hidden="true">↗</span></a></div>

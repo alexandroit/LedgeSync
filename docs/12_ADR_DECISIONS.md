@@ -121,3 +121,82 @@ and automatic renewal. Public and origin HTTPS, redirects, matching HTML/CSS
 hashes and continued HiperMusicas availability were verified. See
 [deployment evidence and rollback](WEBSITE.md). This website deployment does
 not change the offline alpha's product capabilities or release artifacts.
+
+## ADR-026 — Approval binds selected content; changed approved files are skipped
+
+**Accepted, 2026-10-02.** An upload approval is bound to the selected entries'
+paths, kinds, sizes and SHA-256 values, the rule snapshot and the configuration.
+Excluded entries and directory timestamps are not part of it, so activity in
+ignored files no longer invalidates a run. Before each mutation the executor
+checks the source root, known rule files and new rule files in traversed folders;
+changed rules or configuration, a different account, or a changed destination
+stop the run before further mutation. An approved file whose content changed is
+not uploaded: it is reported as a per-file `SOURCE_CHANGED` issue and the run ends
+`partial`. Files added after the preview are not part of the approved work.
+Unapproved content is never uploaded and approved work is never extended. See
+[failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md).
+
+## ADR-027 — Policy-aware traversal; links are recorded, never followed
+
+**Accepted, 2026-10-02; refines ADR-011.** Under conservative composition, a
+directory that an enabled Gitignore group excludes is recorded but not read,
+because no descendant can be selected. Rule files that can affect a directory are
+read before its children are considered; ancestors of configured root-file
+sources are never pruned; a disagreement with the complete policy fails closed.
+Symbolic links and special nodes remain unsupported for copying: they are never
+followed, opened or copied, but they no longer abort a scan. Selected ones are
+listed as `Not copied`. Rule-source baselines are versioned by traversal profile
+(`ledgesync-traversal-v2`).
+
+## ADR-028 — My Drive under the drive.file scope
+
+**Accepted, 2026-10-02.** `drive.file` cannot read My Drive's root metadata, but
+the `root` alias is a valid parent. Choosing My Drive uses the alias; creation
+under it is confirmed with a parent query restricted to the object's operation
+marker, and the canonical root ID is then recorded for later verification. The
+scope is unchanged.
+
+## ADR-029 — Replacement generations for earlier copies missing or changed in Drive
+
+**Accepted, 2026-10-02.** A recorded object that is missing, trashed, renamed or
+moved is never modified, moved back, adopted or deleted. The preview shows the
+item as **Copy again** (`recreate`); after approval a new object is created under
+a new operation identity generation, and for a folder its whole subtree is copied
+again under the new folder. Generation 0 preserves alpha identities.
+
+## ADR-030 — Saved sync pairs and opt-in automatic copies
+
+**Accepted, 2026-10-02.** Approved runs save their source, destination and
+policy as a sync pair in a private catalog separate from the transfer journal.
+Reopening never restores an approval. Automatic copies are off by default and
+require an explicit authorization bound to a reviewed preview: account,
+destination, source identity, configuration digest, rules digest and conflict
+policy. Automatic runs perform only create-only work (new files, folders,
+keep-both versions and reconciliation of reserved copies). Any change to the
+bound inputs, or earlier copies missing in Drive, pauses the job for review; an
+offline network, a busy transfer or an unmounted source only delays it. The
+desktop checks authorized pairs only while it is open; `ledgesync automatic run`
+and `automatic watch` are explicit entry points for servers. Packages never
+install a service, login item, timer or scheduled task.
+
+## ADR-031 — Restore to a new location; managed overwrite and mirror stay disabled
+
+**Accepted for this release, 2026-10-02; owner confirmation of the remaining
+scope is pending.** Restore downloads only journal-recorded, verified objects of a
+pair's managed copy into a new, empty folder outside the source and LedgeSync's
+private data. Each file must match Drive's MD5 and the journal's SHA-256; an
+existing file is never overwritten. Managed overwrite (`recover-managed`),
+managed mirror and every deletion remain disabled: changed files keep both
+versions. Enabling them requires the P4 recovery, concurrency and deletion gates.
+
+## ADR-032 — Publisher signing for macOS and Windows; signed APT metadata
+
+**Accepted, 2026-10-02.** Release builds for macOS are signed with a Developer
+ID Application identity (hardened runtime, secure timestamp, no entitlement
+exceptions), notarized and stapled (app and DMG; CLI binaries are notarized but a
+bare Mach-O cannot be stapled). Windows executables, setups and uninstallers are
+Authenticode-signed with an RFC 3161 timestamp through Azure Artifact Signing or
+a hardware-protected certificate. Ubuntu packages are distributed through the
+GPG-signed APT repository (ADR-022). Builds without signing material are labeled
+`unsigned-developer-build`; they are never presented as signed releases, and no
+self-signed certificate is used. See [platform signing](PLATFORMS.md#publisher-signing).

@@ -2,43 +2,48 @@
 
 **Product direction:** the desktop application is the primary experience. The CLI is a secondary interface over the same Go application services; its currently implemented commands are listed below. The visual model should feel immediately familiar to users of the **current Google Drive web app / desktop experience** or desktop file managers without copying Google trademarks, artwork, proprietary assets, or pixel-for-pixel layout. Familiar patterns include: left navigation, top breadcrumb/path bar, search entry, list/grid toggle, file rows/cards with status, details pane, and activity/history views.
 
-## Current implementation and unresolved file-transfer report
+## Current implementation (0.1.0-alpha.5 candidate)
 
-Alpha.4 source and recorded public packages contain explicit desktop and
-interactive CLI folder-copy workflows. The owner nevertheless reports that files
-are not synchronizing; real acceptance is unresolved. Start with the
-[continuation handoff](../CLAUDE_CODE_HANDOFF.md), distinguish manual copy from
-unimplemented automatic watching, and reproduce the actual failing journey.
-Historical alpha.3 packages provided authorization and offline previews only. In the desktop: choose a local source, connect, choose My Drive or an existing folder
-through Google's system-browser Picker, preview, then approve **Upload folder**.
-Account and immutable destination ID are visible before approval. The implementation
-preserves `drive.file`; it does not gain visibility over all existing Drive files.
+The reported synchronization failure is fixed in source and regression-tested;
+see the [failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md). Live Google
+acceptance is pending the owner's consent step
+([acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md)).
 
-The local root becomes a managed child folder inside the destination, with
-included files and empty directories retained. Active ignore rules apply.
-Verified copies are reused without upload; changed local files keep both versions
-under a stable `.ledgesync-` suffix. No existing file is overwritten or deleted.
-Completion reports verified counts, not merely bytes sent. The success action
-opens the verified folder in the system browser.
+In the desktop: choose a local folder, connect, choose **My Drive** or an
+existing folder through Google's system-browser Picker, **Preview folder
+upload**, review, then **Upload folder**. The local root becomes a managed child
+folder; included files and empty folders keep their hierarchy; active ignore
+rules apply, and directories they exclude completely are not read. Links and
+special files are listed as *Not copied*. The review counts new, changed,
+unchanged and copied-again items. Verified copies are reused; changed files keep
+both versions (or are paused when the pair's conflict policy is *pause*). Items
+missing, trashed, renamed or moved in Drive are copied again without touching the
+existing item. No Drive file is overwritten or deleted. `drive.file` is unchanged.
 
-Transfers are explicit and cancellable. Cancellation keeps completed files, and
-a new preview reconciles journaled object IDs before continuing. Restarting the
-app does not start a job; select the same source/destination and preview again.
-Incomplete file uploads may restart because session URLs are not persisted.
-The per-user SQLite journal contains plans, IDs, checksums and rule-source
-history, but no OAuth tokens or upload-session URLs. Missing previously observed
-rules block uploads after restart as well as during the current session.
+Every approved run saves its **sync pair**. **Sync pairs** reopens a pair (the
+folder is rescanned and the destination revalidated; no approval is stored).
+**Policies** edits a pair's rule groups, dialects (Gitignore and rclone
+profiles), composition, conflict policy and retries. **Activity** shows the live
+transfer, automatic runs and recent results; **History & Recovery** lists runs
+with per-file issues and restores a verified copy into a new empty folder;
+**Settings** holds defaults for new pairs, the global automatic-copy pause and
+local history. Errors show a redacted reason with guidance for the code.
 
-Source/account/destination changes are blocked while a transfer runs. Disconnect,
-confirmed remote revocation and shutdown drain active transfers first. Declining
-revocation leaves work running. The native close prompt defaults to **Keep Open**.
-Scheduler/watch triggers, shared-drive transfers, restore/download, remote
-overwrite/deletion and bidirectional synchronization remain unavailable.
+Automatic copies are opt-in per pair, authorized from a reviewed preview and
+bound to its account, destination, folder identity, configuration, rules and
+conflict policy. They run only while LedgeSync is open, never alongside another
+transfer, perform only create-only work, pause for review when a bound input
+changes or earlier copies are missing in Drive, and wait while offline or when
+the source volume is unavailable. Installation never enables them.
+
+The CLI shares these services: `copy --pair`, `pairs`, `automatic
+enable|disable|run|watch` and `restore` ([CLI guide](CLI.md)). Shared drives,
+remote overwrite, mirror/deletion and bidirectional synchronization remain
+unavailable (ADR-031).
 
 The screen catalogue below is the product design contract, including future
 features; it is not a claim that every screen or interaction is implemented.
-See [live acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md) and
-[current status](17_AGENT_HANDOFF_AND_STATUS.md).
+See [current status](17_AGENT_HANDOFF_AND_STATUS.md).
 
 ## Desktop information architecture
 

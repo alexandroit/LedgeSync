@@ -2,11 +2,84 @@
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
 
-**Current blocking owner report:** the application is not synchronizing files.
-The installed artifact, exact failing step and root cause are not established.
+## Alpha.5 candidate — reported synchronization failure fixed
+
+**Owner report:** the application was not synchronizing files. **Outcome:** four
+independent defects were reproduced with the production HTTP provider against a
+new `drive.file` emulator, fixed and regression-tested: My Drive selection
+failed under `drive.file`; any symbolic link (for example in an ignored
+`node_modules` or `.venv`) aborted the scan; churn in ignored files turned runs
+into `needs_review`; and earlier copies missing or moved in Drive blocked every
+later run. The owner's own failing machine/build was not available (no installed
+app, logs or crash reports on the inspected Mac); see the
+[failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md) for evidence, fixes
+and test names. Work is on branch `fix/drive-sync-recovery`; version
+`0.1.0-alpha.5` is used for changed binaries. Alpha.4 tags, assets and APT pool
+bytes are unchanged.
+
+**Live Google acceptance is pending the owner.** The configured CLI opened
+Google's consent page; nobody completed it (`AUTH_TIMEOUT`), so no account was
+connected and nothing was written to Drive. Run
+[live_acceptance.py](../tools/live_acceptance.py) after `ledgesync auth connect`
+as described in the [acceptance checklist](research/DRIVE_UPLOAD_ACCEPTANCE.md).
+
+**Publisher signing is blocked on owner material.** The build Mac has only an
+*Apple Development* identity (not notarizable) and no notarization credentials;
+the repository has no Windows signing configuration. The signing pipeline is
+implemented and fails closed; [Publisher signing](PLATFORMS.md#publisher-signing)
+lists exactly what to provide. Ubuntu APT metadata is already signed with the
+existing server key.
+
+### Completion dispositions (handoff A–H)
+
+| Item | Disposition | Evidence |
+|---|---|---|
+| A — first/incremental copy failure, safe diagnostics | **Implemented**; live acceptance pending owner consent | `internal/transfer/e2e_test.go` (12 end-to-end tests), `internal/transport/desktop/journey_test.go`, `internal/connections/errors_test.go`, Playwright `pairs.spec.ts` |
+| B — configuration semantics | **Implemented:** `conflictPolicy: pause` pauses changed files (no upload, listed in the review); `maxRetries` bounds retries (`drive.Client.WithRetries`, default 6); `maxTransfers` is an upper bound honored by serial execution. **Deferred:** parallel transfers (the credential service serializes requests by design; concurrency needs a reviewed redesign) | `internal/transfer/service.go` (`ActionPaused`), `internal/providers/drive/client.go` |
+| C — durable projects and primary GUI | **Implemented:** saved pairs (private catalog), reopen without stored approval, policy editor (rule groups, dialects, composition, conflict policy, retries), Activity, History & Recovery and Settings on saved data | `internal/projects`, `internal/transferstate/catalog.go`, `internal/transport/desktop/projects.go`, Playwright `pairs.spec.ts` |
+| D — repeat, recovery, diagnostics | **Implemented:** unchanged repeats skip; changed files keep both; cancellation, process loss, lost acknowledgements, expired sessions and network loss reconcile reserved IDs; per-file issues and bounded run history | e2e tests above; `TestE2ECancelledMultiChunkUploadResumesWithoutDuplicates`, `TestE2ETransientFailures…`, `TestE2EExpiredSession…` |
+| E — opt-in automatic copy | **Implemented:** explicit authorization bound to a reviewed preview; interval and change checks while the app runs; `automatic run`/`watch` for servers; pause on any bound change or missing earlier copies; wait when offline, busy or the source is unmounted; global pause; nothing installed | `internal/projects/scheduler.go`, `projects_test.go`, `TestDesktopJourneyPickerAutomationRunsAndPausesOnRuleChange`, `TestCLIPairsCopyAutomaticAndRestoreShareServices` |
+| F — VCS/code-tool policy adapters | **Deferred, fail closed:** Git and rclone dialects remain the implemented adapters; Mercurial, SVN (properties), Perforce, CVS, Bazaar/Breezy, Fossil, docker/npm/prettier/helm stay *Not implemented* in capabilities and block configurations that enable them. No dialect is silently mapped to Gitignore | `internal/policy/policy.go` capabilities; `app` `CAPABILITY_UNSUPPORTED` path |
+| G — native/server reliability and release security | **Implemented in source:** GUI and CLI share every service; native vaults and permissions unchanged; Drive requests wait briefly for short credential operations; signing pipeline for macOS/Windows; APT signing unchanged. **Blocked:** publisher signing material; live SSH consent; release builds on all targets need CI | `tools/sign_macos.py`, `tools/sign_windows.ps1`, `.github/workflows/*.yml` |
+| H — remaining recovery scope | **Implemented:** restore to a new empty folder with MD5/SHA-256 verification (desktop and CLI). **Explicitly disabled (ADR-031, owner confirmation pending):** managed overwrite, mirror and any deletion | `internal/restore`, `restore_test.go`, Playwright restore test |
+| Mobile | **Not claimed.** macOS builds are not iPhone/iPad deliverables; iOS scope still needs the owner's decision | — |
+
+### Commands and results (2026-10-02, macOS 27 arm64)
+
+From the repository root, with Go caches under `build/claude/`:
+
+- `go test ./cmd/... ./internal/...` — all packages pass.
+- `go test -race ./cmd/... ./internal/...` — all packages pass.
+- `go vet ./cmd/... ./internal/...` and `go vet -tags bindings ./cmd/ledgesync-desktop` — clean.
+- `cd frontend && npm ci && npm run build && npx playwright test` — build passes, **53 passed**.
+- `.venv/bin/python tools/test_*.py` — OAuth client 9, CLI packaging 6, DMG 4, Windows packaging 4, Debian 11, APT builder 4: all pass.
+- `go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7` on the edited workflows — only false positives for runner labels the linter predates (`macos-15-intel`, `windows-11-arm`), which earlier CI runs used successfully.
+- Native macOS arm64 desktop (Wails v2.14.0) and CLI built with the publisher client; generated client source removed. The app started and exited cleanly, created private state, and ran with the hardened runtime and no entitlement exceptions (`flags=0x10002(adhoc,runtime)`).
+
+**Not run here:** live Google consent/upload (owner step), Picker and desktop
+window clicks, Windows/Ubuntu native runs and clean-machine installer tests (CI
+runners), publisher signing and notarization (no material), APT snapshot
+publication (needs the release assets), SSH return.
+
+### Next safe steps
+
+1. Owner: `ledgesync auth connect`, then `tools/live_acceptance.py`; one manual
+   Picker/desktop pass (see the acceptance checklist).
+2. Owner: provide signing material as listed in
+   [Publisher signing](PLATFORMS.md#publisher-signing).
+3. Merge the branch to `main`, let native CI build all six targets, publish
+   `v0.1.0-alpha.5` assets, update `deploy/installers/source-release.json`, run
+   the installer workflow (clean Windows/Ubuntu runners), publish the APT
+   snapshot and verify public `apt-get install ledgesync` on amd64/arm64.
+
+---
+
+The sections below are the historical record before this change.
+
+**Historical blocking owner report:** the application is not synchronizing files.
 The release/CI records below describe historical distribution and synthetic/native
-checks; they do not resolve this report. Use
-[CLAUDE_CODE_HANDOFF.md](../CLAUDE_CODE_HANDOFF.md) as the single continuation entrypoint.
+checks. Use [CLAUDE_CODE_HANDOFF.md](../CLAUDE_CODE_HANDOFF.md) as the continuation
+entrypoint; the current status is above.
 
 **Implementation:** 0.1.0-alpha.4 implements explicitly approved Drive folder
 uploads. All 37 release assets are published and publicly verified. The alpha.4

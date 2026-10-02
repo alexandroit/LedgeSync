@@ -1,5 +1,17 @@
 # Platform builds and installation
 
+**0.1.0-alpha.5 candidate (2026-10-02, not yet published).** The source on this
+branch fixes the reported synchronization failure (My Drive under `drive.file`,
+links in ignored folders, ignored-file churn, earlier copies missing in Drive) and
+adds saved sync pairs, opt-in automatic copies, restore to a new folder, typed
+errors and the server CLI commands; see
+[failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md) and
+[status](17_AGENT_HANDOFF_AND_STATUS.md). Alpha.5 packages are built by the same
+native CI and installer workflows. They are publisher-signed only when the
+signing material in [Publisher signing](#publisher-signing) is configured;
+otherwise they are labeled unsigned developer builds. The published alpha.4
+release described below remains unchanged.
+
 LedgeSync **0.1.0-alpha.4** implements explicitly approved Google Drive folder
 copies in the desktop and native CLI. The [application release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4)
 contains native archives for macOS, Ubuntu and Windows in AMD64/ARM64, macOS
@@ -407,13 +419,72 @@ Credential Manager, and macOS uses Keychain. These stores are only accessed
 when account or authorized upload actions require them; headless CLI previews
 remain offline. `auth status` explicitly reads local vault metadata.
 
-Desktop archives are developer builds: **no trusted publisher signature or notarization**.
-The macOS build uses an ad-hoc local signature. No claim
-is made that Gatekeeper, SmartScreen, clean installation, update, uninstall,
-accessibility, or a complete interactive account-connection journey has passed
-on every target. Native vault lifecycle results are recorded above. Do not disable
-operating-system security controls to run a downloaded package; building from
-reviewed source is an available development path.
+Published alpha.1–alpha.4 desktop archives are developer builds: **no trusted
+publisher signature or notarization**. The macOS build uses an ad-hoc local
+signature. No claim is made that Gatekeeper, SmartScreen, clean installation,
+update, uninstall, accessibility, or a complete interactive account-connection
+journey has passed on every target. Native vault lifecycle results are recorded
+above. Do not disable operating-system security controls to run a downloaded
+package; building from reviewed source is an available development path.
+
+## Publisher signing
+
+The pipeline is implemented and fails closed; it runs only for official `main`
+builds when the material below is configured. Signed artifacts reduce operating
+system warnings but cannot guarantee the absence of reputation prompts
+(Microsoft SmartScreen builds reputation per release; Gatekeeper still shows a
+first-launch confirmation for downloaded apps). Self-signed certificates are
+never used. Builds without signing material carry `SIGNING-STATE.txt` with
+`unsigned-developer-build`.
+
+| Platform | What is signed | Tooling | Verification |
+|---|---|---|---|
+| macOS Intel and Apple Silicon | `LedgeSync.app` (hardened runtime, secure timestamp, no entitlement exceptions), DMG, CLI | [sign_macos.py](../tools/sign_macos.py), [entitlements](../deploy/macos/LedgeSync.entitlements) | `codesign --verify --deep --strict`, notarization `Accepted`, `stapler validate` (app and DMG), `spctl --assess` (exec and open) |
+| Windows 11 and Windows Server, x64 and ARM64 | `LedgeSync.exe`, `ledgesync.exe`, setup EXE and its uninstaller | [sign_windows.ps1](../tools/sign_windows.ps1), [pinned client](../tools/install_signing_client.ps1), Inno `SignTool` | `signtool verify /pa /all`, `Get-AuthenticodeSignature` Valid with a trusted RFC 3161 timestamp, not self-signed |
+| Ubuntu desktop and server | APT `InRelease`/`Release.gpg` metadata over the `.deb` hashes | [build_apt_repository.py](../tools/build_apt_repository.py) with the existing server key | `apt-get install ledgesync` with `Signed-By`, tamper rejection ([APT runbook](APT_REPOSITORY.md)) |
+
+The ad-hoc hardened-runtime check passed locally on macOS arm64: the app ran
+with `flags=0x10002(adhoc,runtime)` and no entitlements. An ad-hoc build is
+correctly rejected by `spctl`.
+
+### Signing material the owner must provide
+
+Never paste certificates, passwords or keys into a chat or the repository. Add
+them as GitHub Actions secrets/variables of `alexandroit/LedgeSync`, or install
+them only on a trusted signing machine.
+
+**Apple (both macOS architectures).** An active, paid Apple Developer Program
+membership and its Account Holder to create a **Developer ID Application**
+certificate (the existing *Apple Development* certificate on the build Mac
+cannot be notarized for distribution). Export it as `.p12`. Create an App Store
+Connect API key for notarization (Users and Access → Integrations; note the
+Issuer ID and Key ID and download the `.p8` once). Configure:
+
+- secrets `APPLE_DEVELOPER_ID_CERTIFICATE` (base64 of the `.p12`),
+  `APPLE_DEVELOPER_ID_PASSWORD`, `APPLE_NOTARY_API_KEY` (base64 of the `.p8`),
+  `APPLE_NOTARY_KEY_ID`, `APPLE_NOTARY_ISSUER`;
+- variable `APPLE_DEVELOPER_ID_IDENTITY`, the full identity name
+  `Developer ID Application: NAME (TEAMID)`.
+
+For local signing instead, install the certificate in the login keychain, run
+`xcrun notarytool store-credentials` once, then
+`python3 tools/sign_macos.py --keychain-profile PROFILE --app build/bin/LedgeSync.app --dmg-arch arm64 --version VERSION`.
+
+**Windows (all four Windows targets).** Either Azure Artifact Signing
+(recommended): an Azure subscription, an Artifact Signing account with completed
+identity validation and a public-trust certificate profile, and a Microsoft
+Entra application holding the *Artifact Signing Certificate Profile Signer* role
+on that account. Configure secrets `ARTIFACT_SIGNING_TENANT_ID`,
+`ARTIFACT_SIGNING_CLIENT_ID`, `ARTIFACT_SIGNING_CLIENT_SECRET` and variables
+`ARTIFACT_SIGNING_ENDPOINT` (the account's regional `https://….codesigning.azure.net/`
+URI), `ARTIFACT_SIGNING_ACCOUNT`, `ARTIFACT_SIGNING_PROFILE`. Or an OV/EV
+code-signing certificate whose key is on a hardware token or cloud HSM, used on a
+trusted Windows signing machine with `LEDGESYNC_WINDOWS_SIGNING=thumbprint`,
+`LEDGESYNC_WINDOWS_CERT_SHA1` and the CA's `LEDGESYNC_TIMESTAMP_URL`.
+
+**Ubuntu.** No new material: the existing RSA4096 APT key on the production
+server signs repository metadata. Publishing a new snapshot needs the existing
+SSH access described in the [APT runbook](APT_REPOSITORY.md).
 
 ## Build from source
 

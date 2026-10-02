@@ -23,10 +23,14 @@ The [website](https://ledgesync.com/) and secondary GitHub Pages copy serve the
 updated release. Exact delivery evidence is in the
 [publication status](docs/PLATFORMS.md#alpha4-native-validation-and-publication-gates).
 
-> **Current blocking report (2026-10-02):** the owner reports that the application
-> is not synchronizing files. The recorded distribution checks below do not prove
-> the live upload journey or resolve that failure. Continue diagnosis and completion
-> through [the Claude Code handoff](CLAUDE_CODE_HANDOFF.md).
+> **0.1.0-alpha.5 candidate (2026-10-02):** the reported synchronization failure
+> (My Drive under `drive.file`, links in ignored folders, ignored-file churn,
+> earlier copies missing in Drive) is fixed in source with regression tests, and
+> the release adds saved sync pairs, opt-in automatic copies, restore to a new
+> folder and typed error guidance. Live Google acceptance and publisher signing
+> are pending owner steps. See the [failure analysis](docs/research/DRIVE_SYNC_FAILURE_ANALYSIS.md),
+> [status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and
+> [publisher signing](docs/PLATFORMS.md#publisher-signing).
 
 ## Downloads
 

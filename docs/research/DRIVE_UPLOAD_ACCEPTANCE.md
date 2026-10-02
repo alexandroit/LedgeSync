@@ -1,5 +1,45 @@
 # Manual Google Drive folder-copy acceptance
 
+## Alpha.5 candidate — automated and live acceptance status (2026-10-02)
+
+**Emulator acceptance: passed.** The real HTTP provider, executor, journal and
+desktop bridge were exercised against the `drive.file` emulator for: My Drive and
+Picker destinations; nested and empty folders; ignored files; zero-byte, Unicode
+and space-containing names; multi-chunk files; links in ignored folders; churn in
+ignored files; unchanged repeats (no new uploads); changed files (keep-both);
+added files; cancellation mid-file and resume of the same identity; lost
+acknowledgements, 5xx, 429 with `Retry-After`, dropped connections and expired
+upload sessions; rule changes during a run; destination trashed after preview;
+the managed folder trashed, a file deleted or renamed in Drive (copied again
+without touching the existing item); automatic copies that run and then pause
+when rules change; and restore with independent SHA-256 comparison. See the
+[failure analysis](DRIVE_SYNC_FAILURE_ANALYSIS.md) for the test names and
+commands.
+
+**Live Google acceptance: pending the owner's consent step.** A configured
+native CLI built from this source (publisher Desktop client, `drive.file`) opened
+Google's consent page on the build Mac on 2026-10-02; nobody completed it, and
+the attempt ended with `AUTH_TIMEOUT` after three minutes. No account was
+connected and nothing was written to Drive. To finish acceptance, the owner runs,
+from the repository root on a Mac with the configured build:
+
+```sh
+ledgesync auth connect            # approve in the browser with the test account
+python3 tools/live_acceptance.py --cli "$(command -v ledgesync)" --work build/live-acceptance
+```
+
+[live_acceptance.py](../../tools/live_acceptance.py) uses only a synthetic
+fixture and a new `LedgeSync acceptance <timestamp>` pair in My Drive. It
+verifies the first copy by restoring it and comparing SHA-256 values in Python,
+an unchanged repeat, a keep-both change, a `kill -9` during a 64 MiB upload and
+resume, a network loss through a local proxy that is cut mid-transfer, the final
+tree after both interruptions, an authorized automatic run and the pause after an
+ignore-rule change. It writes a redacted JSON report and never deletes Drive
+files; remove the acceptance folder in Drive afterwards. The native Picker and the
+desktop window still need one manual pass: choose an existing folder in the
+Picker, preview, upload, then trash the managed folder in Drive and confirm the
+next preview offers **Copy again**.
+
 ## Status and evidence boundary
 
 Release **0.1.0-alpha.4** implements manual Google Drive folder copies. Its exact

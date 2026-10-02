@@ -15,6 +15,6 @@
     "productName": "LedgeSync",
     "productVersion": "0.1.0",
     "copyright": "Copyright 2026 LedgeSync contributors. Apache-2.0.",
-    "comments": "Local policy explorer and Google Drive account authorization. Cloud transfers are not enabled."
+    "comments": "Local policy explorer and manual, preview-approved Google Drive folder copies. Existing files are preserved; no automatic schedule."
   }
 }

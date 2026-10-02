@@ -1,4 +1,4 @@
-// LedgeSync CLI is a secondary surface over the shared offline application service.
+// LedgeSync CLI is a secondary surface over shared application and authentication services.
 package main
 
 import (
@@ -18,8 +18,8 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/policy"
 )
 
-const version = "0.1.0-alpha.3"
-const usage = `LedgeSync 0.1.0-alpha.3 — offline policy explorer
+const version = "0.1.0-alpha.4"
+const usage = `LedgeSync 0.1.0-alpha.4 — local policy explorer
 
 Usage:
   ledgesync browse --root DIRECTORY --json
@@ -29,12 +29,15 @@ Usage:
   ledgesync plan --config project.json [--output plan.json]
   ledgesync plan inspect --plan plan.json
   ledgesync capabilities
+  ledgesync auth status
   ledgesync --version
 
-All CLI previews use a fake empty destination. This headless CLI has no cloud
-connection or credential import. Google Drive authorization is available only
+All CLI previews use a fake empty destination. Explicit auth status reads only
+connection metadata through the shared native vault service in configured builds.
+It never opens a browser or checks the grant online. Google authorization is available
 in the desktop app's Connections screen with its bundled Desktop OAuth client.
-Cloud browsing, transfer, apply, deletion and scheduling are not implemented.
+The desktop app supports explicitly approved Google Drive folder uploads.
+CLI transfer, apply, deletion and scheduling commands are not implemented.
 Git policy is patterns-only; no Git or rclone executable is needed at runtime.
 `
 
@@ -64,6 +67,9 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) int {
 		}
 		return report(errOut, output(out, policy.Capabilities()))
 	}
+	if args[0] == "auth" {
+		return runAuthStatus(ctx, args[1:], out, errOut, newAuthStatusService)
+	}
 	command := args[0]
 	args = args[1:]
 	if command == "config" {
@@ -78,7 +84,7 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) int {
 		args = args[1:]
 	}
 	if !strings.Contains("|browse|validate|explain|plan|inspect|", "|"+command+"|") {
-		return report(errOut, domain.Fail("CAPABILITY_UNSUPPORTED", "command %q is unavailable in the offline alpha", command))
+		return report(errOut, domain.Fail("CAPABILITY_UNSUPPORTED", "command %q is unavailable in this CLI; use the desktop for approved uploads", command))
 	}
 	f := flag.NewFlagSet("ledgesync "+command, flag.ContinueOnError)
 	f.SetOutput(errOut)

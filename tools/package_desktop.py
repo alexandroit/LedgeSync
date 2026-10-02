@@ -20,7 +20,7 @@ TARGETS = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runner", required=True, choices=TARGETS)
-    parser.add_argument("--version", default="0.1.0-alpha.3")
+    parser.add_argument("--version", default="0.1.0-alpha.4")
     args = parser.parse_args()
     for value in (args.runner, args.version):
         if not all(c.isalnum() or c in ".-" for c in value):
@@ -52,7 +52,22 @@ def main():
         for filename in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"):
             shutil.copy2(ROOT / filename, stage / filename)
         shutil.copytree(ROOT / "third_party", stage / "third_party")
-        (stage / "README.txt").write_text("LedgeSync developer alpha desktop\n\nLocal file browsing, simulated previews and Google Drive OAuth authorization. No cloud file transfers.\nOpen Connections and choose Connect Google Drive to authorize in your browser.\nGuide: https://github.com/alexandroit/LedgeSync/blob/main/docs/GOOGLE_DRIVE_AUTH.md\nDeveloper builds are unsigned and are not notarized.\nSee https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md\n", encoding="utf-8")
+        (stage / "README.txt").write_text(
+            f"LedgeSync {args.version} developer alpha desktop\n\n"
+            "Browse local files and manually copy an approved folder to Google Drive.\n"
+            "Open Connections and choose Connect Google Drive to authorize in your browser.\n"
+            "Choose My Drive or an existing parent with the browser folder picker.\n"
+            "Preview folder upload, review included/excluded items, then choose Upload folder.\n"
+            "The local root and included empty folders retain their hierarchy inside the parent.\n"
+            "Verified copies are reused; changed files keep both versions. No overwrite or deletion.\n"
+            "Keep the app open. After cancellation or restart, preview again to reconcile and continue.\n"
+            "No scheduler, watcher, shared-drive upload or background service is enabled.\n"
+            "The separate CLI provides offline previews, not uploads. Auth status requires a configured native CLI build.\n"
+            "Guide: https://github.com/alexandroit/LedgeSync/blob/main/docs/GOOGLE_DRIVE_AUTH.md\n"
+            "Developer builds are unsigned and are not notarized.\n"
+            "See https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md\n",
+            encoding="utf-8",
+        )
         if args.runner.startswith("windows"):
             archive = output / (name + ".zip")
             with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:

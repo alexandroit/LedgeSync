@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate an ignored desktop-only Google OAuth client source file.
+"""Generate ignored Google OAuth configuration for desktop or oauth-tagged builds.
 
 Use --client-file PATH or LEDGESYNC_GOOGLE_DESKTOP_CLIENT_JSON, never credentials
 in command-line arguments. Only Google installed Desktop client JSON is accepted;
@@ -74,8 +74,10 @@ def validate_client(data: bytes) -> str:
     require(all(isinstance(value, str) and value in {
         'http://localhost', 'http://localhost/', 'http://127.0.0.1',
         'http://127.0.0.1/', 'http://[::1]', 'http://[::1]/'} for value in redirects))
-    # Keep only validated client configuration. No provider calls or token input.
-    return json.dumps(document, ensure_ascii=True, separators=(',', ':'), sort_keys=True)
+    # The runtime parser requires only these fields. Do not copy development
+    # project identifiers or unused certificate metadata into distributed code.
+    packaged = {'installed': {key: installed[key] for key in required}}
+    return json.dumps(packaged, ensure_ascii=True, separators=(',', ':'), sort_keys=True)
 
 
 def regular_node(info):
@@ -140,7 +142,7 @@ def generate(data: bytes, destination: Path = OUTPUT):
     require(destination.name == OUTPUT.name and not os.path.lexists(destination))
     # JSON quoting yields a valid Go interpreted string for this ASCII schema;
     # no -ldflags/-X, environment value, or command argument reaches the compiler.
-    content = MARKER + ('//go:build desktop\n\npackage connections\n\n'
+    content = MARKER + ('//go:build desktop || oauth\n\npackage connections\n\n'
         'func init() {\n\tbundledClientJSON = ' + json.dumps(client) + '\n}\n').encode('ascii')
     descriptor, temporary = tempfile.mkstemp(prefix='.oauth-client-', suffix='.tmp', dir=destination.parent)
     path = Path(temporary)

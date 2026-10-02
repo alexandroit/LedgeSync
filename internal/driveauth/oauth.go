@@ -19,8 +19,9 @@ import (
 )
 
 type callbackResult struct {
-	code string
-	err  error
+	code     string
+	folderID string
+	err      error
 }
 
 func randomValue() (string, error) {
@@ -31,28 +32,33 @@ func randomValue() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 func (s *Service) authorize(ctx context.Context, client *clientConfig) (*credential, error) {
+	token, _, err := s.authorizeSelection(ctx, client, false, "")
+	return token, err
+}
+
+func (s *Service) authorizeSelection(ctx context.Context, client *clientConfig, folder bool, retainedRefresh string) (*credential, string, error) {
 	if ctx.Err() != nil {
-		return nil, contextError(ctx)
+		return nil, "", contextError(ctx)
 	}
 	if s.openURL == nil {
-		return nil, ErrBrowser
+		return nil, "", ErrBrowser
 	}
 	state, err := randomValue()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	verifier, err := randomValue()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	challenge := sha256.Sum256([]byte(verifier))
 	listener, err := net.Listen("tcp4", "127.0.0.1:0")
 	if err != nil {
-		return nil, ErrCallback
+		return nil, "", ErrCallback
 	}
 	redirect := "http://" + listener.Addr().String() + "/"
 	results := make(chan callbackResult, 1)
-	handler := newCallback(ctx, state, listener.Addr().String(), results)
+	handler := newSelectionCallback(ctx, state, listener.Addr().String(), results, folder)
 	server := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 5 * time.Second, WriteTimeout: 5 * time.Second, IdleTimeout: 5 * time.Second, MaxHeaderBytes: 8192, ErrorLog: log.New(io.Discard, "", 0)}
 	server.SetKeepAlivesEnabled(false)
 	stopped := make(chan struct{})
@@ -67,7 +73,7 @@ func (s *Service) authorize(ctx context.Context, client *clientConfig) (*credent
 	defer func() { stopCancellation(); closeServer() }()
 	u, err := url.Parse(s.authURL)
 	if err != nil {
-		return nil, ErrCallback
+		return nil, "", ErrCallback
 	}
 	q := u.Query()
 	q.Set("client_id", client.ID)
@@ -79,38 +85,49 @@ func (s *Service) authorize(ctx context.Context, client *clientConfig) (*credent
 	q.Set("code_challenge_method", "S256")
 	q.Set("access_type", "offline")
 	q.Set("prompt", "consent select_account")
+	if folder {
+		q.Set("prompt", "consent")
+		q.Set("trigger_onepick", "true")
+		q.Set("allow_folder_selection", "true")
+		q.Set("mimetypes", "application/vnd.google-apps.folder")
+	}
 	u.RawQuery = q.Encode()
 	// The launcher must return promptly. No raw URL or launcher error is returned.
 	if err = s.openURL(u.String()); err != nil {
 		if ctx.Err() != nil {
-			return nil, contextError(ctx)
+			return nil, "", contextError(ctx)
 		}
-		return nil, ErrBrowser
+		return nil, "", ErrBrowser
 	}
 	var result callbackResult
 	select {
 	case <-ctx.Done():
-		return nil, contextError(ctx)
+		return nil, "", contextError(ctx)
 	case <-stopped:
 		if ctx.Err() != nil {
-			return nil, contextError(ctx)
+			return nil, "", contextError(ctx)
 		}
-		return nil, ErrCallback
+		return nil, "", ErrCallback
 	case result = <-results:
 	}
 	// The callback has one purpose and must not remain reachable during the
 	// credential-bearing exchange, including a slow or failed token response.
 	closeServer()
 	if ctx.Err() != nil {
-		return nil, contextError(ctx)
+		return nil, "", contextError(ctx)
 	}
 	if result.err != nil {
-		return nil, result.err
+		return nil, "", result.err
 	}
-	return s.exchange(ctx, client, result.code, verifier, redirect, "")
+	token, err := s.exchangeWithFallback(ctx, client, result.code, verifier, redirect, "", retainedRefresh)
+	return token, result.folderID, err
 }
 
 func newCallback(ctx context.Context, state, host string, result chan<- callbackResult) http.Handler {
+	return newSelectionCallback(ctx, state, host, result, false)
+}
+
+func newSelectionCallback(ctx context.Context, state, host string, result chan<- callbackResult, folder bool) http.Handler {
 	var used atomic.Bool
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
@@ -152,6 +169,13 @@ func newCallback(ctx context.Context, state, host string, result chan<- callback
 		default:
 			value.err = ErrCallback
 		}
+		if folder {
+			if value.err == nil && len(q["picked_file_ids"]) == 1 && validFolderID(q.Get("picked_file_ids")) {
+				value.folderID = q.Get("picked_file_ids")
+			} else if value.err == nil || len(q["picked_file_ids"]) != 0 {
+				value.err = ErrCallback
+			}
+		}
 		if ctx.Err() != nil {
 			http.Error(w, "This authorization attempt is no longer active. Return to LedgeSync to try again.", http.StatusGone)
 			return
@@ -175,6 +199,18 @@ func newCallback(ctx context.Context, state, host string, result chan<- callback
 		// Buffered, single delivery: a browser retry cannot block the HTTP handler.
 		result <- value
 	})
+}
+
+func validFolderID(id string) bool {
+	if len(id) == 0 || len(id) > 256 || id == "root" {
+		return false
+	}
+	for _, c := range id {
+		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '-' || c == '_') {
+			return false
+		}
+	}
+	return true
 }
 
 func validCallbackParameters(q url.Values) bool {

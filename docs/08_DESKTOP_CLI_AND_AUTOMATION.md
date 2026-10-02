@@ -1,6 +1,41 @@
 # 08 — Desktop Explorer, CLI, and Automation Workflows
 
-**Product direction:** the desktop application is the primary experience. The CLI is a secondary, fully supported automation/headless interface over the same Go application services. The visual model should feel immediately familiar to users of the **current Google Drive web app / desktop experience** or desktop file managers without copying Google trademarks, artwork, proprietary assets, or pixel-for-pixel layout. Familiar patterns include: left navigation, top breadcrumb/path bar, search entry, list/grid toggle, file rows/cards with status, details pane, and activity/history views.
+**Product direction:** the desktop application is the primary experience. The CLI is a secondary interface over the same Go application services; its currently implemented commands are listed below. The visual model should feel immediately familiar to users of the **current Google Drive web app / desktop experience** or desktop file managers without copying Google trademarks, artwork, proprietary assets, or pixel-for-pixel layout. Familiar patterns include: left navigation, top breadcrumb/path bar, search entry, list/grid toggle, file rows/cards with status, details pane, and activity/history views.
+
+## Current implementation: alpha.4 source candidate
+
+Public alpha.3 packages connect a Google account and provide local/offline
+previews. The unreleased alpha.4 source adds an explicit desktop folder-copy
+workflow: choose a local source, connect, choose My Drive or an existing folder
+through Google's system-browser Picker, preview, then approve **Upload folder**.
+Account and immutable destination ID are visible before approval. The candidate
+preserves `drive.file`; it does not gain visibility over all existing Drive files.
+
+The local root becomes a managed child folder inside the destination, with
+included files and empty directories retained. Active ignore rules apply.
+Verified copies are reused without upload; changed local files keep both versions
+under a stable `.ledgesync-` suffix. No existing file is overwritten or deleted.
+Completion reports verified counts, not merely bytes sent. The success action
+opens the verified folder in the system browser.
+
+Transfers are explicit and cancellable. Cancellation keeps completed files, and
+a new preview reconciles journaled object IDs before continuing. Restarting the
+app does not start a job; select the same source/destination and preview again.
+Incomplete file uploads may restart because session URLs are not persisted.
+The per-user SQLite journal contains plans, IDs, checksums and rule-source
+history, but no OAuth tokens or upload-session URLs. Missing previously observed
+rules block uploads after restart as well as during the current session.
+
+Source/account/destination changes are blocked while a transfer runs. Disconnect,
+confirmed remote revocation and shutdown drain active transfers first. Declining
+revocation leaves work running. The native close prompt defaults to **Keep Open**.
+Scheduler/watch triggers, shared-drive transfers, restore/download, remote
+overwrite/deletion and bidirectional synchronization remain unavailable.
+
+The screen catalogue below is the product design contract, including future
+features; it is not a claim that every screen or interaction is implemented.
+See [live acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md) and
+[current status](17_AGENT_HANDOFF_AND_STATUS.md).
 
 ## Desktop information architecture
 
@@ -83,11 +118,18 @@ When remote contents changed unexpectedly, show the evidence and safe choices wi
 
 ## Automation
 
-Disabled initially. Support interval and file-watch triggers only after the interactive browser/preview path is reliable; both use the same planner. Minimum interval is a product resource-control setting, initially 60 seconds. A watch event is a hint followed by debounce/reconciliation, not a guarantee of immediate durable upload.
+Unavailable in the current candidate. Interval and file-watch triggers below are
+planned only after the interactive browser/preview path is reliable; both must
+use the same planner. Minimum interval is a product resource-control setting,
+initially proposed as 60 seconds. A watch event is a hint followed by
+debounce/reconciliation, not a guarantee of immediate durable upload.
 
 A scheduler requires explicit copy-preauthorization for unchanged project/policy/root identity and allowed operation classes. It cannot approve updates, adoption, mirror deletion, scope expansion, or a newly unavailable required policy source. Pause on those changes and show a review queue. Do not run two jobs for one pair simultaneously; coalesce triggers and reconcile after sleep/restart.
 
-Closing the window asks about an active transfer when necessary. Background/tray operation and launch-at-login are opt-in, reversible settings. The installer must not silently create a service/daemon or modify system-wide startup.
+The current native close prompt asks about an active operation and defaults to
+**Keep Open**. Background/tray operation and launch-at-login remain future opt-in,
+reversible settings. The installer must not silently create a service/daemon or
+modify system-wide startup.
 
 ## Accessibility and responsiveness
 
@@ -98,3 +140,25 @@ Date/time is displayed in the user's locale/timezone but persisted in UTC. Byte 
 ## CLI parity
 
 Every safety-relevant desktop action has a corresponding typed application service usable by the CLI, but the CLI does not dictate the product UX. CLI output supports human-readable and versioned JSON forms for automation, tests, CI, and advanced users. Headless usage must never open a browser unexpectedly; return `AUTH_REQUIRED` with an explicit authorization workflow. The CLI must not bypass safeguards that appear in the desktop.
+
+The current CLI exposes local browse/explain/configuration/plan inspection and
+read-only authentication status. **There is no CLI copy/upload/apply command.**
+Drive folder selection and approved execution exist in shared typed services,
+but their headless command adapter is not implemented. This is a product
+limitation, not separate CLI transfer logic or permission to bypass the GUI's
+approval boundary. Server packages currently provide those offline tools only.
+
+Current source adds `ledgesync auth status`, using the GUI's `connections.NewGoogleDrive`
+factory and `driveauth.Service.Status`. It returns the safe status/account DTO and
+`onlineVerified: false`; a saved connection is not evidence of a valid live grant.
+This explicit command may ask the OS to unlock its vault. Preview/help commands
+do not read credentials. Missing build configuration and vault failures return
+redacted JSON errors with exit 6; canceled status returns 130. Successful local
+status reads return 0, including disconnected/reconnect-required states.
+
+Connect/check/disconnect/revoke remain GUI actions. Those CLI subcommands return
+`AUTH_REQUIRED` and direct the user to Connections without creating the service.
+This read-only boundary avoids adding concurrent GUI/CLI token mutations before
+cross-process credential-operation locking is implemented. See
+[native CLI build configuration](OAUTH_BUILD.md); existing portable packages do
+not contain the publisher client or gain authentication through this source edit.

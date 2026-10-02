@@ -23,6 +23,7 @@ type Preview struct {
 	Entries      []domain.Entry      `json:"entries"`
 	Plan         domain.Plan         `json:"plan"`
 	Capabilities []policy.Capability `json:"capabilities"`
+	RuleSources  []string            `json:"ruleSources"`
 }
 type Service struct {
 	mu       sync.Mutex
@@ -129,7 +130,7 @@ func (s *Service) Scan(ctx context.Context, c config.Config) (Preview, error) {
 	s.mu.Lock()
 	s.observed[key] = append([]string{}, sourcePaths...)
 	s.mu.Unlock()
-	return Preview{c.Project.DisplayName, tree.RootPath(), true, entries, plan, policy.Capabilities()}, nil
+	return Preview{c.Project.DisplayName, tree.RootPath(), true, entries, plan, policy.Capabilities(), sourcePaths}, nil
 }
 func (s *Service) Explain(ctx context.Context, configPath, p string) (domain.Explanation, error) {
 	if err := domain.ValidatePath(p); err != nil {

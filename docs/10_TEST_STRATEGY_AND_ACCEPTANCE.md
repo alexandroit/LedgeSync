@@ -2,7 +2,7 @@
 
 ## Distinguish evidence from plans
 
-The application is not implemented. This package supplies 28 Git reference cases, 12 proposed rclone cases, 10 composition cases, and 32 safety scenarios. The included Git runner checks fixture expectations against an installed Git in temporary repositories. It does not execute a LedgeSync filter engine. The validation report is the authority on checks actually run.
+The initial specification supplied 28 Git reference cases, 12 proposed rclone cases, 10 composition cases, and 32 safety scenarios. The application now has an offline engine, desktop explorer and OAuth implementation; see [current status](17_AGENT_HANDOFF_AND_STATUS.md) for actual evidence and remaining product gaps. The included Git fixture runner alone is not proof that the application matches Git. Keep reference-fixture, implementation-test and authorized integration evidence separate.
 
 A release needs all relevant layers below; passing a finite example corpus is not proof of complete compatibility for Git, rclone, SVN, Mercurial, Perforce, CVS, Bazaar/Breezy, Fossil, or code-tool profiles.
 

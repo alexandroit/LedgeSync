@@ -1,4 +1,4 @@
-// Package desktop exposes the shared read-only application service to the desktop.
+// Package desktop exposes shared preview, authorization and approved transfer services.
 package desktop
 
 import (
@@ -19,6 +19,8 @@ type Picker func() (string, error)
 
 // App binds read-only previews and explicit Google Drive account authorization.
 type App struct {
+	transfer          transferService
+	openDriveFolder   func(string) error
 	google            GoogleDriveService
 	showAfterConnect  func()
 	connectionContext context.Context
@@ -28,6 +30,8 @@ type App struct {
 	configPicker      Picker
 	mu                sync.Mutex
 	cancel            context.CancelFunc
+	actionDone        chan struct{}
+	lifecycle         bool
 	path              string
 	isConfig          bool
 }
@@ -39,11 +43,18 @@ func New(service previewService, folderPicker, configPicker Picker) *App {
 func (a *App) begin() (context.Context, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if a.lifecycle || (a.transfer != nil && a.transfer.Busy()) {
+		return nil, errTransferBusy
+	}
+	if a.connectionContext != nil && a.connectionContext.Err() != nil {
+		return nil, context.Canceled
+	}
 	if a.cancel != nil {
 		return nil, errors.New("SCAN_BUSY: wait for the current scan or cancel it")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	a.cancel = cancel
+	a.actionDone = make(chan struct{})
 	return ctx, nil
 }
 
@@ -52,6 +63,8 @@ func (a *App) finish() {
 	defer a.mu.Unlock()
 	a.cancel()
 	a.cancel = nil
+	close(a.actionDone)
+	a.actionDone = nil
 }
 
 func (a *App) scan(ctx context.Context, path string, isConfig bool) (*app.Preview, error) {
@@ -65,8 +78,14 @@ func (a *App) scan(ctx context.Context, path string, isConfig bool) (*app.Previe
 	if err != nil {
 		return nil, err
 	}
+	if err = ctx.Err(); err != nil {
+		return nil, err
+	}
 	a.mu.Lock()
 	a.path, a.isConfig = path, isConfig
+	if a.transfer != nil {
+		a.transfer.Invalidate()
+	}
 	a.mu.Unlock()
 	return &result, nil
 }
@@ -77,6 +96,9 @@ func (a *App) open(picker Picker, isConfig bool) (*app.Preview, error) {
 		return nil, err
 	}
 	defer a.finish()
+	if picker == nil {
+		return nil, errors.New("PICKER_UNAVAILABLE: the native source picker is unavailable")
+	}
 	path, err := picker()
 	if err != nil || path == "" {
 		return nil, err

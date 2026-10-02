@@ -11,6 +11,13 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/transfer"
 )
 
+func newTestStore(t *testing.T) *Store {
+	t.Helper()
+	s := NewStore(filepath.Join(t.TempDir(), "state"))
+	t.Cleanup(func() { _ = s.Close() })
+	return s
+}
+
 func testProject(t *testing.T, s *Store) Project {
 	t.Helper()
 	p, err := s.Save(Project{Name: "Pair", SourceRoot: filepath.Join(t.TempDir(), "src"), Policy: DefaultPolicy(), Destination: transfer.Destination{ID: "dest", Name: "Dest", AccountReference: "acct"}})
@@ -21,7 +28,7 @@ func testProject(t *testing.T, s *Store) Project {
 }
 
 func TestStoreValidatesAndRoundTrips(t *testing.T) {
-	s := NewStore(filepath.Join(t.TempDir(), "state"))
+	s := newTestStore(t)
 	if _, err := s.Save(Project{Name: "", SourceRoot: "/x"}); domain.ErrorCode(err) != "CONFIG_INVALID" {
 		t.Fatalf("empty name accepted: %v", err)
 	}
@@ -98,7 +105,7 @@ func TestSchedulerPausesForReviewAndWaitsForTransientConditions(t *testing.T) {
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			s := NewStore(filepath.Join(t.TempDir(), "state"))
+			s := newTestStore(t)
 			p := authorized(t, s, TriggerInterval)
 			runner := &fakeRunner{err: c.err}
 			sch := NewScheduler(s, runner, nil)
@@ -120,7 +127,7 @@ func TestSchedulerPausesForReviewAndWaitsForTransientConditions(t *testing.T) {
 }
 
 func TestSchedulerWatchSkipsUnchangedSourceAndEditsWin(t *testing.T) {
-	s := NewStore(filepath.Join(t.TempDir(), "state"))
+	s := newTestStore(t)
 	p := authorized(t, s, TriggerWatch)
 	runner := &fakeRunner{fingerprint: "f1", outcome: Outcome{Ran: true, Fingerprint: "f1", Summary: RunSummary{State: "succeeded"}}}
 	sch := NewScheduler(s, runner, nil)
@@ -152,7 +159,7 @@ func TestSchedulerWatchSkipsUnchangedSourceAndEditsWin(t *testing.T) {
 }
 
 func TestSchedulerLoopHonorsGlobalPause(t *testing.T) {
-	s := NewStore(filepath.Join(t.TempDir(), "state"))
+	s := newTestStore(t)
 	p := authorized(t, s, TriggerInterval)
 	if _, err := s.SaveSettings(Settings{DefaultConflictPolicy: "keep-both", DefaultMaxRetries: 6, AutomationPaused: true}); err != nil {
 		t.Fatal(err)

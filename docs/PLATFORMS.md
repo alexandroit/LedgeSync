@@ -6,11 +6,9 @@ remains offline and has no account-authorization workflow. No package installs
 a service, schedules jobs, connects an account automatically, uploads files or
 enables deletion. Connecting requires explicit setup and browser consent.
 
-**Alpha.2 native release CI, installer verification and publication are pending.**
-The alpha.2 download links below are prepared for publication and may not resolve
-yet. The [previous alpha.1 release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1)
-remains available without OAuth support. Its historical evidence is retained
-separately below and does not validate the new release.
+[Alpha.2 is published](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.2).
+The previous alpha.1 assets remain unchanged. Evidence for the two releases is
+recorded separately below.
 
 ## Target matrix
 
@@ -45,10 +43,40 @@ not sufficient for desktop authorization, and there is no plaintext fallback.
 The `ledgesync-cli` package does not require a keyring or connect to Google.
 
 Local synthetic OAuth and frontend tests do not establish real Google consent,
-refresh, revocation or platform-native credential storage acceptance. Record
-alpha.2 native CI and public artifact evidence here when those checks complete.
+refresh or revocation. Native credential storage was separately tested on
+disposable runner accounts as recorded below.
 Real Google account acceptance remains pending until an owner-created OAuth
 client is configured; no personal account was used in automated tests.
+
+## Observed alpha.2 release results
+
+Application source: `42474b558d3b1557318f9cb0ae714748869f90b3`.
+[Build run 36949133758](https://github.com/alexandroit/LedgeSync/actions/runs/36949133758)
+passed all 16 jobs, including 23 frontend tests. The same six OS/architecture
+combinations passed actual synthetic native vault create/read/update/delete in
+[run 36949135946](https://github.com/alexandroit/LedgeSync/actions/runs/36949135946).
+The macOS ARM64 WebView also displayed Connections, opened the native client
+picker, and returned unchanged after cancellation; no client or token was imported.
+
+[Installer run 36950139047](https://github.com/alexandroit/LedgeSync/actions/runs/36950139047)
+passed Windows x64/ARM64 wizard and install/reinstall/remove tests, Ubuntu
+x64/ARM64 package tests, and the signed local APT lifecycle. Ubuntu GUI checks
+observe eight seconds of Xvfb process startup, not a complete interactive journey.
+Windows tests compare installed payload bytes and preserve a synthetic user file.
+They do not establish cross-version migration or a complete Windows GUI journey.
+[Public APT run 36950554723](https://github.com/alexandroit/LedgeSync/actions/runs/36950554723)
+passed on both architectures: HTTPS key/signature checks, tamper rejection,
+forced by-hash indexes, desktop plus GNOME Keyring recommendation, separate
+headless CLI, and removal preserving a synthetic user file.
+
+All 37 public assets were verified against their recorded digests and sizes;
+all 32 alpha.1 assets remained unchanged. macOS DMGs preserve the exact native
+CI apps; only installation text was repackaged at commit
+`b4e3d7261776309648f203c29119bf859ca49695`. Detailed evidence:
+[application archives/DMGs](research/OAUTH_ALPHA_RELEASE.json),
+[installers](research/OAUTH_INSTALLERS_RELEASE.json),
+[public assets](research/OAUTH_PUBLIC_ASSETS.json), and
+[APT/site deployment](research/OAUTH_DEPLOYMENT_VERIFICATION.json).
 
 ## Historical alpha.1 release results
 
@@ -149,9 +177,6 @@ contains the native ARM64 app and accepts only ARM64 Windows.
 The signed project repository supports **Ubuntu 24.04, amd64 and arm64**. APT
 does not discover third-party repositories automatically; add this source once:
 
-Alpha.2 repository publication is pending. Until that completes, these commands
-can install the previously published alpha.1, which has no Connections workflow.
-
 ```sh
 sudo apt-get update &&
 sudo apt-get install ca-certificates curl &&
@@ -192,10 +217,10 @@ ledgesync --version
 ```
 
 The CLI package has no graphical-library dependencies and no OAuth commands.
-The planned alpha.2 Debian version is `0.1.0~alpha.2-1`; the application reports
-`0.1.0-alpha.2`. The currently published alpha.1 uses `0.1.0~alpha.1-1` and reports
-`0.1.0-alpha.1`; its original binaries and notices remain unchanged. GitHub normalizes `~` to `.` in
-download filenames; the package's internal Debian version and the APT pool
+The published alpha.2 Debian version is `0.1.0~alpha.2-1`; the application reports
+`0.1.0-alpha.2`. The previous alpha.1 packages, binaries and notices remain
+unchanged in the archived release and repository snapshot. GitHub normalizes
+`~` to `.` in download filenames; the package's internal Debian version and the APT pool
 filenames retain `~`. Adjacent checksums use the actual GitHub download names.
 Package removal does not delete user
 configuration or source files:
@@ -222,7 +247,8 @@ when an account action is requested; headless CLI previews remain offline.
 Desktop archives are developer builds: **no trusted publisher signature or notarization**.
 The macOS build uses an ad-hoc local signature. No claim
 is made that Gatekeeper, SmartScreen, clean installation, update, uninstall,
-accessibility, or vault integration has passed on every target. Do not disable
+accessibility, or a complete interactive account-connection journey has passed
+on every target. Native vault lifecycle results are recorded above. Do not disable
 operating-system security controls to run a downloaded package; building from
 reviewed source is an available development path.
 

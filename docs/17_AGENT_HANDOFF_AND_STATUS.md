@@ -1,7 +1,7 @@
 # 17 — Agent Handoff and Current Status
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
-**Implementation:** 0.1.0-alpha.2, desktop authorization developer alpha (release validation pending).
+**Implementation:** 0.1.0-alpha.2, desktop authorization developer alpha.
 
 Read [PROJECT_IDENTITY.md](../PROJECT_IDENTITY.md) first. The authoritative name
 is LedgeSync, command `ledgesync`, primary domain `ledgesync.com`. The owner
@@ -101,15 +101,57 @@ Local checks observed on macOS ARM64:
   written; no Google browser authorization started. Test app closed afterward.
 - `python3 tools/collect_licenses.py`, `python3 tools/verify_licenses.py`: passed
   after new dependency pins. Four DMG integrity/no-overwrite tests passed.
-- Documentation validation: zero failures; optional local JSON Schema dependency
-  unavailable. CI performs the full schema check with its pinned dependency.
+- `.venv/bin/python tools/validate_docs.py`: zero failures and zero skipped
+  checks, including both schemas and all five examples. The system interpreter
+  lacked jsonschema; the existing project virtual environment supplies it.
 
-New six-platform native-vault CI and the existing native build/install suites
-must pass before publication. Release/source/digest evidence will be appended
-once observed; alpha.1 artifacts must remain unchanged. Setup instructions are
+[Build run 36949133758](https://github.com/alexandroit/LedgeSync/actions/runs/36949133758)
+passed all 16 jobs at application source
+`42474b558d3b1557318f9cb0ae714748869f90b3`.
+[Vault run 36949135946](https://github.com/alexandroit/LedgeSync/actions/runs/36949135946)
+passed actual synthetic create/read/update/delete on all six native OS/architecture
+runners. The public alpha.2 tag and 24 initial asset digests were verified;
+[OAUTH_ALPHA_RELEASE.json](research/OAUTH_ALPHA_RELEASE.json) records all twelve
+archives and two DMGs, their architecture/Go metadata, 44 license hashes and
+exact native bundle matching. DMG packaging commit
+`b4e3d7261776309648f203c29119bf859ca49695` changes installation copy only;
+application bytes remain those of the successful native builds. Installer and
+public APT verification evidence is recorded below. Alpha.1 artifacts
+remain immutable. Setup instructions are
 in [GOOGLE_DRIVE_AUTH.md](GOOGLE_DRIVE_AUTH.md), protocol/source decisions in
 [OAUTH_SOURCE_REVIEW.md](research/OAUTH_SOURCE_REVIEW.md) and vault review in
 [OAUTH_VAULT_REVIEW.md](research/OAUTH_VAULT_REVIEW.md).
+
+The first alpha.2 installer run, 36949766324, passed both Windows installer
+lifecycles and both native Ubuntu package tests, but its local APT job failed
+because the repository builder still required alpha.1. The builder now requires
+an explicit Debian version and checks all four package identities before signing;
+four regression tests cover this boundary. Fix commit:
+`ad2cddfbea493590609d490b0dee10435a9be2d0`. The failed run is not treated as
+an all-platform success; a new full installer run validates the correction.
+
+Final packaging/deployment evidence:
+
+- [Installer run 36950139047](https://github.com/alexandroit/LedgeSync/actions/runs/36950139047)
+  passed all five required jobs at `ad2cddfbea493590609d490b0dee10435a9be2d0`.
+  Both Windows wizards/install/reinstall/remove flows and both Ubuntu native
+  package checks passed; local signed APT installation passed. Four repository
+  input-version regression tests passed, alongside ten Debian and four Windows
+  packaging guards. See [installer evidence](research/OAUTH_INSTALLERS_RELEASE.json).
+- [Public APT run 36950554723](https://github.com/alexandroit/LedgeSync/actions/runs/36950554723)
+  passed on Ubuntu 24.04 amd64 and arm64. Active snapshot is
+  `20261002-alpha2-ad2cddf`, Debian version `0.1.0~alpha.2-1`, with the existing
+  signing key unchanged. All twelve prior pool/by-hash files are retained.
+  No application or OS package was installed on the production server.
+- Public release contains 37 verified assets; all 24 initial alpha.2 assets and
+  all 32 alpha.1 assets retain their original IDs, bytes, sizes and timestamps.
+  [Public asset evidence](research/OAUTH_PUBLIC_ASSETS.json) records the hashes.
+- Canonical Ubuntu website and secondary Pages both serve source
+  `82b2f6bf05e49d7e8f25c9f5e06e2db105d25636`. Public and origin HTML/CSS hashes
+  match tracked content. [Pages run 36950632081](https://github.com/alexandroit/LedgeSync/actions/runs/36950632081)
+  passed. HiperMusicas public/origin remain HTTP 200, PID 1521428 unchanged;
+  shared Nginx hashes match the pre-deployment baseline. No Nginx reload was
+  required for these content switches. See [deployment evidence](research/OAUTH_DEPLOYMENT_VERIFICATION.json).
 
 Unrun external acceptance: actual Google consent, renewal/revocation against a
 real account, publisher signing/notarization, and cloud file transfers. No
@@ -146,7 +188,7 @@ strict plan decoding, and source-output case aliases/parent identity races.
 The scan and plan are read-only. There is no basis for claiming that future
 upload, overwrite, recovery or deletion paths have been tested.
 
-## Public delivery and platform evidence
+## Historical alpha.1 — Public delivery and platform evidence
 
 The public repository is <https://github.com/alexandroit/LedgeSync>, licensed
 Apache-2.0 with retained third-party notices. The canonical public site is
@@ -178,7 +220,7 @@ installation, accessibility or GUI runtime acceptance on those systems.
 Source audit and documentation-only historical results remain in document 18.
 They must not overwrite the actual implementation status above.
 
-## Website deployment follow-up
+## Historical alpha.1 — Website deployment follow-up
 
 The initial website source deployed to Ubuntu was
 `92eb75b51d978565e1dd8ef939d6cf6320da2299`. Changed files: `dist/index.html`
@@ -213,7 +255,7 @@ reported no browser. Website-only changes did not rerun application CI; the
 immutable alpha retains the existing 16-job validation above. Deployment,
 renewal, update and rollback procedures are in [WEBSITE.md](WEBSITE.md).
 
-## Graphical app and macOS disk-image delivery
+## Historical alpha.1 — Graphical app and macOS disk-image delivery
 
 The owner requested the missing graphical download and `.dmg`. Two disk images
 were added to the existing `v0.1.0-alpha.1` release: Apple Silicon ARM64 and Intel
@@ -277,7 +319,7 @@ unrun checks, remaining limits and the next safe step. Never infer successful
 installation, signing, GUI runtime, live transfer or full milestone completion
 from a build or simulated destination.
 
-## Windows installers and Ubuntu APT delivery
+## Historical alpha.1 — Windows installers and Ubuntu APT delivery
 
 The owner required the Windows EXE to open an installation wizard and Ubuntu
 to support `apt-get install ledgesync`. This packaging follow-up is complete;
@@ -351,3 +393,12 @@ The secondary GitHub Pages copy also matches the new HTML and CSS after
 [Pages run 36947337099](https://github.com/alexandroit/LedgeSync/actions/runs/36947337099)
 passed. Production remains the owner's Ubuntu origin. Temporary server upload
 directories were removed; live/rollback releases and signed APT snapshots remain.
+
+## Current handoff
+
+Alpha.2 is published with desktop Google Drive authorization, native credential
+storage, DMGs, Windows installers and signed Ubuntu packages. The canonical
+website and secondary Pages are updated; alpha.2 CI and deployment evidence is
+recorded in the authorization section above. The owner must create a Desktop
+OAuth client, import its JSON and perform live consent acceptance using
+[the setup guide](GOOGLE_DRIVE_AUTH.md). Cloud file transfers remain unimplemented.

@@ -41,19 +41,22 @@ reloading it: `/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx`.
 
 ## Verified deployment
 
-Verified on **2026-10-01 America/Toronto (2026-10-02 UTC)**. The deployed website
-source is commit `2890e90f028c6ee038739b09423b372668e20a00`, which adds
-Windows x64/ARM64 setup downloads and signed Ubuntu APT installation instructions
-alongside the macOS DMGs. The previous release
-`188ba5de5c76b5562b6b7c6afa8e14f4a20ad45f` remains on the server as the content
-rollback target. The content switch required no Nginx reload. Its CSS URL uses
-`?v=adb26c666d23` to avoid stale CDN styling. Adding the isolated APT location
-previously passed `nginx -t` before a graceful reload. Shared vhosts were unchanged.
+Verified on **2026-10-02 UTC**. Current source is
+`82b2f6bf05e49d7e8f25c9f5e06e2db105d25636`, which links the alpha.2 macOS DMGs,
+Windows setup EXEs, Ubuntu APT packages and Google Drive setup guide. The prior
+content release `2890e90f028c6ee038739b09423b372668e20a00` remains on the server
+for rollback. The stylesheet is unchanged and retains `?v=adb26c666d23`.
+No Nginx reload or shared-vhost edit was required.
 
-Both native Ubuntu architectures passed [public APT installation tests](https://github.com/alexandroit/LedgeSync/actions/runs/36946856179).
-The website's Windows setup links resolve to the validated release assets;
-[public download evidence](research/INSTALLERS_PUBLIC_VERIFICATION.json) records
-all new hashes and preservation of previous assets.
+Both native Ubuntu architectures passed
+[alpha.2 public APT installation tests](https://github.com/alexandroit/LedgeSync/actions/runs/36950554723).
+All four desktop download links returned HTTP 200. The 37 public release asset
+hashes and preservation of prior assets are recorded in
+[public download evidence](research/OAUTH_PUBLIC_ASSETS.json); current production
+and Pages hashes are in [deployment evidence](research/OAUTH_DEPLOYMENT_VERIFICATION.json).
+Routing/certificate renewal checks below were initially established during the
+original deployment; this content update rechecked public/origin content,
+Nginx configuration and the unaffected HiperMusicas service.
 
 | Check | Observed result |
 |---|---|
@@ -72,7 +75,7 @@ all new hashes and preservation of previous assets.
 SHA-256:
 
 ```text
-2bb92fb73abad13be1ab59137acdc103206d92f979a00075c77d55c2f5fff66b  dist/index.html
+da01fd20c5566f7883b1983fd082cf4b232ebc5c0fdc84f64d9f068bb1ba0eda  dist/index.html
 adb26c666d2320bd2a826d5b5e0685404239e72c2f1585c5db2f08d2cbe931ca  dist/style.css
 ```
 
@@ -96,7 +99,7 @@ adb26c666d2320bd2a826d5b5e0685404239e72c2f1585c5db2f08d2cbe931ca  dist/style.css
 
 For a content rollback, atomically restore `current` to the recorded previous
 release and repeat the public checks. For a configuration rollback, restore the
-saved LedgeSync vhost, test and reload. This first deployment has no prior live
+saved LedgeSync vhost, test and reload. The original deployment had no prior live
 LedgeSync release; its HTTP bootstrap configuration was retained under
 `/var/backups/ledgesync/initial-92eb75b51d97/` for recovery. It is not a HTTPS
 service rollback target.
@@ -112,6 +115,6 @@ not deploy to Ubuntu. After publishing website source, dispatch the Pages
 workflow as needed to keep the secondary copy current.
 
 The latest secondary Pages publication is
-[run 36947337099](https://github.com/alexandroit/LedgeSync/actions/runs/36947337099),
+[run 36950632081](https://github.com/alexandroit/LedgeSync/actions/runs/36950632081),
 with public HTML and stylesheet bytes matching source commit
-`2890e90f028c6ee038739b09423b372668e20a00`.
+`82b2f6bf05e49d7e8f25c9f5e06e2db105d25636`.

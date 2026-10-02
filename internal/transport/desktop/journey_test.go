@@ -30,9 +30,11 @@ func (g *journeyGoogle) Status(context.Context) (driveauth.Status, error) {
 	defer g.mu.Unlock()
 	return driveauth.Status{State: "connected", ClientConfigured: true, Account: &driveauth.Account{Reference: g.account}}, nil
 }
-func (g *journeyGoogle) Connect(ctx context.Context) (driveauth.Status, error)    { return g.Status(ctx) }
-func (g *journeyGoogle) Check(ctx context.Context) (driveauth.Status, error)      { return g.Status(ctx) }
-func (g *journeyGoogle) Disconnect(ctx context.Context) (driveauth.Status, error) { return g.Status(ctx) }
+func (g *journeyGoogle) Connect(ctx context.Context) (driveauth.Status, error) { return g.Status(ctx) }
+func (g *journeyGoogle) Check(ctx context.Context) (driveauth.Status, error)   { return g.Status(ctx) }
+func (g *journeyGoogle) Disconnect(ctx context.Context) (driveauth.Status, error) {
+	return g.Status(ctx)
+}
 func (g *journeyGoogle) Revoke(ctx context.Context, _ string, _ bool) (driveauth.Status, error) {
 	return g.Status(ctx)
 }
@@ -193,7 +195,7 @@ func TestDesktopJourneyPickerAutomationRunsAndPausesOnRuleChange(t *testing.T) {
 		t.Fatalf("authorization = %+v %v", p, err)
 	}
 	j.write(map[string]string{"b.txt": "added while automatic copies are on", "tmp/scratch": "ignored"})
-	runner := automationRunner{j.app}
+	runner := j.app.automationRunner()
 	outcome, err := runner.RunAuthorized(context.Background(), p)
 	if err != nil || !outcome.Ran || outcome.Summary.State != "succeeded" || outcome.Summary.CompletedFiles != 3 {
 		t.Fatalf("automatic run = %+v %v", outcome, err)

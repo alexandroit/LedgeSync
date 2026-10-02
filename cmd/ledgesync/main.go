@@ -19,8 +19,8 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/policy"
 )
 
-const version = "0.1.0-alpha.4"
-const usage = `LedgeSync 0.1.0-alpha.4 — approved folder copies and local policy previews
+const version = "0.1.0-alpha.5"
+const usage = `LedgeSync 0.1.0-alpha.5 — approved folder copies to Google Drive and local policy previews
 
 Usage:
   ledgesync browse --root DIRECTORY --json
@@ -35,15 +35,27 @@ Usage:
   ledgesync auth disconnect
   ledgesync copy --root DIRECTORY --destination root|picker|FOLDER_ID
   ledgesync copy --config project.json --pick-destination [--no-browser]
+  ledgesync copy --pair PAIR_ID
+  ledgesync pairs list
+  ledgesync pairs add --root DIRECTORY --destination root|FOLDER_ID [--name NAME]
+  ledgesync pairs remove --pair PAIR_ID
+  ledgesync automatic enable --pair PAIR_ID [--every MINUTES] [--watch]
+  ledgesync automatic disable --pair PAIR_ID
+  ledgesync automatic run [--pair PAIR_ID]
+  ledgesync automatic watch
+  ledgesync restore --pair PAIR_ID --to EMPTY_DIRECTORY
   ledgesync --version
 
-Browse/explain/plan remain offline previews against a fake destination.
+Browse/explain/plan are offline previews against a fake destination.
 Auth status reads local connection metadata, without checking the grant online.
-Configured builds support browser authorization and manually approved Google Drive
-folder copies through the same services and native credential vault as the desktop.
-Connect, disconnect, and copy require an interactive terminal. Copy displays a fresh
-preview and requires its exact digest before upload. No automatic approval, serialized
-apply, deletion, watcher, scheduling, or service is enabled.
+Connect, disconnect, copy and "automatic enable" require an interactive terminal:
+copy shows a fresh preview and requires its exact digest before uploading.
+Saved pairs are shared with the desktop application. "automatic enable" authorizes
+create-only copies bound to the reviewed preview; "automatic run" (for cron or a
+systemd timer) and "automatic watch" execute only authorized pairs and pause them
+when the account, destination, folder, configuration or ignore rules change.
+"restore" downloads a pair's verified Drive copy into a new empty folder.
+Nothing deletes or overwrites Drive files, and no service is installed or enabled.
 For SSH servers, --no-browser displays loopback forwarding instructions for your browser.
 Git policy is patterns-only; no Git or rclone executable is needed at runtime.
 `
@@ -73,6 +85,12 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) int {
 			return report(errOut, domain.Fail("CONFIG_INVALID", "unexpected arguments"))
 		}
 		return report(errOut, output(out, policy.Capabilities()))
+	}
+	if args[0] == "copy" && len(args) == 3 && args[1] == "--pair" {
+		return runPairCopy(ctx, args[2], os.Stdin, out, errOut, interactiveTerminal(os.Stdin, out, errOut), newPairServices)
+	}
+	if args[0] == "pairs" || args[0] == "automatic" || args[0] == "restore" {
+		return runPairs(ctx, args, os.Stdin, out, errOut, interactiveTerminal(os.Stdin, out, errOut), newPairServices)
 	}
 	if args[0] == "copy" || (args[0] == "auth" && len(args) > 1 && (args[1] == "connect" || args[1] == "disconnect")) {
 		return runOnline(ctx, args, os.Stdin, out, errOut, interactiveTerminal(os.Stdin, out, errOut), newOnlineServices)

@@ -346,7 +346,13 @@ func fingerprint(p app.Preview) (string, error) {
 	}{p.Plan.SourceIdentity, p.Plan.ConfigDigest, p.Plan.RulesDigest, app.TraversalProfile, items})
 }
 func projectKey(p app.Preview, d Destination) string {
-	return domain.HashBytes([]byte(p.Plan.SourceIdentity + "\x00" + d.AccountReference + "\x00" + d.ID))
+	return ProjectKey(p.Plan.SourceIdentity, d.AccountReference, d.ID)
+}
+
+// ProjectKey identifies a source/account/destination pair in the journal. It is
+// derived from identities only, so a copy can be restored after the source is lost.
+func ProjectKey(sourceIdentity, account, destinationID string) string {
+	return domain.HashBytes([]byte(sourceIdentity + "\x00" + account + "\x00" + destinationID))
 }
 
 // operationID is stable for a project, path, kind and content. Generation 0 keeps

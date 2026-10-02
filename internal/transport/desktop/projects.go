@@ -1,7 +1,6 @@
 package desktop
 
 import (
-	"context"
 	"path/filepath"
 	"time"
 
@@ -99,17 +98,6 @@ func projectSelection(p projects.Project) (selection, error) {
 	return selection{path: p.SourceRoot, inline: &c}, nil
 }
 
-func projectSource(p projects.Project) (transfer.Source, error) {
-	if p.ConfigPath != "" {
-		return transfer.Source{ConfigPath: p.ConfigPath}, nil
-	}
-	c, err := p.Policy.Config(p.SourceRoot)
-	if err != nil {
-		return transfer.Source{}, err
-	}
-	return transfer.Source{Root: p.SourceRoot, Config: &c}, nil
-}
-
 // OpenProject selects a saved pair: it scans the local folder and validates the
 // saved destination again. Nothing is approved; a fresh preview is required.
 func (a *App) OpenProject(id string) (*ProjectSession, error) {
@@ -169,9 +157,19 @@ func (a *App) ensureProjectLocked(plan transfer.Plan) string {
 	if d == nil || d.ID != plan.DestinationID || d.AccountReference != plan.AccountReference {
 		return ""
 	}
+	remember := func(p projects.Project) string {
+		if plan.SourceIdentity != "" && p.SourceIdentity != plan.SourceIdentity {
+			p.SourceIdentity = plan.SourceIdentity
+			if saved, err := a.projects.Save(p); err == nil {
+				p = saved
+			}
+		}
+		a.projectID = p.ID
+		return p.ID
+	}
 	if a.projectID != "" {
 		if p, err := a.projects.Get(a.projectID); err == nil && p.Destination.ID == d.ID && p.Destination.AccountReference == d.AccountReference {
-			return p.ID
+			return remember(p)
 		}
 	}
 	p, err := a.pairFromSelection(a.selected, *d, plan.SourceName)
@@ -179,9 +177,9 @@ func (a *App) ensureProjectLocked(plan transfer.Plan) string {
 		return ""
 	}
 	if existing, ok, err := a.projects.FindPair(p.SourceRoot, d.AccountReference, d.ID); err == nil && ok {
-		a.projectID = existing.ID
-		return existing.ID
+		return remember(existing)
 	}
+	p.SourceIdentity = plan.SourceIdentity
 	saved, err := a.projects.Save(p)
 	if err != nil {
 		return ""
@@ -424,11 +422,9 @@ func (a *App) AuthorizeAutomation(id, trigger string, intervalSeconds int, planD
 	if plan == nil || plan.PlanDigest != planDigest || id == "" || current != id {
 		return projects.Project{}, domain.Fail("PLAN_REQUIRED", "Preview this sync pair, review it, then enable automatic copies.")
 	}
-	if expires, e := time.Parse(time.RFC3339Nano, plan.ExpiresAt); e != nil || !time.Now().Before(expires) {
-		return projects.Project{}, domain.Fail("PLAN_EXPIRED", "This preview expired. Preview again before enabling automatic copies.")
-	}
-	if plan.RecreatedItems > 0 {
-		return projects.Project{}, domain.Fail("AUTOMATION_REVIEW_REQUIRED", "Some earlier copies are missing or changed in Drive. Upload this preview manually first, then enable automatic copies.")
+	auth, err := projects.NewAuthorization(*plan, time.Now())
+	if err != nil {
+		return projects.Project{}, err
 	}
 	p, err := s.Get(id)
 	if err != nil {
@@ -437,10 +433,7 @@ func (a *App) AuthorizeAutomation(id, trigger string, intervalSeconds int, planD
 	if p.Destination.ID != plan.DestinationID || p.Destination.AccountReference != plan.AccountReference {
 		return projects.Project{}, domain.Fail("PLAN_REQUIRED", "This preview belongs to a different destination.")
 	}
-	now := time.Now().UTC().Format(time.RFC3339)
-	p.Automation = projects.Automation{Enabled: true, Trigger: trigger, IntervalSeconds: intervalSeconds, NextRunAt: now, Authorization: &projects.Authorization{
-		AccountReference: plan.AccountReference, DestinationID: plan.DestinationID, SourceIdentity: plan.SourceIdentity,
-		ConfigDigest: plan.ConfigDigest, RulesDigest: plan.RulesDigest, ConflictPolicy: plan.ConflictPolicy, PlanDigest: plan.PlanDigest, ApprovedAt: now}}
+	p.Automation = projects.Automation{Enabled: true, Trigger: trigger, IntervalSeconds: intervalSeconds, NextRunAt: auth.ApprovedAt, Authorization: auth}
 	saved, err := s.Save(p)
 	if err != nil {
 		return projects.Project{}, connections.PublicError(err)
@@ -569,11 +562,13 @@ func (a *App) recordManualRun(st transfer.Status) {
 	_ = a.projects.RecordRun(projects.Summarize(p, "manual", st))
 }
 
-// automationRunner executes authorized checks through the automation service.
-type automationRunner struct{ a *App }
+// automationRunner adapts the shared runner to the desktop's exclusivity gate:
+// manual actions and automatic runs never overlap.
+func (a *App) automationRunner() projects.ServiceRunner {
+	return projects.ServiceRunner{Local: a.service, Transfer: a.automatic, Accounts: a.google, Store: a.projects, Gate: a.beginAutomatic}
+}
 
-func (r automationRunner) begin() (func(), error) {
-	a := r.a
+func (a *App) beginAutomatic() (func(), error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.lifecycle || a.cancel != nil || a.automationBusy || (a.transfer != nil && a.transfer.Busy()) || a.automation.Busy() {
@@ -581,96 +576,4 @@ func (r automationRunner) begin() (func(), error) {
 	}
 	a.automationBusy = true
 	return func() { a.mu.Lock(); a.automationBusy = false; a.mu.Unlock() }, nil
-}
-
-func (r automationRunner) LocalFingerprint(ctx context.Context, p projects.Project) (string, error) {
-	src, err := projectSource(p)
-	if err != nil {
-		return "", err
-	}
-	var preview app.Preview
-	if src.Config != nil {
-		preview, err = r.a.service.Scan(ctx, *src.Config)
-	} else {
-		preview, err = r.a.service.Preview(ctx, src.ConfigPath)
-	}
-	if err != nil {
-		return "", err
-	}
-	return transfer.Fingerprint(preview)
-}
-
-func (r automationRunner) RunAuthorized(ctx context.Context, p projects.Project) (projects.Outcome, error) {
-	a := r.a
-	release, err := r.begin()
-	if err != nil {
-		return projects.Outcome{}, err
-	}
-	defer release()
-	auth := p.Automation.Authorization
-	if auth == nil || !p.Automation.Enabled {
-		return projects.Outcome{}, domain.Fail("AUTOMATION_UNAUTHORIZED", "Automatic copies are not authorized for this sync pair.")
-	}
-	account, err := a.connectedAccount(ctx)
-	if err != nil {
-		return projects.Outcome{}, connections.PublicError(err)
-	}
-	if account != auth.AccountReference {
-		return projects.Outcome{}, domain.Fail("ACCOUNT_CHANGED", "A different Google account is connected. Automatic copies are paused.")
-	}
-	d, err := a.automation.RestoreDestination(ctx, p.Destination)
-	if err != nil {
-		return projects.Outcome{}, err
-	}
-	if d.ID != auth.DestinationID {
-		return projects.Outcome{}, domain.Fail("DESTINATION_CHANGED", "The Drive destination changed. Automatic copies are paused.")
-	}
-	src, err := projectSource(p)
-	if err != nil {
-		return projects.Outcome{}, err
-	}
-	plan, err := a.automation.PreviewSource(ctx, src)
-	if err != nil {
-		return projects.Outcome{}, err
-	}
-	switch {
-	case plan.SourceIdentity != auth.SourceIdentity:
-		return projects.Outcome{}, domain.Fail("SOURCE_REPLACED", "The local folder was replaced or is on a different volume. Review and authorize automatic copies again.")
-	case plan.ConfigDigest != auth.ConfigDigest || plan.RulesDigest != auth.RulesDigest || plan.ConflictPolicy != auth.ConflictPolicy:
-		a.automation.Invalidate()
-		return projects.Outcome{}, domain.Fail("AUTOMATION_REVIEW_REQUIRED", "Ignore rules or the project policy changed since automatic copies were authorized. Preview the sync pair and authorize again.")
-	case plan.RecreatedItems > 0:
-		a.automation.Invalidate()
-		return projects.Outcome{}, domain.Fail("AUTOMATION_REVIEW_REQUIRED", "Some earlier copies are missing, trashed or moved in Drive. Review a manual preview before automatic copies continue.")
-	}
-	work := 0
-	for _, e := range plan.Entries {
-		switch e.Action {
-		case transfer.ActionCreate, transfer.ActionUpload, transfer.ActionKeepBoth, transfer.ActionResume:
-			work++
-		case transfer.ActionSkip, transfer.ActionUnsupported, transfer.ActionPaused:
-		default:
-			a.automation.Invalidate()
-			return projects.Outcome{}, domain.Fail("AUTOMATION_REVIEW_REQUIRED", "The automatic preview contains work that needs your review.")
-		}
-	}
-	if work == 0 {
-		a.automation.Invalidate()
-		return projects.Outcome{Fingerprint: plan.SourceDigest}, nil
-	}
-	if _, err = a.automation.Start(ctx, plan.PlanDigest); err != nil {
-		return projects.Outcome{}, err
-	}
-	ticker := time.NewTicker(200 * time.Millisecond)
-	defer ticker.Stop()
-	for a.automation.Busy() {
-		select {
-		case <-ctx.Done():
-			a.automation.CancelAndWait()
-		case <-ticker.C:
-		}
-	}
-	summary := projects.Summarize(p, "automatic", a.automation.Status())
-	_ = a.projects.RecordRun(summary)
-	return projects.Outcome{Ran: true, Summary: summary, Fingerprint: plan.SourceDigest}, nil
 }

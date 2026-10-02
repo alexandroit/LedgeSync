@@ -7,7 +7,7 @@ const destination: DriveDestination = { id: 'fixture-parent', name: 'Backups', a
 const preview: Preview = { projectName: 'Local preview', sourceRoot: '/synthetic/Client Work', offline: true, entries: [], capabilities: [], plan: { planId: 'p', planDigest: 'local', rulesDigest: 'rules', createdAt: '2026-10-02T00:00:00Z', destinationIdentity: 'none', scanComplete: { source: true, destination: true }, operations: [], risks: [], summary: { operationCount: 0, uploadBytes: 0, trashCount: 0 } } };
 const plan: DriveUploadPlan = { planDigest: 'pairs-plan', sourceName: 'Client Work', destinationName: 'Backups', destinationId: destination.id, accountReference: account, fileCount: 3, folderCount: 2, totalBytes: 3000, transferBytes: 1000, newFiles: 1, changedFiles: 1, unchangedFiles: 1, excludedCount: 2, expiresAt: '2099-01-01T00:00:00Z', warnings: [], entries: [{ relativePath: '', kind: 'directory', size: 0, action: 'skip' }, { relativePath: 'a.txt', kind: 'file', size: 1000, action: 'skip' }, { relativePath: 'b.txt', kind: 'file', size: 1000, action: 'upload' }, { relativePath: 'c.txt', kind: 'file', size: 1000, action: 'keep-both', note: 'Changed since the last copy; the earlier copy remains.' }] };
 const run: RunSummary = { runId: 'run-1', projectId: 'pair-1', projectName: 'Client Work', destination: 'Backups', trigger: 'automatic', state: 'partial', message: 'Copied and verified the approved items that were unchanged.', startedAt: '2026-10-02T10:00:00Z', finishedAt: '2026-10-02T10:01:00Z', totalFiles: 3, completedFiles: 2, skippedFiles: 1, pausedFiles: 0, totalBytes: 3000, uploadedBytes: 2000, sentBytes: 1000, remoteFolderId: 'managed-folder', issues: [{ path: 'notes/draft.md', code: 'SOURCE_CHANGED', message: 'This file\'s content changed after the preview: notes/draft.md' }] };
-const project: Project = { id: 'pair-1', name: 'Client Work', sourceRoot: '/synthetic/Client Work', policy: { composition: 'conservative', conflictPolicy: 'keep-both', maxRetries: 6, groups: [{ id: 'git', priority: 100, enabled: true, dialect: 'gitignore', scope: 'project', sources: [{ type: 'recursive-basename', value: '.gitignore', required: false }] }] }, destination, automation: { enabled: false, trigger: '', intervalSeconds: 0, paused: false }, createdAt: '2026-10-02T09:00:00Z', updatedAt: '2026-10-02T10:01:00Z', lastRun: run };
+const project: Project = { id: 'pair-1', name: 'Client Work', sourceRoot: '/synthetic/Client Work', policy: { composition: 'conservative', conflictPolicy: 'keep-both', maxRetries: 6, groups: [{ id: 'git', priority: 100, enabled: true, dialect: 'gitignore', scope: 'project', sources: [{ type: 'recursive-basename', value: '.gitignore', required: false }] }] }, destination, automation: { enabled: false, trigger: '', intervalSeconds: 0, paused: false }, sourceIdentity: 'source-identity', createdAt: '2026-10-02T09:00:00Z', updatedAt: '2026-10-02T10:01:00Z', lastRun: run };
 const settings: Settings = { defaultConflictPolicy: 'keep-both', defaultMaxRetries: 6, automationPaused: false };
 
 interface PairsHarness { calls: string[]; args: unknown[][]; setProject(value: Project): void; failPreview(message: string): void; setStatus(value: DriveTransferStatus): void }
@@ -48,6 +48,9 @@ async function start(page: Page) {
       CheckProjectNow: async (id: string) => { record('check-now', id); },
       AutomationStatus: async () => ({ available: true, paused: config.automationPaused, running: false }),
       CancelAutomaticCopy: async () => {},
+      RestoreProjectCopy: async (id: string) => { record('restore', id); return { state: 'restoring', target: '/synthetic/Restored', totalFiles: 2, files: 0, folders: 0, totalBytes: 2000, bytes: 0, message: 'Reading the recorded copy.' }; },
+      RestoreStatus: async () => ({ state: 'partial', target: '/synthetic/Restored', totalFiles: 2, files: 1, folders: 1, totalBytes: 2000, bytes: 1000, message: 'Restored the available verified files.', issues: [{ path: 'a.txt', code: 'REMOTE_CHANGED', message: 'This item was trashed, moved, renamed or replaced in Drive.' }] }),
+      CancelRestore: async () => {},
     } } } as never;
   }, { connected, destination, preview, plan, run, project, settings });
   await page.goto('/');
@@ -152,4 +155,16 @@ test('policy editor saves validated groups and shows typed validation errors', a
   const policies = await page.evaluate(() => window.pairsHarness.args.filter((_, i) => window.pairsHarness.calls[i] === 'policy'));
   const last = policies[policies.length - 1] as [string, Project['policy']];
   expect(last[1].groups[1]).toEqual({ id: 'rules-2', priority: 90, enabled: true, dialect: 'rclone-filter', scope: 'project', sources: [{ type: 'root-file', value: 'team-upload-rules.txt', required: false }] });
+});
+
+test('restore downloads the verified copy into a new folder and reports missing items', async ({ page }) => {
+  await start(page);
+  await page.getByRole('button', { name: 'History & Recovery', exact: true }).click();
+  await page.getByLabel('Sync pair history').selectOption('pair-1');
+  await page.getByRole('button', { name: 'Restore this copy to a new folder…', exact: true }).click();
+  const card = page.getByRole('region', { name: 'Restore' });
+  await expect(card.getByRole('heading', { name: 'Copy restored with missing items', exact: true })).toBeVisible();
+  await expect(card).toContainText('1 of 2 files restored');
+  await expect(card).toContainText('a.txt');
+  expect(await page.evaluate(() => window.pairsHarness.calls)).toContain('restore');
 });

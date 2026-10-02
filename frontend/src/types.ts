@@ -79,11 +79,16 @@ export interface RunSummary {
 }
 export interface Project {
   id: string; name: string; sourceRoot: string; configPath?: string; policy: ProjectPolicy;
-  destination: DriveDestination; automation: ProjectAutomation; createdAt: string; updatedAt: string; lastRun?: RunSummary;
+  destination: DriveDestination; automation: ProjectAutomation; sourceIdentity?: string; createdAt: string; updatedAt: string; lastRun?: RunSummary;
 }
 export interface ErrorInfo { code: string; message: string }
 export interface ProjectSession { project: Project; preview: Preview | null; destination?: DriveDestination; destinationError?: ErrorInfo }
 export interface AutomationView { available: boolean; paused: boolean; activeProjectId?: string; running: boolean; transfer?: DriveTransferStatus }
+export interface RestoreProgress {
+  state: 'restoring' | 'succeeded' | 'partial' | 'failed' | 'cancelled';
+  target: string; totalFiles: number; files: number; folders: number; totalBytes: number; bytes: number;
+  currentPath?: string; errorCode?: string; message: string; issues?: TransferIssue[];
+}
 export interface Settings { defaultConflictPolicy: 'keep-both' | 'pause'; defaultMaxRetries: number; automationPaused: boolean }
 export interface DesktopBridge {
   OpenFolder(): Promise<Preview | null>;
@@ -123,5 +128,8 @@ export interface DesktopBridge {
   CheckProjectNow?(id: string): Promise<void>;
   AutomationStatus?(): Promise<AutomationView>;
   CancelAutomaticCopy?(): Promise<void>;
+  RestoreProjectCopy?(id: string): Promise<RestoreProgress | null>;
+  RestoreStatus?(): Promise<RestoreProgress | null>;
+  CancelRestore?(): Promise<void>;
 }
 declare global { interface Window { go?: { desktop?: { App?: DesktopBridge } }; runtime?: { EventsOn?(name: string, callback: () => void): () => void } } }

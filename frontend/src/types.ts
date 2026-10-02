@@ -34,7 +34,7 @@ export interface Preview {
   entries: Entry[]; plan: Plan; capabilities: Capability[];
 }
 export interface DriveConnectionStatus {
-  state: 'setup_required' | 'disconnected' | 'connecting' | 'connected' | 'reconnect_required' | 'client_changed' | 'storage_unavailable';
+  state: 'setup_required' | 'disconnected' | 'connecting' | 'connected' | 'reconnect_required' | 'client_changed' | 'storage_unavailable' | 'revoked_local_cleanup_required';
   clientConfigured: boolean;
   account?: { reference: string; displayName: string; email: string };
   message: string;
@@ -49,6 +49,7 @@ export interface DesktopBridge {
   ConnectGoogleDrive(): Promise<DriveConnectionStatus>;
   CheckGoogleDrive(): Promise<DriveConnectionStatus>;
   DisconnectGoogleDrive(): Promise<DriveConnectionStatus>;
+  RevokeGoogleDrive(expectedAccountReference: string, confirmed: boolean): Promise<DriveConnectionStatus>;
   CancelGoogleDrive(): Promise<void>;
 }
 declare global { interface Window { go?: { desktop?: { App?: DesktopBridge } } } }

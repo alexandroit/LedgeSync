@@ -11,7 +11,9 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -50,12 +52,19 @@ func (s *Service) authorize(ctx context.Context, client *clientConfig) (*credent
 	}
 	redirect := "http://" + listener.Addr().String() + "/"
 	results := make(chan callbackResult, 1)
-	handler := newCallback(state, listener.Addr().String(), results)
+	handler := newCallback(ctx, state, listener.Addr().String(), results)
 	server := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 5 * time.Second, WriteTimeout: 5 * time.Second, IdleTimeout: 5 * time.Second, MaxHeaderBytes: 8192, ErrorLog: log.New(io.Discard, "", 0)}
 	server.SetKeepAlivesEnabled(false)
 	stopped := make(chan struct{})
 	go func() { defer close(stopped); _ = server.Serve(listener) }()
-	defer func() { _ = server.Close(); <-stopped }()
+	var closeOnce sync.Once
+	closeServer := func() {
+		closeOnce.Do(func() { _ = server.Close(); <-stopped })
+	}
+	// Cancellation closes the listener even while a native browser launcher is
+	// still returning. The handler also checks this attempt's context directly.
+	stopCancellation := context.AfterFunc(ctx, closeServer)
+	defer func() { stopCancellation(); closeServer() }()
 	u, err := url.Parse(s.authURL)
 	if err != nil {
 		return nil, ErrCallback
@@ -73,6 +82,9 @@ func (s *Service) authorize(ctx context.Context, client *clientConfig) (*credent
 	u.RawQuery = q.Encode()
 	// The launcher must return promptly. No raw URL or launcher error is returned.
 	if err = s.openURL(u.String()); err != nil {
+		if ctx.Err() != nil {
+			return nil, contextError(ctx)
+		}
 		return nil, ErrBrowser
 	}
 	var result callbackResult
@@ -80,19 +92,25 @@ func (s *Service) authorize(ctx context.Context, client *clientConfig) (*credent
 	case <-ctx.Done():
 		return nil, contextError(ctx)
 	case <-stopped:
+		if ctx.Err() != nil {
+			return nil, contextError(ctx)
+		}
 		return nil, ErrCallback
 	case result = <-results:
+	}
+	// The callback has one purpose and must not remain reachable during the
+	// credential-bearing exchange, including a slow or failed token response.
+	closeServer()
+	if ctx.Err() != nil {
+		return nil, contextError(ctx)
 	}
 	if result.err != nil {
 		return nil, result.err
 	}
-	if ctx.Err() != nil {
-		return nil, contextError(ctx)
-	}
 	return s.exchange(ctx, client, result.code, verifier, redirect, "")
 }
 
-func newCallback(state, host string, result chan<- callbackResult) http.Handler {
+func newCallback(ctx context.Context, state, host string, result chan<- callbackResult) http.Handler {
 	var used atomic.Bool
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
@@ -101,12 +119,16 @@ func newCallback(state, host string, result chan<- callbackResult) http.Handler 
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'")
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		if ctx.Err() != nil {
+			http.Error(w, "This authorization attempt is no longer active. Return to LedgeSync to try again.", http.StatusGone)
+			return
+		}
 		if r.Method != http.MethodGet {
 			w.Header().Set("Allow", "GET")
 			http.Error(w, "Use the authorization page in your browser.", http.StatusMethodNotAllowed)
 			return
 		}
-		if r.URL.Path != "/" || r.Host != host {
+		if r.URL.Path != "/" || r.URL.RawPath != "" || r.URL.Scheme != "" || r.URL.Host != "" || r.URL.User != nil || r.URL.Opaque != "" || r.URL.Fragment != "" || r.URL.RawFragment != "" || strings.Contains(r.RequestURI, "#") || r.Host != host {
 			http.Error(w, "Unknown authorization callback.", http.StatusNotFound)
 			return
 		}
@@ -121,6 +143,8 @@ func newCallback(state, host string, result chan<- callbackResult) http.Handler 
 		}
 		value := callbackResult{}
 		switch {
+		case !validCallbackParameters(q):
+			value.err = ErrCallback
 		case len(q["error"]) == 1 && q.Get("error") != "" && len(q["code"]) == 0:
 			value.err = ErrDenied
 		case len(q["code"]) == 1 && len(q["error"]) == 0 && safeSecret(q.Get("code")) && len(q.Get("code")) <= 4096:
@@ -128,19 +152,57 @@ func newCallback(state, host string, result chan<- callbackResult) http.Handler 
 		default:
 			value.err = ErrCallback
 		}
+		if ctx.Err() != nil {
+			http.Error(w, "This authorization attempt is no longer active. Return to LedgeSync to try again.", http.StatusGone)
+			return
+		}
 		if !used.CompareAndSwap(false, true) {
 			http.Error(w, "This authorization callback was already received.", http.StatusConflict)
 			return
 		}
+		body := "LedgeSync received the authorization response. You can close this tab and return to LedgeSync."
+		if value.err != nil {
+			body = "LedgeSync authorization was not completed. Return to LedgeSync to try again."
+		}
+		// A fixed length and explicit flush complete the safe page before the
+		// receiver closes the server. No code, state or provider text is reflected.
+		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 		if value.err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			_, _ = io.WriteString(w, "LedgeSync authorization was not completed. Return to LedgeSync to try again.")
-		} else {
-			_, _ = io.WriteString(w, "LedgeSync received the authorization response. You can close this tab and return to LedgeSync.")
 		}
+		_, _ = io.WriteString(w, body)
+		_ = http.NewResponseController(w).Flush()
 		// Buffered, single delivery: a browser retry cannot block the HTTP handler.
 		result <- value
 	})
+}
+
+func validCallbackParameters(q url.Values) bool {
+	for _, values := range q {
+		if len(values) != 1 {
+			return false
+		}
+	}
+	// This is a code flow: callback tokens must never become credentials. The
+	// actual granted scope is independently validated in the token response.
+	for _, name := range []string{"access_token", "refresh_token", "id_token", "token_type", "expires_in"} {
+		if _, present := q[name]; present {
+			return false
+		}
+	}
+	if scope, present := q["scope"]; present && !acceptedScope(scope[0], false) {
+		return false
+	}
+	if issuer, present := q["iss"]; present && issuer[0] != "https://accounts.google.com" {
+		return false
+	}
+	if len(q["error"]) == 0 && (len(q["error_description"]) != 0 || len(q["error_uri"]) != 0) {
+		return false
+	}
+	// RFC 6749 section 4.1.2 requires ignoring unrecognized response parameters.
+	// Bounded, single-valued extensions (for example authuser and prompt) are
+	// never forwarded, interpreted as credentials, reflected or logged.
+	return true
 }
 
 func acceptedScope(value string, allowMissing bool) bool {

@@ -2,6 +2,8 @@ package driveauth
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"time"
@@ -48,6 +50,10 @@ func (s *Service) publish(r *record, err error) (Status, error) {
 	}
 	if errors.Is(err, ErrStorage) {
 		st.State = "storage_unavailable"
+	}
+	if s.grantRevoked(r) {
+		st.State = "revoked_local_cleanup_required"
+		st.Message = ErrRevokedCleanup.Error()
 	}
 	s.mu.Lock()
 	s.cached = st
@@ -131,24 +137,29 @@ func (s *Service) save(ctx context.Context, r *record) error {
 		runtime.Credential = &c
 	}
 	s.runtime = &runtime
+	if r.Credential == nil {
+		s.revokedBinding = ""
+	}
 	return nil
 }
 func (s *Service) Status(ctx context.Context) (Status, error) {
 	if ctx.Err() != nil {
 		return s.cachedStatus(), contextError(ctx)
 	}
-	if !s.op.TryLock() {
+	if !s.tryAcquire() {
 		return s.cachedStatus(), nil
 	}
-	defer s.op.Unlock()
+	defer s.release()
 	r, err := s.load()
 	return s.publish(r, err)
 }
 func (s *Service) ConfigureClient(ctx context.Context, data []byte) (Status, error) {
-	if !s.op.TryLock() {
+	if !s.tryAcquire() {
 		return s.cachedStatus(), ErrBusy
 	}
-	defer s.op.Unlock()
+	defer s.release()
+	ctx, done := s.operation(ctx)
+	defer done()
 	r, err := s.load()
 	if err != nil {
 		return s.publish(nil, err)
@@ -173,6 +184,9 @@ func (s *Service) operation(ctx context.Context) (context.Context, func()) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	s.mu.Lock()
 	s.cancel = cancel
+	if s.stopping {
+		cancel()
+	}
 	s.mu.Unlock()
 	return ctx, func() { cancel(); s.mu.Lock(); s.cancel = nil; s.mu.Unlock() }
 }
@@ -187,10 +201,12 @@ func (s *Service) Cancel() {
 }
 
 func (s *Service) Connect(ctx context.Context) (Status, error) {
-	if !s.op.TryLock() {
+	if !s.tryAcquire() {
 		return s.cachedStatus(), ErrBusy
 	}
-	defer s.op.Unlock()
+	defer s.release()
+	ctx, done := s.operation(ctx)
+	defer done()
 	r, err := s.load()
 	if err != nil {
 		return s.publish(nil, err)
@@ -198,14 +214,15 @@ func (s *Service) Connect(ctx context.Context) (Status, error) {
 	if r.Client == nil {
 		return s.publish(r, ErrSetup)
 	}
+	if s.grantRevoked(r) {
+		return s.publish(r, ErrRevokedCleanup)
+	}
 	if s.clientChanged(r) {
 		return s.publish(r, ErrClientChanged)
 	}
 	if r.Credential != nil && !r.Credential.Reconnect {
 		return s.publish(r, ErrConnected)
 	}
-	ctx, done := s.operation(ctx)
-	defer done()
 	st, _ := s.publish(r, nil)
 	st.State = "connecting"
 	st.Message = "Complete the authorization in your system browser."
@@ -232,16 +249,21 @@ func (s *Service) Connect(ctx context.Context) (Status, error) {
 }
 
 func (s *Service) Check(ctx context.Context) (Status, error) {
-	if !s.op.TryLock() {
+	if !s.tryAcquire() {
 		return s.cachedStatus(), ErrBusy
 	}
-	defer s.op.Unlock()
+	defer s.release()
+	ctx, done := s.operation(ctx)
+	defer done()
 	r, err := s.load()
 	if err != nil {
 		return s.publish(nil, err)
 	}
 	if r.Client == nil {
 		return s.publish(r, ErrSetup)
+	}
+	if s.grantRevoked(r) {
+		return s.publish(r, ErrRevokedCleanup)
 	}
 	if s.clientChanged(r) {
 		return s.publish(r, ErrClientChanged)
@@ -252,8 +274,6 @@ func (s *Service) Check(ctx context.Context) (Status, error) {
 	if r.Credential.Reconnect {
 		return s.publish(r, ErrReconnect)
 	}
-	ctx, done := s.operation(ctx)
-	defer done()
 	refreshed := false
 	if !r.Credential.Expiry.After(s.now().Add(time.Minute)) {
 		if err = s.refresh(ctx, r); err != nil {
@@ -301,15 +321,108 @@ func (s *Service) checkFailure(ctx context.Context, r *record, err error) (Statu
 	return s.publish(r, err)
 }
 
-// Disconnect removes local account tokens only. Bundled services select their
-// application client; legacy services retain the imported client configuration.
-// Revocation at Google and cloud-file deletion are separate actions.
-func (s *Service) Disconnect(ctx context.Context) (Status, error) {
-	s.Cancel()
-	if !s.op.TryLock() {
-		return s.cachedStatus(), ErrBusy
+// tryAcquire/release serialize reads and mutations while giving lifecycle
+// operations a cancellable completion signal instead of polling a mutex.
+func (s *Service) tryAcquire() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.stopping || !s.op.TryLock() {
+		return false
 	}
-	defer s.op.Unlock()
+	s.operationDone = make(chan struct{})
+	return true
+}
+func (s *Service) release() {
+	s.mu.Lock()
+	done := s.operationDone
+	s.operationDone = nil
+	s.op.Unlock()
+	if done != nil {
+		close(done)
+	}
+	s.mu.Unlock()
+}
+
+// drain excludes new starts, cancels the current operation and waits for all its
+// vault writes to return before allowing credential removal. A native vault call
+// cannot be interrupted through Store; timeout reports failure without claiming
+// cleanup and never starts a goroutine that might remove credentials later.
+func (s *Service) drain(ctx context.Context) (func(), error) {
+	if ctx.Err() != nil {
+		return nil, contextError(ctx)
+	}
+	s.mu.Lock()
+	if s.stopping {
+		s.mu.Unlock()
+		return nil, ErrBusy
+	}
+	s.stopping = true
+	if s.cancel != nil {
+		s.cancel()
+	}
+	pending := s.operationDone
+	s.mu.Unlock()
+	reset := func() { s.mu.Lock(); s.stopping = false; s.mu.Unlock() }
+	if pending != nil {
+		select {
+		case <-ctx.Done():
+			reset()
+			return nil, contextError(ctx)
+		case <-pending:
+		}
+	}
+	s.mu.Lock()
+	if ctx.Err() != nil {
+		s.stopping = false
+		s.mu.Unlock()
+		return nil, contextError(ctx)
+	}
+	if !s.op.TryLock() {
+		s.stopping = false
+		s.mu.Unlock()
+		return nil, ErrBusy
+	}
+	s.operationDone = make(chan struct{})
+	s.mu.Unlock()
+	return func() { s.release(); reset() }, nil
+}
+
+func grantBinding(r *record) string {
+	if r == nil || r.Client == nil || r.Credential == nil {
+		return ""
+	}
+	value, _ := json.Marshal(struct {
+		Client           clientConfig
+		Account, Refresh string
+	}{*r.Client, r.Credential.Account.Reference, r.Credential.RefreshToken})
+	hash := sha256.Sum256(value)
+	clear(value)
+	return hex.EncodeToString(hash[:])
+}
+func (s *Service) grantRevoked(r *record) bool {
+	return s.revokedBinding != "" && s.revokedBinding == grantBinding(r)
+}
+func (s *Service) disconnectedRecord(r *record) *record {
+	next := &record{Version: 1, Client: r.Client}
+	if s.bundled != nil {
+		next.Client = s.bundledClient()
+	}
+	return next
+}
+
+// Disconnect removes local account tokens only. It first cancels and drains any
+// in-flight operation so a delayed refresh/authorization cannot restore them.
+// Bundled services select their application client; legacy services retain the
+// imported client configuration. Google grants and cloud files are unchanged.
+func (s *Service) Disconnect(ctx context.Context) (Status, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+	release, err := s.drain(ctx)
+	if err != nil {
+		return s.cachedStatus(), err
+	}
+	defer release()
+	s.runtime = nil
 	r, err := s.load()
 	if err != nil {
 		return s.publish(nil, err)
@@ -317,15 +430,63 @@ func (s *Service) Disconnect(ctx context.Context) (Status, error) {
 	if r.Client == nil {
 		return s.publish(r, nil)
 	}
-	next := &record{Version: 1, Client: r.Client}
-	if s.bundled != nil {
-		next.Client = s.bundledClient()
-	}
+	next := s.disconnectedRecord(r)
 	if err = s.save(ctx, next); err != nil {
 		return s.publish(r, err)
 	}
 	return s.publish(next, nil)
 }
+
+// Revoke removes the Google grant only after explicit confirmation of its shared
+// Google Cloud project impact. A rejected confirmation has no side effects,
+// including cancellation or vault reads. Network failures are never retried.
+func (s *Service) Revoke(ctx context.Context, expectedAccountReference string, confirmed bool) (Status, error) {
+	if !confirmed || !validAccount(Account{Reference: expectedAccountReference}) {
+		return s.cachedStatus(), ErrRevokeConfirmation
+	}
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+	release, err := s.drain(ctx)
+	if err != nil {
+		return s.cachedStatus(), err
+	}
+	defer release()
+	r, err := s.load()
+	if err != nil {
+		return s.publish(nil, err)
+	}
+	if s.clientChanged(r) {
+		return s.publish(r, ErrClientChanged)
+	}
+	if r.Client == nil || r.Credential == nil || r.Credential.Account.Reference != expectedAccountReference {
+		return s.publish(r, ErrIdentity)
+	}
+	if s.grantRevoked(r) {
+		return s.publish(r, ErrRevokedCleanup)
+	}
+	// Register a cancellation function only after the prior operation drained.
+	// operation() intentionally cancels while stopping; lifecycle owns this gate.
+	revokeCtx, stop := context.WithCancel(ctx)
+	s.mu.Lock()
+	s.cancel = stop
+	s.mu.Unlock()
+	defer func() { stop(); s.mu.Lock(); s.cancel = nil; s.mu.Unlock() }()
+	if err = s.revokeToken(revokeCtx, r.Credential.RefreshToken); err != nil {
+		return s.publish(r, err)
+	}
+	// Google has confirmed revocation. Drop the process access token immediately,
+	// then complete local cleanup even if the caller cancels after that response.
+	s.revokedBinding = grantBinding(r)
+	s.runtime = nil
+	cleanup, finish := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer finish()
+	next := s.disconnectedRecord(r)
+	if err = s.save(cleanup, next); err != nil {
+		return s.publish(r, ErrRevokedCleanup)
+	}
+	return s.publish(next, nil)
+}
+
 func contextError(ctx context.Context) error {
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		return ErrTimeout

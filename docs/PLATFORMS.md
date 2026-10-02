@@ -11,6 +11,11 @@ enables deletion. Connecting requires an explicit click and browser consent.
 Evidence for this release and the previous alpha.1/alpha.2 releases is recorded
 separately below.
 
+The current source includes an unreleased
+[OAuth hardening follow-up](research/OAUTH_SECURITY_HARDENING.md). Its new
+revocation confirmation and lifecycle changes are not included in the alpha.3
+download links below. Existing release bytes and tags are unchanged.
+
 ## Target matrix
 
 | System | Architecture | Deliverable | Validation gate |

@@ -8,6 +8,7 @@ const connected: DriveConnectionStatus = { state: 'connected', clientConfigured:
 
 interface Harness {
   calls: string[];
+  revocations: { accountReference: string; confirmed: boolean }[];
   complete(result: DriveConnectionStatus): void;
   fail(): void;
   setStatus(result: DriveConnectionStatus): void;
@@ -25,6 +26,7 @@ async function start(page: Page, initial: DriveConnectionStatus) {
     const calls: string[] = [];
     window.driveHarness = {
       calls,
+      revocations: [],
       complete(result) { current = result; resolveConnect?.(result); },
       fail() { rejectConnect?.(new Error('sensitive-transport-value <script>window.injected=true</script>')); },
       setStatus(result) { current = result; },
@@ -36,6 +38,7 @@ async function start(page: Page, initial: DriveConnectionStatus) {
       ConnectGoogleDrive: async () => { calls.push('connect'); return new Promise<DriveConnectionStatus>((resolve, reject) => { resolveConnect = resolve; rejectConnect = reject; }); },
       CheckGoogleDrive: async () => { calls.push('check'); if (checked) current = checked; return current; },
       DisconnectGoogleDrive: async () => { calls.push('disconnect'); current = disconnected; return current; },
+      RevokeGoogleDrive: async (accountReference: string, confirmed: boolean) => { calls.push('revoke'); window.driveHarness.revocations.push({ accountReference, confirmed }); if (!confirmed || accountReference !== current.account?.reference) throw new Error('Confirmation does not match the saved account.'); current = { ...disconnected, message: 'Google access revoked and local credentials removed.' }; return current; },
       CancelGoogleDrive: async () => { calls.push('cancel'); current = { ...disconnected, message: 'Authorization cancelled.' }; rejectConnect?.(new Error('Google Drive authorization was canceled.')); },
     } } };
   }, { initial, disconnected });
@@ -83,10 +86,12 @@ test('legacy authorization retains identity until explicit disconnect then offer
   await expect(card.getByText('fixture@example.invalid', { exact: true })).toBeVisible();
   await expect(card.getByText('Disconnect it first, then connect again to authorize this version.', { exact: false })).toBeVisible();
   await expect(card.getByRole('button')).toHaveCount(1);
-  await expect(card.getByRole('button', { name: 'Disconnect account', exact: true })).toBeEnabled();
+  await expect(card.getByRole('button', { name: 'Disconnect from this device', exact: true })).toBeEnabled();
+  await expect(card.getByRole('button', { name: 'Revoke access on Google', exact: true })).toHaveCount(0);
+  await expect(card.getByText('This version cannot revoke a grant from a different OAuth client.', { exact: false })).toBeVisible();
   await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
-  await card.getByRole('button', { name: 'Disconnect account', exact: true }).click();
+  await card.getByRole('button', { name: 'Disconnect from this device', exact: true }).click();
   await expect(card.getByText('fixture@example.invalid', { exact: true })).toHaveCount(0);
   await card.getByRole('button', { name: 'Connect Google Drive', exact: true }).click();
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'disconnect', 'connect']);
@@ -97,12 +102,12 @@ test('legacy authorization retains identity until explicit disconnect then offer
 test('failed legacy disconnection preserves identity and never enables authorization with the new client', async ({ page }) => {
   await start(page, { ...connected, state: 'client_changed', message: 'Disconnect the previous app authorization.' });
   await page.evaluate(() => { window.go!.desktop!.App!.DisconnectGoogleDrive = async () => { throw new Error('sensitive-vault-response'); }; });
-  await page.getByRole('button', { name: 'Disconnect account', exact: true }).click();
+  await page.getByRole('button', { name: 'Disconnect from this device', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Could not remove the local Google Drive credentials.');
   await expect(page.getByText('fixture@example.invalid', { exact: true })).toBeVisible();
   await expect(page.getByText('New authorization required', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /Connect Google Drive|Reconnect Google Drive|Check connection/ })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Disconnect account', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Disconnect from this device', exact: true })).toBeEnabled();
   await expect(page.locator('body')).not.toContainText('sensitive-vault-response');
 });
 
@@ -125,7 +130,7 @@ test('browser authorization shows pending cancellation then connected identity a
   expect(await page.evaluate(() => window.injected)).toBeUndefined();
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
   await expect(page.getByRole('button', { name: 'Check connection', exact: true })).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'Disconnect account', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Disconnect from this device', exact: true })).toBeEnabled();
   await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -185,7 +190,7 @@ test('account check reports reconnection and disconnect removes displayed accoun
   await expect(page.getByText('fixture@example.invalid', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reconnect Google Drive', exact: true })).toBeEnabled();
   await expect(page.getByText('It does not delete Drive files or revoke the Google permission grant.', { exact: false })).toBeVisible();
-  await page.getByRole('button', { name: 'Disconnect account', exact: true }).click();
+  await page.getByRole('button', { name: 'Disconnect from this device', exact: true }).click();
   await expect(page.getByText('Not connected', { exact: true })).toBeVisible();
   await expect(page.getByText('fixture@example.invalid', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Connect Google Drive', exact: true })).toBeEnabled();
@@ -212,21 +217,22 @@ test('a rejected check reconciles the persisted reconnect state discarded by Wai
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'check', 'status']);
 });
 
-for (const operation of ['connect', 'disconnect'] as const) {
+for (const operation of ['connect', 'disconnect', 'revoke'] as const) {
   test(`a rejected ${operation} reconciles the vault-unavailable state`, async ({ page }) => {
-    const initial = operation === 'disconnect' ? connected : disconnected;
+    const initial = operation === 'connect' ? disconnected : connected;
     await start(page, initial);
     const unavailable: DriveConnectionStatus = { state: 'storage_unavailable', clientConfigured: false, scope, message: 'Unlock the operating system credential vault and try again.' };
     await page.evaluate(({ operation, unavailable }) => {
-      const methods = { connect: 'ConnectGoogleDrive', disconnect: 'DisconnectGoogleDrive' } as const;
+      const methods = { connect: 'ConnectGoogleDrive', disconnect: 'DisconnectGoogleDrive', revoke: 'RevokeGoogleDrive' } as const;
       window.go!.desktop!.App![methods[operation]] = async () => {
         window.driveHarness.calls.push(operation);
         window.driveHarness.setStatus(unavailable);
         throw 'sensitive-vault-error';
       };
     }, { operation, unavailable });
-    const labels = { connect: 'Connect Google Drive', disconnect: 'Disconnect account' };
+    const labels = { connect: 'Connect Google Drive', disconnect: 'Disconnect from this device', revoke: 'Revoke access on Google' };
     await page.getByRole('button', { name: labels[operation], exact: true }).click();
+    if (operation === 'revoke') await page.getByRole('dialog').getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
     await expect(page.getByText('Credential vault unavailable', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Retry connection status', exact: true })).toBeEnabled();
     await expect(page.getByText('Connected', { exact: true })).toHaveCount(0);
@@ -248,7 +254,7 @@ test('failed status reconciliation removes stale connection claims and requires 
   await expect(page.getByText('Connected', { exact: true })).toHaveCount(0);
   await expect(page.getByText('fixture@example.invalid', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Retry connection status', exact: true })).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'Disconnect account', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Disconnect from this device', exact: true })).toHaveCount(0);
   await expect(page.locator('body')).not.toContainText('sensitive-status-failure');
   await page.evaluate(result => { window.go!.desktop!.App!.GoogleDriveStatus = async () => result; }, connected);
   await page.getByRole('button', { name: 'Retry connection status', exact: true }).click();
@@ -275,9 +281,9 @@ test('failed account checks and disconnects preserve account identity and allow 
   await expect(page.getByRole('alert')).toContainText('Could not check the Google Drive connection.');
   await expect(page.getByRole('button', { name: 'Check connection', exact: true })).toBeEnabled();
   await page.evaluate(() => { window.go!.desktop!.App!.DisconnectGoogleDrive = async () => { throw new Error('sensitive-vault-response'); }; });
-  await page.getByRole('button', { name: 'Disconnect account', exact: true }).click();
+  await page.getByRole('button', { name: 'Disconnect from this device', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Could not remove the local Google Drive credentials.');
-  await expect(page.getByRole('button', { name: 'Disconnect account', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Disconnect from this device', exact: true })).toBeEnabled();
   await expect(page.getByText('fixture@example.invalid', { exact: true })).toBeVisible();
   await expect(page.locator('body')).not.toContainText('sensitive-check-response');
   await expect(page.locator('body')).not.toContainText('sensitive-vault-response');
@@ -318,4 +324,144 @@ test('navigation during browser authorization preserves the request without poll
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'connect']);
   await page.getByRole('button', { name: 'Cancel authorization', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Connect Google Drive', exact: true })).toBeEnabled();
+});
+
+test('remote revocation defaults to cancel and cancel or Escape never invokes the backend', async ({ page }) => {
+  await start(page, connected);
+  const trigger = page.getByRole('button', { name: 'Revoke access on Google', exact: true });
+  for (const method of ['button', 'Escape', 'Enter']) {
+    await trigger.click();
+    const dialog = page.getByRole('dialog', { name: 'Revoke access on Google?' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+    await expect(dialog).toContainText('Other apps whose OAuth clients share the same Google Cloud project may also lose this account’s authorization.');
+    await expect(dialog).toContainText('fixture@example.invalid');
+    if (method === 'button') await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    else await page.keyboard.press(method);
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    await expect(page.getByText('Connected', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
+    expect(await page.evaluate(() => window.driveHarness.revocations)).toEqual([]);
+  }
+});
+
+test('remote revocation sends the explicitly confirmed account and clears identity only after success', async ({ page }) => {
+  await start(page, connected);
+  await page.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Revoke access on Google?' });
+  await expect(dialog).toContainText('To remove credentials only from this computer, cancel and choose “Disconnect from this device”.');
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
+  await dialog.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByText('Not connected', { exact: true })).toBeVisible();
+  await expect(page.getByRole('status')).toHaveText('Google access revoked and local credentials removed.');
+  await expect(page.getByText('fixture@example.invalid', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Connect Google Drive', exact: true })).toBeEnabled();
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'revoke']);
+  expect(await page.evaluate(() => window.driveHarness.revocations)).toEqual([{ accountReference: connected.account!.reference, confirmed: true }]);
+});
+
+test('revocation in flight disables competing account operations without reporting Connected', async ({ page }) => {
+  await start(page, connected);
+  await page.evaluate(() => {
+    window.go!.desktop!.App!.RevokeGoogleDrive = async (accountReference, confirmed) => {
+      window.driveHarness.calls.push('revoke');
+      window.driveHarness.revocations.push({ accountReference, confirmed });
+      return new Promise<DriveConnectionStatus>(resolve => { window.driveHarness.complete = result => { window.driveHarness.setStatus(result); resolve(result); }; });
+    };
+  });
+  await page.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await expect(page.getByText('Revoking Google access', { exact: true })).toBeVisible();
+  for (const name of ['Check connection', 'Disconnect from this device', 'Revoke access on Google']) {
+    await expect(page.getByRole('button', { name, exact: true })).toBeDisabled();
+  }
+  await expect(page.getByText('Connected', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'revoke']);
+  await page.evaluate(result => window.driveHarness.complete(result), disconnected);
+  await expect(page.getByText('Not connected', { exact: true })).toBeVisible();
+});
+
+test('failed revocation reconciles account status without exposing transport details or retrying remotely', async ({ page }) => {
+  const consoleMessages: string[] = [];
+  page.on('console', message => consoleMessages.push(message.text()));
+  await start(page, connected);
+  await page.evaluate(() => {
+    window.go!.desktop!.App!.RevokeGoogleDrive = async () => { window.driveHarness.calls.push('revoke'); throw new Error('synthetic-refresh-token-revoke-error <script>window.injected=true</script>'); };
+  });
+  await page.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Could not confirm revocation and local cleanup.');
+  await expect(page.getByText('fixture@example.invalid', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Revoke access on Google', exact: true })).toBeEnabled();
+  await expect(page.locator('body')).not.toContainText('synthetic-refresh-token-revoke-error');
+  expect(consoleMessages.join('\n')).not.toContain('synthetic-refresh-token-revoke-error');
+  expect(await page.evaluate(() => [localStorage.length, sessionStorage.length, window.injected])).toEqual([0, 0, undefined]);
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'revoke', 'status']);
+  await page.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'revoke', 'status']);
+});
+
+test('Google success with failed vault cleanup permits only local cleanup and never repeats revocation', async ({ page }) => {
+  await start(page, connected);
+  const cleanup: DriveConnectionStatus = { ...connected, state: 'revoked_local_cleanup_required', message: 'Google confirmed revocation. Local credential cleanup still needs an unlocked vault.' };
+  await page.evaluate(result => {
+    window.go!.desktop!.App!.RevokeGoogleDrive = async () => {
+      window.driveHarness.calls.push('revoke'); window.driveHarness.setStatus(result);
+      throw new Error('synthetic-private-cleanup-error');
+    };
+  }, cleanup);
+  await page.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await expect(page.getByText('Google access revoked; local cleanup required', { exact: true })).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('Google confirmed revocation.');
+  for (const name of ['Check connection', 'Connect Google Drive', 'Reconnect Google Drive', 'Revoke access on Google']) {
+    await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+  }
+  await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toHaveCount(0);
+  await expect(page.locator('body')).not.toContainText('synthetic-private-cleanup-error');
+  await page.getByRole('button', { name: 'Disconnect from this device', exact: true }).click();
+  await expect(page.getByText('Not connected', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Connect Google Drive', exact: true })).toBeEnabled();
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'revoke', 'status', 'disconnect']);
+});
+
+test('an account changed outside the UI cannot retarget an open revocation confirmation', async ({ page }) => {
+  await start(page, connected);
+  await page.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('fixture@example.invalid');
+  const replacement: DriveConnectionStatus = { ...connected, account: { reference: 'google-drive:replacement-account', displayName: 'Replacement Account', email: 'replacement@example.invalid' } };
+  // A different process replaced the persisted grant; the open dialog still
+  // represents the original account. The service rejects that expected reference.
+  await page.evaluate(result => window.driveHarness.setStatus(result), replacement);
+  await dialog.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Could not confirm revocation and local cleanup.');
+  await expect(page.getByText('replacement@example.invalid', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => window.driveHarness.revocations)).toEqual([{ accountReference: connected.account!.reference, confirmed: true }]);
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'revoke', 'status']);
+  await page.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('replacement@example.invalid');
+  expect(await page.evaluate(() => window.driveHarness.revocations)).toHaveLength(1);
+});
+
+test('failed revocation status reconciliation removes stale identity and all account actions', async ({ page }) => {
+  await start(page, connected);
+  await page.evaluate(() => {
+    window.go!.desktop!.App!.RevokeGoogleDrive = async () => { throw new Error('synthetic-revocation-response'); };
+    window.go!.desktop!.App!.GoogleDriveStatus = async () => { throw new Error('synthetic-vault-response'); };
+  });
+  await page.getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Revoke access on Google', exact: true }).click();
+  await expect(page.getByText('Not checked', { exact: true })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('The saved connection status could not be read.');
+  await expect(page.getByRole('article', { name: 'Google Drive connection' }).getByRole('button')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Retry connection status', exact: true })).toBeEnabled();
+  await expect(page.getByText('fixture@example.invalid', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Connected', { exact: true })).toHaveCount(0);
+  await expect(page.locator('body')).not.toContainText('synthetic-revocation-response');
+  await expect(page.locator('body')).not.toContainText('synthetic-vault-response');
 });

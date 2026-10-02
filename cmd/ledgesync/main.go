@@ -33,7 +33,7 @@ Usage:
 
 All CLI previews use a fake empty destination. This headless CLI has no cloud
 connection or credential import. Google Drive authorization is available only
-in the desktop app's Connections screen with your own Desktop app OAuth client.
+in the desktop app's Connections screen with its bundled Desktop OAuth client.
 Cloud browsing, transfer, apply, deletion and scheduling are not implemented.
 Git policy is patterns-only; no Git or rclone executable is needed at runtime.
 `

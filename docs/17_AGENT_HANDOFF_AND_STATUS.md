@@ -3,6 +3,9 @@
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
 **Implementation:** 0.1.0-alpha.3, published one-click authorization developer alpha.
 
+**Source follow-up:** OAuth protection hardening is implemented after alpha.3;
+the published installers, APT packages, website and release tag are unchanged.
+
 Read [PROJECT_IDENTITY.md](../PROJECT_IDENTITY.md) first. The authoritative name
 is LedgeSync, command `ledgesync`, primary domain `ledgesync.com`. The owner
 requested public Apache-2.0 source, a website and desktop/server platform builds.
@@ -11,6 +14,59 @@ publication on the existing Ubuntu server hosting HiperMusicas. The canonical
 site is now live there. The owner subsequently requested Google Drive token
 authorization, then selected a bundled Desktop client with one-click browser
 consent. The current change does not enable cloud transfers.
+
+## OAuth protection verification and hardening (unreleased source)
+
+The owner requested verification of existing protections and code fixes for
+missing controls. Read [the requirement-by-requirement evidence and limits](research/OAUTH_SECURITY_HARDENING.md).
+Existing PKCE/state generation, system browser, native vaults, backend-only
+tokens, exact `drive.file`, bounded refresh, account/client binding and publisher
+build configuration were retained after inspection.
+
+Corrections: callback attempt context and closure before exchange; canonical
+route/parameter checks; duplicate/case-aliased provider JSON rejection; cancel and
+drain before local credential removal; separate confirmed remote revocation
+bound to the reviewed account; explicit shared-project warning, default Cancel,
+and local-cleanup recovery after confirmed revocation. The CLI remains offline
+and its help now correctly describes the bundled client. No alternate CLI
+credential store or authorization flow was introduced.
+
+Changed files: `internal/driveauth/{oauth,service,http,types}.go`, new callback,
+lifecycle and diagnostic tests, two callback test constructor calls, desktop
+bridge/tests, frontend Connections/types/styles/tests, CLI help and this
+documentation. Tests use local fake endpoints and synthetic credentials. No
+real grant was authorized/revoked, no personal vault entry was read, no cloud
+files were uploaded and no shared Google Cloud settings were changed.
+
+Validation completed locally:
+
+- `go test -json ./...`: passed, with 315 test/subtest pass events. The native
+  vault opt-in and external rclone differential tests explicitly skipped;
+  three packages had no tests. Synthetic OAuth and credential-boundary tests ran.
+- `go test -race ./...` and `go vet ./...`: passed.
+- Callback-specific race regressions also passed five bounded repetitions,
+  covering concurrent replay and listener closure timing.
+- `python3 tools/test_configure_oauth_client.py`: all nine synthetic guards passed.
+- Frontend `npm run check`, `npm test`, `npm run build`: passed, including all
+  30 Playwright tests. An initial UI test exposed a closed-dialog cleanup timing
+  issue; dismissal now removes it synchronously and all tests passed afterward.
+- `go test ./internal/transport/desktop` and `go vet ./internal/transport/desktop`:
+  passed. Native macOS ARM64 compilation passed with `go build -tags desktop`
+  and macOS 13 CGO minimum flags; this compilation did not import a real client
+  or authorize an account.
+- Compiled production UI was inspected at the 900×620 minimum window using a
+  synthetic account. The impact warning and buttons fit, Cancel was focused,
+  and the test dialog was canceled. Owned preview processes were closed.
+- `.venv/bin/python tools/validate_docs.py`: 42 Markdown files, 140 local links,
+  35 JSON files, two schemas and five examples; zero failures/skips.
+  `git diff --check` passed.
+
+Native-vault lifecycle evidence for alpha.3 remains historical; the owner's
+personal native-vault integration opt-in remains disabled. Cross-process
+credential serialization, multi-account support and cloud transfer jobs are
+still separate implementation gates. A failed local cleanup after confirmed
+revocation is remembered only in the running process; finish cleanup before
+closing the app.
 
 ## One-click authorization follow-up (alpha.3)
 
@@ -483,6 +539,12 @@ passed. Production remains the owner's Ubuntu origin. Temporary server upload
 directories were removed; live/rollback releases and signed APT snapshots remain.
 
 ## Current handoff
+
+The subsequent OAuth protection changes are in source and covered by the
+hardening section above. They have not replaced the published alpha.3 artifacts.
+Complete live Google acceptance with an authorized account before claiming
+provider interoperability; remote revocation is a separate deliberate action
+with possible impact on other apps in the same Google Cloud project.
 
 Alpha.3 is published with the bundled Desktop OAuth client, native credential
 storage, DMGs, Windows installers and signed Ubuntu packages. Release and

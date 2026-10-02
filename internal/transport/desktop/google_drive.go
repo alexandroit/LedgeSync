@@ -13,6 +13,7 @@ type GoogleDriveService interface {
 	Connect(context.Context) (driveauth.Status, error)
 	Check(context.Context) (driveauth.Status, error)
 	Disconnect(context.Context) (driveauth.Status, error)
+	Revoke(context.Context, string, bool) (driveauth.Status, error)
 	Cancel()
 }
 
@@ -61,6 +62,17 @@ func (a *App) DisconnectGoogleDrive() (driveauth.Status, error) {
 		return driveauth.Status{}, errGoogleUnavailable
 	}
 	return a.google.Disconnect(a.connectionContext)
+}
+func (a *App) RevokeGoogleDrive(expectedAccountReference string, confirmed bool) (driveauth.Status, error) {
+	// Requiring confirmation at both boundaries prevents an accidental binding
+	// call from reaching any operation with effects on the shared Google project.
+	if !confirmed {
+		return driveauth.Status{}, driveauth.ErrRevokeConfirmation
+	}
+	if a.google == nil {
+		return driveauth.Status{}, errGoogleUnavailable
+	}
+	return a.google.Revoke(a.connectionContext, expectedAccountReference, true)
 }
 func (a *App) CancelGoogleDrive() {
 	if a.google != nil {

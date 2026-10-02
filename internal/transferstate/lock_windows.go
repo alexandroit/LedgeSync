@@ -7,6 +7,8 @@ import (
 
 const noFollowFlag = 0
 
+func trustedSystemAlias(string, os.FileInfo) bool { return false }
+
 // The private per-user configuration directory inherits the user's Windows ACL.
 // Unix permission bits are not meaningful on this platform.
 func privateMode(st os.FileInfo, directory bool) bool { return st.Mode()&os.ModeSymlink == 0 }

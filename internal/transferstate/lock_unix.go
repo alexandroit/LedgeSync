@@ -5,10 +5,24 @@ package transferstate
 import (
 	"golang.org/x/sys/unix"
 	"os"
+	"path/filepath"
+	"runtime"
 	"syscall"
 )
 
 const noFollowFlag = unix.O_NOFOLLOW
+
+func trustedSystemAlias(p string, st os.FileInfo) bool {
+	if runtime.GOOS != "darwin" || (p != "/var" && p != "/tmp") {
+		return false
+	}
+	info, ok := st.Sys().(*syscall.Stat_t)
+	if !ok || info.Uid != 0 {
+		return false
+	}
+	resolved, err := filepath.EvalSymlinks(p)
+	return err == nil && resolved == "/private"+p
+}
 
 func privateMode(st os.FileInfo, directory bool) bool {
 	if st.Mode().Perm()&0077 != 0 {

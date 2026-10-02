@@ -2,6 +2,7 @@ package transferstate
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +29,7 @@ func TestStorePersistsIntentAcknowledgementAndVerifiedIdentity(t *testing.T) {
 	if err = store.SaveProject(project); err != nil {
 		t.Fatal(err)
 	}
-	node := Node{Path: "nested/file.txt", Kind: "file", Name: "file.txt", ID: "reserved-id", ParentID: "parent-id", OperationID: "operation-id", SHA256: "fixture-sha", MD5: "fixture-md5", Size: 5, Status: "intent"}
+	node := Node{Path: "nested/file.txt", Kind: "file", Name: "file.txt", ID: "reserved-id", ParentID: "parent-id", OperationID: "operation-id", SHA256: strings.Repeat("a", 64), MD5: strings.Repeat("b", 32), Size: 5, Status: "intent"}
 	if err = store.SaveNode(project.Key, node); err != nil {
 		t.Fatal(err)
 	}
@@ -236,6 +237,75 @@ func errText(err error) string {
 		return ""
 	}
 	return err.Error()
+}
+
+func TestStoreRejectsInvalidOperationMetadataOnWriteAndRead(t *testing.T) {
+	valid := Node{Path: "nested/file", Kind: "file", Name: "file", ID: "reserved", ParentID: "parent", OperationID: "operation", SHA256: strings.Repeat("a", 64), MD5: strings.Repeat("b", 32), Size: 5, Status: "verified"}
+	cases := map[string]func(*Node){
+		"unknown status":         func(n *Node) { n.Status = "trusted" },
+		"unknown kind":           func(n *Node) { n.Kind = "shortcut" },
+		"invalid identifier":     func(n *Node) { n.ID = "../outside" },
+		"invalid parent":         func(n *Node) { n.ParentID = "" },
+		"unsafe path":            func(n *Node) { n.Path = "../outside" },
+		"unsafe name":            func(n *Node) { n.Name = "nested/file" },
+		"invalid digest":         func(n *Node) { n.SHA256 = strings.Repeat("z", 64) },
+		"missing checksum":       func(n *Node) { n.MD5 = "" },
+		"negative size":          func(n *Node) { n.Size = -1 },
+		"directory with content": func(n *Node) { n.Kind = "directory" },
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			store, err := Open(filepath.Join(t.TempDir(), "journal"), "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer store.Close()
+			if err := store.SaveProject(Project{Key: "project", SourceIdentity: "source", AccountReference: "account", DestinationID: "destination"}); err != nil {
+				t.Fatal(err)
+			}
+			node := valid
+			mutate(&node)
+			if err := store.SaveNode("project", node); domain.ErrorCode(err) != "STATE_UNAVAILABLE" {
+				t.Fatalf("invalid operation accepted: %v", err)
+			}
+			raw, err := json.Marshal(node)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := store.db.Exec("INSERT INTO operations(id,project_id,payload) VALUES(?,?,?)", node.OperationID, "project", raw); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := store.Load("project"); domain.ErrorCode(err) != "STATE_UNAVAILABLE" {
+				t.Fatalf("corrupt operation accepted on recovery: %v", err)
+			}
+		})
+	}
+}
+
+func TestStoreAllowsTrustedMacSystemAliasWithoutWeakeningSourceBoundary(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("macOS system alias regression")
+	}
+	base, err := os.MkdirTemp("/var/tmp", "ledgesync-state-alias-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(base)
+	resolved, err := filepath.EvalSymlinks(base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	store, err := Open(filepath.Join(base, "journal"), "")
+	if err != nil {
+		t.Fatalf("root-owned /var alias rejected: %v", err)
+	}
+	store.Close()
+	if store, err := Open(filepath.Join(base, "forbidden"), resolved); domain.ErrorCode(err) != "STATE_INSIDE_SOURCE" {
+		if store != nil {
+			store.Close()
+		}
+		t.Fatalf("alias bypassed source boundary: %v", err)
+	}
 }
 
 func TestStoreRefusesPreexistingPublicStatePermissions(t *testing.T) {

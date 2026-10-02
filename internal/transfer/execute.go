@@ -56,7 +56,7 @@ func guard(ctx context.Context, a *approved, tree *discovery.Tree) error {
 	if tree.Identity() != a.Preview.Plan.SourceIdentity {
 		return domain.Fail("SOURCE_CHANGED", "The local root identity changed.")
 	}
-	if err := tree.RevalidateStructure(); err != nil {
+	if err := tree.RevalidateStructure(ctx); err != nil {
 		return err
 	}
 	c := config.Default(a.Preview.SourceRoot)

@@ -9,7 +9,6 @@ from pathlib import Path
 import subprocess
 import tempfile
 import threading
-import urllib.request
 
 from build_apt_repository import build
 
@@ -26,11 +25,12 @@ def run(args, check=True):
 
 
 def download(url, path):
-    with urllib.request.urlopen(url, timeout=60) as response:
-        data = response.read(1024 * 1024)
-        if response.read(1):
-            raise ValueError('Unexpectedly large repository metadata')
-    path.write_bytes(data)
+    # Exercise the documented curl onboarding client. Cloudflare's browser
+    # integrity check rejects Python urllib before requests reach this origin.
+    # Keep curl and APT's native user agents; do not impersonate a browser.
+    run(['curl', '--fail', '--show-error', '--silent', '--location',
+         '--max-time', '60', '--max-filesize', str(1024 * 1024),
+         '--output', str(path), url])
 
 
 def main():
@@ -60,6 +60,10 @@ def main():
             download(base + '/ledgesync-archive-keyring.gpg', keyfile)
             if keyfile.read_bytes() != (ROOT / 'deploy/apt/ledgesync-archive-keyring.gpg').read_bytes():
                 raise ValueError('Public key differs from the pinned project key')
+            public_source = work / 'published.sources'
+            download(base + '/ledgesync.sources', public_source)
+            if public_source.read_bytes() != (ROOT / 'deploy/apt/ledgesync.sources').read_bytes():
+                raise ValueError('Public source definition differs from the pinned project source')
         else:
             gnupg = work / 'gnupg'
             gnupg.mkdir(mode=0o700)

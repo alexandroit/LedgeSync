@@ -83,3 +83,19 @@ headless CLI installation and preservation of synthetic data during removal.
 Cloudflare rejects the default Python urllib client with error 1010; onboarding
 uses unmodified curl, as documented, followed by the real unmodified APT client.
 No Cloudflare protection or TLS/signature validation was disabled.
+
+## Alpha.2 publication
+
+Current snapshot: `20261002-alpha2-ad2cddf`, Debian version `0.1.0~alpha.2-1`.
+The existing signing key is unchanged. The prior snapshot and all twelve prior
+pool/by-hash files remain available; immutable package bytes were not replaced.
+The repository builder now requires an explicit Debian version and rejects a
+mixed or incomplete set before signing.
+
+[Installer run 36950139047](https://github.com/alexandroit/LedgeSync/actions/runs/36950139047)
+passed both native Ubuntu package checks and local signed APT installation.
+[Public run 36950554723](https://github.com/alexandroit/LedgeSync/actions/runs/36950554723)
+passed on amd64 and arm64 against `https://ledgesync.com/apt`. Both installed
+alpha.2 desktop with its GNOME Keyring recommendation, then tested the separate
+CLI and removal preserving synthetic user data. See
+[deployment evidence](research/OAUTH_DEPLOYMENT_VERIFICATION.json).

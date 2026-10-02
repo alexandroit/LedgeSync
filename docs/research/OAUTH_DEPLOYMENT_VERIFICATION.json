@@ -1,0 +1,50 @@
+{
+  "version": "0.1.0-alpha.2",
+  "aptSnapshot": "20261002-alpha2-ad2cddf",
+  "previousSnapshotRetained": "20261002-alpha1-e796bc5",
+  "previousPoolAndByHashFilesPreserved": 12,
+  "signingFingerprint": "11B35F4E066806C33AA8653A51AD694F4729F5AB",
+  "publicAPTRun": {
+    "id": 36950554723,
+    "url": "https://github.com/alexandroit/LedgeSync/actions/runs/36950554723",
+    "headSha": "ad2cddfbea493590609d490b0dee10435a9be2d0",
+    "conclusion": "success"
+  },
+  "reports": [
+    {
+      "baseURL": "https://ledgesync.com/apt",
+      "architecture": "amd64",
+      "version": "0.1.0~alpha.2-1",
+      "signatureVerified": true,
+      "tamperedMetadataRejected": true,
+      "byHashForced": true,
+      "desktopInstalled": true,
+      "secretServiceInstalled": true,
+      "headlessCliInstalled": true,
+      "uninstallPreservedUserFixture": true
+    },
+    {
+      "baseURL": "https://ledgesync.com/apt",
+      "architecture": "arm64",
+      "version": "0.1.0~alpha.2-1",
+      "signatureVerified": true,
+      "tamperedMetadataRejected": true,
+      "byHashForced": true,
+      "desktopInstalled": true,
+      "secretServiceInstalled": true,
+      "headlessCliInstalled": true,
+      "uninstallPreservedUserFixture": true
+    }
+  ],
+  "website": {
+    "sourceCommit": "82b2f6bf05e49d7e8f25c9f5e06e2db105d25636",
+    "canonical": "https://ledgesync.com/",
+    "pagesRun": 36950632081,
+    "htmlSHA256": "da01fd20c5566f7883b1983fd082cf4b232ebc5c0fdc84f64d9f068bb1ba0eda",
+    "cssSHA256": "adb26c666d2320bd2a826d5b5e0685404239e72c2f1585c5db2f08d2cbe931ca",
+    "canonicalAndPagesBodiesMatch": true,
+    "hipermusicasPublicAndOriginStatus": 200,
+    "hipermusicasPIDUnchanged": true,
+    "sharedNginxHashesUnchanged": true
+  }
+}

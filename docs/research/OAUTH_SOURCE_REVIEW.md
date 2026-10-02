@@ -66,9 +66,11 @@ fails closed. Mutations are serialized within the service instance; there is no
 claim of a cross-process credential transaction manager.
 
 A real OAuth client was not available, and no real Google authorization or token
-exchange was performed. Google consent-screen publishing/verification, genuine
-OS-vault round trips, headless remote authorization, multiple simultaneous
-accounts, cloud namespace selection and synchronization remain separate gates.
+exchange was performed. Google consent-screen publishing/verification, headless
+remote authorization, multiple simultaneous accounts, cloud namespace
+selection and synchronization remain separate gates. Native OS-vault round trips
+subsequently passed on six disposable runners in
+[run 36949135946](https://github.com/alexandroit/LedgeSync/actions/runs/36949135946).
 Disconnect clears local tokens and retains the client configuration. It does not
 revoke the Google grant; revocation is a separate explicit user action.
 

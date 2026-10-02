@@ -1,8 +1,16 @@
 # Platform builds and installation
 
-LedgeSync's first version is **0.1.0-alpha.1, offline only**. Desktop and CLI
-share the same Go engine. No package installs a service, schedules jobs, connects
-an account, uploads files, or enables deletion.
+LedgeSync **0.1.0-alpha.2** adds Google Drive authorization in the desktop app.
+The desktop and CLI share the local policy/preview engine; the headless CLI
+remains offline and has no account-authorization workflow. No package installs
+a service, schedules jobs, connects an account automatically, uploads files or
+enables deletion. Connecting requires explicit setup and browser consent.
+
+**Alpha.2 native release CI, installer verification and publication are pending.**
+The alpha.2 download links below are prepared for publication and may not resolve
+yet. The [previous alpha.1 release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1)
+remains available without OAuth support. Its historical evidence is retained
+separately below and does not validate the new release.
 
 ## Target matrix
 
@@ -21,7 +29,28 @@ ARM means ARM64 in this project; there are no 32-bit packages. Windows Server
 desktop use is not an acceptance target; use the CLI for Server Core/headless
 systems. No macOS Server-specific package or operating-system service is required.
 
-## Observed release results
+## Alpha.2 authorization and validation boundary
+
+Read [Google Drive setup](GOOGLE_DRIVE_AUTH.md) before connecting. Alpha.2 requires
+your own Google OAuth **Desktop app** client; no shared client is bundled. Import
+its JSON through **Connections**, then authorize the limited `drive.file` scope
+in your system browser. Only one account is supported. Connecting, checking,
+reconnecting and disconnecting do not browse or transfer cloud files; every
+file preview still uses a simulated empty destination.
+
+Credentials use macOS Keychain, Windows Credential Manager or Ubuntu Secret
+Service. Ubuntu requires an active graphical user's D-Bus session and an unlocked
+default credential collection, such as GNOME Keyring. An SSH/headless login is
+not sufficient for desktop authorization, and there is no plaintext fallback.
+The `ledgesync-cli` package does not require a keyring or connect to Google.
+
+Local synthetic OAuth and frontend tests do not establish real Google consent,
+refresh, revocation or platform-native credential storage acceptance. Record
+alpha.2 native CI and public artifact evidence here when those checks complete.
+Real Google account acceptance remains pending until an owner-created OAuth
+client is configured; no personal account was used in automated tests.
+
+## Historical alpha.1 release results
 
 [Version 0.1.0-alpha.1](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1)
 contains six desktop archives and six CLI archives for `darwin`, `linux` and
@@ -78,13 +107,16 @@ insufficient to determine the packaged application's minimum. See the official
 
 | Mac | Download |
 |---|---|
-| Apple Silicon, M-series | [LedgeSync ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-arm64.dmg) |
-| Intel, x64 | [LedgeSync Intel DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-amd64.dmg) |
+| Apple Silicon, M-series | [LedgeSync alpha.2 ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-macos-arm64.dmg) |
+| Intel, x64 | [LedgeSync alpha.2 Intel DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-macos-amd64.dmg) |
 
 1. Download the image matching the processor shown in **About This Mac**.
 2. Open the `.dmg` and drag `LedgeSync.app` to the `Applications` shortcut.
 3. Eject the image and open LedgeSync from Applications. Choose a local folder
    to browse files and preview the offline policy decisions.
+4. To authorize Google Drive, open **Connections** and follow the
+   [Desktop app OAuth setup guide](GOOGLE_DRIVE_AUTH.md). The OS Keychain must
+   be available; authorization does not enable file transfers.
 
 The image contains the graphical app, Applications shortcut, installation
 instructions and license notices. It does not install the command-line tool.
@@ -93,8 +125,8 @@ The developer-signing limits below still apply to disk-image downloads.
 
 ### Windows graphical installer
 
-Download the [x64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe)
-or the [ARM64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe).
+Download the [alpha.2 x64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-windows-amd64-setup.exe)
+or the [alpha.2 ARM64 installer](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-windows-arm64-setup.exe).
 The downloaded setup EXE opens a graphical installation wizard, rather than
 launching the portable application immediately. Follow its folder/shortcut
 steps, then open LedgeSync from the Start menu. It installs for the current
@@ -116,6 +148,9 @@ contains the native ARM64 app and accepts only ARM64 Windows.
 
 The signed project repository supports **Ubuntu 24.04, amd64 and arm64**. APT
 does not discover third-party repositories automatically; add this source once:
+
+Alpha.2 repository publication is pending. Until that completes, these commands
+can install the previously published alpha.1, which has no Connections workflow.
 
 ```sh
 sudo apt-get update &&
@@ -144,7 +179,11 @@ sudo apt-get install ledgesync
 
 Open **LedgeSync** from the application menu, or run `ledgesync-desktop`. The
 desktop package depends on the matching CLI package and its native GTK/WebKit
-runtime libraries, resolved automatically by APT. For a headless server:
+runtime libraries, resolved automatically by APT. For Google authorization,
+use an active desktop session with GNOME Keyring or another Secret Service
+implementation and an unlocked default collection. Installing a keyring package
+alone does not create or unlock that collection. See [account setup](GOOGLE_DRIVE_AUTH.md).
+For a headless server:
 
 ```sh
 sudo apt-get update &&
@@ -152,9 +191,10 @@ sudo apt-get install ledgesync-cli
 ledgesync --version
 ```
 
-The CLI package has no graphical-library dependencies. The Debian version is
-`0.1.0~alpha.1-1`; the application reports `0.1.0-alpha.1`. Both packages preserve
-the original release binaries and notices. GitHub normalizes `~` to `.` in
+The CLI package has no graphical-library dependencies and no OAuth commands.
+The planned alpha.2 Debian version is `0.1.0~alpha.2-1`; the application reports
+`0.1.0-alpha.2`. The currently published alpha.1 uses `0.1.0~alpha.1-1` and reports
+`0.1.0-alpha.1`; its original binaries and notices remain unchanged. GitHub normalizes `~` to `.` in
 download filenames; the package's internal Debian version and the APT pool
 filenames retain `~`. Adjacent checksums use the actual GitHub download names.
 Package removal does not delete user
@@ -174,6 +214,10 @@ Ubuntu desktop needs GTK3 and WebKitGTK 4.1 (`libgtk-3-0t64` and
 `libwebkit2gtk-4.1-0` on Ubuntu 24.04). Development builds need `libgtk-3-dev`,
 `libwebkit2gtk-4.1-dev`, `pkg-config`, and a C compiler. Windows desktop needs
 Microsoft Edge WebView2 Runtime. The macOS app uses the system WebKit.
+Ubuntu OAuth additionally requires the user's D-Bus session and an unlocked
+Secret Service store such as GNOME Keyring. Windows uses the current user's
+Credential Manager, and macOS uses Keychain. These stores are only accessed
+when an account action is requested; headless CLI previews remain offline.
 
 Desktop archives are developer builds: **no trusted publisher signature or notarization**.
 The macOS build uses an ad-hoc local signature. No claim
@@ -191,7 +235,7 @@ required.
 ```sh
 go test ./...
 go build -trimpath -o build/cli/ ./cmd/ledgesync
-python3 tools/package_cli.py --version 0.1.0-alpha.1
+python3 tools/package_cli.py --version 0.1.0-alpha.2
 ```
 
 For the desktop, run `npm ci` in `frontend`, then from `cmd/ledgesync-desktop`:
@@ -212,7 +256,7 @@ bundle identifier is `com.ledgesync.app`; the minimum macOS version is 13.0.
 To create the macOS disk image from an existing native app:
 
 ```sh
-python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch arm64 --version 0.1.0-alpha.1 --output build/packages
+python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch arm64 --version 0.1.0-alpha.2 --output build/packages
 ```
 
 Use `--arch amd64` for an Intel build. The script requires macOS, verifies the

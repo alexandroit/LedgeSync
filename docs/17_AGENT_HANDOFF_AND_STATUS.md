@@ -1,15 +1,16 @@
 # 17 — Agent Handoff and Current Status
 
-**Updated:** 2026-10-01. **Product:** LedgeSync. **Specification:** 0.2.1.
-**Implementation:** 0.1.0-alpha.1, offline developer preview.
+**Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
+**Implementation:** 0.1.0-alpha.2, desktop authorization developer alpha (release validation pending).
 
 Read [PROJECT_IDENTITY.md](../PROJECT_IDENTITY.md) first. The authoritative name
 is LedgeSync, command `ledgesync`, primary domain `ledgesync.com`. The owner
 requested public Apache-2.0 source, a website and desktop/server platform builds.
 After initially deferring DNS activation, the owner explicitly requested
 publication on the existing Ubuntu server hosting HiperMusicas. The canonical
-site is now live there. No live Drive account connection or cloud synchronization
-was requested.
+site is now live there. The owner subsequently requested Google Drive token
+authorization and confirmed that no Desktop OAuth client exists yet. The current
+change implements that setup/consent path; it does not enable cloud transfers.
 
 ## Implemented behavior
 
@@ -47,14 +48,74 @@ claimed. No entire P1/P2/P3/P4 milestone is marked complete.
 - P1-01/02/02A/03/04/05/06/08/09: bounded offline portions implemented and
   tested. Migration, persistence, additional adapters and full acceptance
   requirements remain open; these task IDs are not wholesale completion claims.
-- P1-03A/P1-07 and P2 onward: deferred. Unsupported required sources fail
-  closed. Cloud credentials, writes and destructive capabilities remain absent.
+- P2-01: desktop OAuth and native vault implemented under the explicit follow-up
+  request. Synthetic protocol/UI tests pass; live consent acceptance is pending
+  the owner-created client. P2-02 account identity read exists, but file listing
+  and provider capabilities remain deferred. Neither task is fully accepted.
+- P1-03A/P1-07 and remaining P2 tasks: deferred. Unsupported required sources fail
+  closed. Cloud file writes and destructive capabilities remain absent.
 
 The canonical Drive documentation was reread after the owner's update. All six
 root Markdown files and twenty technical documents were fetched and compared.
 See [the reread evidence and its limits](research/SPEC_REVIEW_0.2.1.md).
 
-## Commands and observed local results
+## Google Drive authorization follow-up (alpha.2)
+
+The owner explicitly asked for the missing access request, then confirmed no
+Google OAuth Desktop client exists. No personal Google authorization was
+performed. The correct LedgeSync Drive specs (06 and 09) were reread through
+the connected Drive; the older supplied folder resolves to an unrelated project
+and was not used as LedgeSync requirements.
+
+Changed implementation: `internal/driveauth/**`, `internal/credentialvault/**`,
+`internal/connections/**`, `internal/systembrowser/**`, desktop bridge/main and
+frontend Connections UI. The core is an independent implementation after the
+pinned upstream OAuth source review. Native vault dependencies are pinned and
+reviewed; distribution notices cover 21 runtime modules and 44 license hashes.
+
+Implemented: native Desktop-client JSON picker/import; system-browser OAuth
+with PKCE S256/state; bounded loopback callback, cancel/timeout and fixed HTTPS
+endpoints; exact `drive.file` scope; read-only account identity; native vault
+refresh-token persistence; process-only access tokens; bounded renewal;
+account mismatch/revocation handling; explicit local disconnect. Frontend DTOs
+contain only safe status and identity. Import buffers are cleared after use.
+Launcher output/errors are discarded and OS browser handoff is bounded.
+
+The service serializes operations within one application process. It does not
+claim a cross-process credential transaction or multi-instance refresh lock;
+use one running app instance. Root-pair locks for future transfers remain open.
+No cloud file operations or credential access in headless CLI were added.
+
+Local checks observed on macOS ARM64:
+
+- `go test ./...`, `go test -race ./...`, `go vet ./...`: passed. Synthetic OAuth
+  covers PKCE/state, denial, timeout/cancel, response validation/redaction,
+  refresh rotation, account mismatch and vault failures. Native vault lifecycle
+  is opt-in only on disposable CI users; ordinary tests access no personal vault.
+- `npm run build` and Playwright: **23 passed**, including 19 new authorization
+  cases and four existing explorer tests. Wails errors are simulated as rejected
+  promises; failed operations reconcile persisted safe state, not stale badges.
+- Native Wails `darwin/arm64` build with macOS 13 flags: passed. Real native
+  WebView displayed Connections and Setup required, opened the native client
+  picker and returned unchanged after Cancel. No JSON imported or vault item
+  written; no Google browser authorization started. Test app closed afterward.
+- `python3 tools/collect_licenses.py`, `python3 tools/verify_licenses.py`: passed
+  after new dependency pins. Four DMG integrity/no-overwrite tests passed.
+- Documentation validation: zero failures; optional local JSON Schema dependency
+  unavailable. CI performs the full schema check with its pinned dependency.
+
+New six-platform native-vault CI and the existing native build/install suites
+must pass before publication. Release/source/digest evidence will be appended
+once observed; alpha.1 artifacts must remain unchanged. Setup instructions are
+in [GOOGLE_DRIVE_AUTH.md](GOOGLE_DRIVE_AUTH.md), protocol/source decisions in
+[OAUTH_SOURCE_REVIEW.md](research/OAUTH_SOURCE_REVIEW.md) and vault review in
+[OAUTH_VAULT_REVIEW.md](research/OAUTH_VAULT_REVIEW.md).
+
+Unrun external acceptance: actual Google consent, renewal/revocation against a
+real account, publisher signing/notarization, and cloud file transfers. No
+client ID, secret, token or private account fixture is committed or released.
+
+## Historical alpha.1 commands and observed local results
 
 Executed on macOS ARM64 with Go 1.27.1:
 
@@ -205,8 +266,8 @@ alpha. Packaging does not implement Drive connections, transfers or scheduling.
 
 ## Next dependency-ready work
 
-Prioritize persistent state/migration/locking and the remaining
-policy adapter contracts before native Drive OAuth and provider integration.
+Finish owner-configured live OAuth acceptance, then prioritize persistent
+state/migration/locking and remaining policy/provider contracts before transfers.
 Use fake providers and temporary roots for development. Real accounts and
 mutations require the corresponding explicit authorization. Keep unsupported
 or ambiguous capabilities disabled.

@@ -6,28 +6,33 @@
 **CLI command:** `ledgesync`.
 **Primary website/domain:** `ledgesync.com`.
 **Specification version:** 0.2.1 · **Prepared:** 2026-10-01.
-**Implementation status:** offline developer alpha; no production release or live Drive transfers. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
+**Implementation status:** 0.1.0-alpha.2 adds desktop Google Drive authorization to the local policy explorer. Cloud browsing and file transfers are not implemented. Native release CI and publication for alpha.2 are pending. See [current implementation status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and [platform builds](docs/PLATFORMS.md).
 
 **Public project:** [GitHub](https://github.com/alexandroit/LedgeSync) ·
 [Website](https://ledgesync.com/) ·
-[Download offline alpha](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1) ·
+[Previous published alpha.1](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.1) ·
 [Builds](https://github.com/alexandroit/LedgeSync/actions/workflows/ci.yml) ·
 [Apache-2.0 license](LICENSE).
 The website is live on the owner's Ubuntu server with HTTPS. See
 [deployment and renewal details](docs/WEBSITE.md).
 
-## Try the offline alpha
+## Try the desktop authorization alpha
+
+**Alpha.2 release preparation:** the downloads below target `0.1.0-alpha.2` and
+remain pending until native CI, packaging and publication finish. The previous
+alpha.1 downloads remain available through the release link above; they do not
+include Google Drive authorization. Build the current source for development.
 
 **Download the graphical app for macOS:**
-[Apple Silicon (ARM64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-arm64.dmg) ·
-[Intel (x64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-macos-amd64.dmg).
+[Apple Silicon (ARM64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-macos-arm64.dmg) ·
+[Intel (x64) DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-macos-amd64.dmg).
 Open the disk image and drag `LedgeSync.app` to `Applications`. Requires macOS
 13 or later. These developer builds are not Developer ID signed or notarized;
 macOS may block downloaded apps. See [installation and validation limits](docs/PLATFORMS.md).
 For Windows and Ubuntu, use the [desktop download section](https://ledgesync.com/#downloads).
 
-**Windows:** download the [x64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe)
-or [ARM64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe).
+**Windows:** download the [x64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-windows-amd64-setup.exe)
+or [ARM64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/LedgeSync-0.1.0-alpha.2-windows-arm64-setup.exe).
 Opening it starts the installation wizard. It installs for the current user,
 creates a Start menu entry and registers an uninstaller in Windows Settings.
 These alpha installers are not Authenticode signed.
@@ -36,21 +41,36 @@ These alpha installers are not Authenticode signed.
 then run `sudo apt-get update && sudo apt-get install ledgesync` for the graphical
 app. Use `ledgesync-cli` for headless servers. These packages come from the
 project's own repository, not Ubuntu's default package archive.
+Alpha.2 APT publication is pending; the repository may still serve alpha.1.
+Google Drive authorization on Ubuntu desktop requires a running, unlocked
+Secret Service credential store such as GNOME Keyring in the graphical session.
+
+**Connect Google Drive:** open **Connections**, import your own Google OAuth
+Desktop app client JSON, and choose **Connect Google Drive**. The system browser
+opens Google's consent screen. No shared client is bundled; follow the
+[Google Cloud setup and authorization guide](docs/GOOGLE_DRIVE_AUTH.md) first.
+One account is supported, using the limited `drive.file` permission. Tokens stay
+in the OS credential vault. Check, reconnect, cancel and disconnect are available
+in the desktop app. Live Google consent remains unverified until an owner-created
+client is configured; automated authorization tests use synthetic credentials.
 
 The first implementation browses local folders, explains policy decisions and
 creates plans against an explicitly simulated, empty destination. Plans are
 deterministic for the same snapshots and creation time.
-It contains no live Google Drive connection, transfer executor or scheduler.
+Connecting an account does not change the simulated destination or apply a plan.
+There is no transfer executor, cloud browser or scheduler. The headless CLI
+remains an offline preview tool and does not import credentials or authorize accounts.
 Source files are read-only. Additional VCS adapters are reported as unavailable
 and required unsupported sources stop preview rather than being skipped.
 
 The desktop is the primary interface. Build instructions for macOS, Ubuntu,
 Windows 11 and headless servers are in [PLATFORMS.md](docs/PLATFORMS.md).
-Release 0.1.0-alpha.1 provides two macOS desktop DMGs plus six desktop and six
+The historical release 0.1.0-alpha.1 provides two macOS desktop DMGs plus six desktop and six
 CLI archives, with checksums and retained license notices. The DMGs contain the
 same previously published apps; no original release asset was replaced.
 All 16 jobs passed in the
 [release CI run](https://github.com/alexandroit/LedgeSync/actions/runs/36942481310).
+That evidence applies to alpha.1, not the pending alpha.2 release.
 Open a folder in the app to explore it with the default `.gitignore` policy,
 or open a project JSON configuration to select multiple rule sources.
 
@@ -105,6 +125,7 @@ All repository work should be in English: code, identifiers, comments, documenta
 | [04 · Filter specification](docs/04_FILTER_ENGINE_SPEC.md) | Dialects, discovery, hierarchy, precedence, traversal, and explanations |
 | [05 · Sync safety](docs/05_SYNC_SAFETY_AND_STATE.md) | Planning, application, ownership, conflicts, deletion, and recovery |
 | [06 · Google Drive](docs/06_GOOGLE_DRIVE_PROVIDER.md) | OAuth, permissions, file IDs, uploads, integrity, quotas, and API limitations |
+| [Google Drive authorization setup](docs/GOOGLE_DRIVE_AUTH.md) | Create your Desktop app client, authorize an account, and understand scope and credential storage |
 | [07 · Configuration and contracts](docs/07_CONFIGURATION_AND_CONTRACTS.md) | Schemas, types, commands, errors, and migrations |
 | [08 · Desktop, CLI, automation](docs/08_DESKTOP_CLI_AND_AUTOMATION.md) | Screens, workflows, scheduling, headless use, and accessibility |
 | [09 · Security and privacy](docs/09_SECURITY_AND_PRIVACY.md) | Threat model, secret handling, path safety, and trust boundaries |

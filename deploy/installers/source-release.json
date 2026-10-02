@@ -47,5 +47,6 @@
         "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/ledgesync-desktop-0.1.0-alpha.1-windows-arm64.zip"
       }
     }
-  }
+  },
+  "sourceDateEpoch": 1790898328
 }

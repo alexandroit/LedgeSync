@@ -18,8 +18,8 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/policy"
 )
 
-const version = "0.1.0-alpha.1"
-const usage = `LedgeSync 0.1.0-alpha.1 — offline policy explorer
+const version = "0.1.0-alpha.2"
+const usage = `LedgeSync 0.1.0-alpha.2 — offline policy explorer
 
 Usage:
   ledgesync browse --root DIRECTORY --json
@@ -31,8 +31,10 @@ Usage:
   ledgesync capabilities
   ledgesync --version
 
-All previews use a fake empty destination. No cloud connection, transfer, apply,
-deletion, scheduler, or credential import is available in this offline alpha.
+All CLI previews use a fake empty destination. This headless CLI has no cloud
+connection or credential import. Google Drive authorization is available only
+in the desktop app's Connections screen with your own Desktop app OAuth client.
+Cloud browsing, transfer, apply, deletion and scheduling are not implemented.
 Git policy is patterns-only; no Git or rclone executable is needed at runtime.
 `
 

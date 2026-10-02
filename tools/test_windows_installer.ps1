@@ -9,7 +9,7 @@ param(
     [Parameter(Mandatory = $true)][string] $Installer,
     [Parameter(Mandatory = $true)][string] $PayloadRoot,
     [Parameter(Mandatory = $true)][ValidateSet('amd64', 'arm64')][string] $Arch,
-    [string] $Version = '0.1.0-alpha.1',
+    [Parameter(Mandatory = $true)][ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$')][string] $Version,
     [string] $ReportPath,
     [switch] $WizardSmoke
 )

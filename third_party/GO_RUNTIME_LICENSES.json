@@ -10,32 +10,32 @@
   "targets": [
     {
       "target": "darwin/amd64",
-      "packages": 281,
+      "packages": 286,
       "cgo_enabled": true
     },
     {
       "target": "darwin/arm64",
-      "packages": 280,
+      "packages": 285,
       "cgo_enabled": true
     },
     {
       "target": "linux/amd64",
-      "packages": 284,
+      "packages": 288,
       "cgo_enabled": true
     },
     {
       "target": "linux/arm64",
-      "packages": 283,
+      "packages": 287,
       "cgo_enabled": true
     },
     {
       "target": "windows/amd64",
-      "packages": 310,
+      "packages": 315,
       "cgo_enabled": true
     },
     {
       "target": "windows/arm64",
-      "packages": 309,
+      "packages": 314,
       "cgo_enabled": true
     }
   ],
@@ -77,6 +77,24 @@
           "upstream_path": "LICENSE",
           "file": "third_party/go_modules/github.com_bep_debounce_v1.2.1/LICENSE",
           "sha256": "77d1b21a5460ffc70d50101e9490a44b35dd713dab8a6f847c54ce4d3e81234a"
+        }
+      ]
+    },
+    {
+      "module": "github.com/danieljoos/wincred",
+      "version": "v1.2.3",
+      "packages": [
+        "github.com/danieljoos/wincred"
+      ],
+      "targets": [
+        "windows/amd64",
+        "windows/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_danieljoos_wincred_v1.2.3/LICENSE",
+          "sha256": "1702a813fa31858c0d6c7788216fa3dd202472265716998024654c252fc7bb41"
         }
       ]
     },
@@ -131,6 +149,24 @@
           "upstream_path": "LICENSE",
           "file": "third_party/go_modules/github.com_google_uuid_v1.6.0/LICENSE",
           "sha256": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d"
+        }
+      ]
+    },
+    {
+      "module": "github.com/keybase/go-keychain",
+      "version": "v0.0.1",
+      "packages": [
+        "github.com/keybase/go-keychain"
+      ],
+      "targets": [
+        "darwin/amd64",
+        "darwin/arm64"
+      ],
+      "notices": [
+        {
+          "upstream_path": "LICENSE",
+          "file": "third_party/go_modules/github.com_keybase_go-keychain_v0.0.1/LICENSE",
+          "sha256": "039c69774070226d213bced933176be4ec396c9b101cd9a13e82a2c390c6c90a"
         }
       ]
     },

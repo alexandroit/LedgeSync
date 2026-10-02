@@ -17,7 +17,7 @@ func Build(c config.Config, sourceIdentity, rulesDigest string, entries []domain
 }
 
 func BuildContext(ctx context.Context, c config.Config, sourceIdentity, rulesDigest string, entries []domain.Entry, remote domain.Inventory, now time.Time) (domain.Plan, error) {
-	p := domain.Plan{SchemaVersion: "1.0", ProjectID: c.Project.ID, CreatedAt: now.UTC().Format(time.RFC3339Nano), ExpiresAt: now.Add(15 * time.Minute).UTC().Format(time.RFC3339Nano), Mode: "copy", SourceIdentity: sourceIdentity, DestinationIdentity: remote.Identity, RulesDigest: rulesDigest, Operations: []domain.Operation{}, Risks: []string{"Offline simulation using a fake destination. This plan cannot be applied.", "Google Drive authentication, transfer, durable state, recovery, and scheduling are not implemented."}, ScanComplete: domain.ScanComplete{Source: true, Destination: remote.Complete}}
+	p := domain.Plan{SchemaVersion: "1.0", ProjectID: c.Project.ID, CreatedAt: now.UTC().Format(time.RFC3339Nano), ExpiresAt: now.Add(15 * time.Minute).UTC().Format(time.RFC3339Nano), Mode: "copy", SourceIdentity: sourceIdentity, DestinationIdentity: remote.Identity, RulesDigest: rulesDigest, Operations: []domain.Operation{}, Risks: []string{"Offline simulation using a fake destination. This plan cannot be applied.", "Google Drive transfer, durable state, recovery, and scheduling are not implemented."}, ScanComplete: domain.ScanComplete{Source: true, Destination: remote.Complete}}
 	if err := c.Validate(); err != nil {
 		return p, err
 	}

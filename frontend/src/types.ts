@@ -33,10 +33,24 @@ export interface Preview {
   projectName: string; sourceRoot: string; offline: boolean;
   entries: Entry[]; plan: Plan; capabilities: Capability[];
 }
+export interface DriveConnectionStatus {
+  state: 'setup_required' | 'disconnected' | 'connecting' | 'connected' | 'reconnect_required' | 'storage_unavailable';
+  clientConfigured: boolean;
+  account?: { reference: string; displayName: string; email: string };
+  message: string;
+  scope: string;
+}
 export interface DesktopBridge {
   OpenFolder(): Promise<Preview | null>;
   OpenConfiguration(): Promise<Preview | null>;
   Refresh(): Promise<Preview | null>;
   Cancel(): Promise<void>;
+  GoogleDriveStatus(): Promise<DriveConnectionStatus>;
+  ImportGoogleOAuthClient(): Promise<DriveConnectionStatus | null>;
+  ConnectGoogleDrive(): Promise<DriveConnectionStatus>;
+  CheckGoogleDrive(): Promise<DriveConnectionStatus>;
+  DisconnectGoogleDrive(): Promise<DriveConnectionStatus>;
+  CancelGoogleDrive(): Promise<void>;
+  OpenGoogleOAuthSetup(): Promise<void>;
 }
 declare global { interface Window { go?: { desktop?: { App?: DesktopBridge } } } }

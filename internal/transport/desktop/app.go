@@ -17,15 +17,20 @@ type previewService interface {
 // Picker is supplied by the native shell; the browser cannot choose arbitrary roots.
 type Picker func() (string, error)
 
-// App is the complete desktop binding. It has no mutation or network methods.
+// App binds read-only previews and explicit Google Drive account authorization.
 type App struct {
-	service      previewService
-	folderPicker Picker
-	configPicker Picker
-	mu           sync.Mutex
-	cancel       context.CancelFunc
-	path         string
-	isConfig     bool
+	google            googleDriveService
+	clientPicker      Picker
+	openGoogleSetup   func() error
+	connectionContext context.Context
+	closeConnections  context.CancelFunc
+	service           previewService
+	folderPicker      Picker
+	configPicker      Picker
+	mu                sync.Mutex
+	cancel            context.CancelFunc
+	path              string
+	isConfig          bool
 }
 
 func New(service previewService, folderPicker, configPicker Picker) *App {

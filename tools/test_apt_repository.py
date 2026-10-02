@@ -11,9 +11,9 @@ import tempfile
 import threading
 
 from build_apt_repository import build
+from package_deb import debian_version
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '0.1.0~alpha.1-1'
 
 
 def run(args, check=True):
@@ -38,7 +38,9 @@ def main():
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--packages', type=Path)
     mode.add_argument('--public', action='store_true')
+    parser.add_argument('--version', required=True, help='Expected application release version')
     args = parser.parse_args()
+    version = debian_version(args.version)
     release = Path('/etc/os-release').read_text() if Path('/etc/os-release').exists() else ''
     if os.environ.get('GITHUB_ACTIONS') != 'true' or os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted' or 'VERSION_ID="24.04"' not in release or 'ID=ubuntu' not in release:
         raise SystemExit('Refusing package lifecycle test outside disposable GitHub Ubuntu 24.04 runners')
@@ -102,14 +104,18 @@ def main():
             run(['sudo', '-n', 'install', '-m', '0644', str(source), str(source_path)])
             run(sudo_apt + ['update', '-o', 'Acquire::By-Hash=force', '-o', 'APT::Update::Error-Mode=any'])
             policy = run(['apt-cache', 'policy', 'ledgesync']).stdout
-            if f'Candidate: {VERSION}' not in policy or base not in policy:
+            if f'Candidate: {version}' not in policy or base not in policy:
                 raise ValueError('APT candidate is not from the expected repository')
-            run(sudo_apt + ['install', '-y', '--no-install-recommends', 'ledgesync'])
+            run(sudo_apt + ['install', '-y', 'ledgesync'])
+            recommendations = run(['dpkg-query', '-W', '-f=${Recommends}', 'ledgesync']).stdout.strip()
+            native_vault_recommended = 'gnome-keyring' in recommendations.split(', ')
+            if native_vault_recommended and run(['dpkg-query', '-W', '-f=${db:Status-Status}', 'gnome-keyring']).stdout.strip() != 'installed':
+                raise ValueError('Desktop recommendation did not install native Secret Service')
             for package in ('ledgesync', 'ledgesync-cli'):
                 installed = run(['dpkg-query', '-W', '-f=${Version}', package]).stdout.strip()
-                if installed != VERSION:
+                if installed != version:
                     raise ValueError('Unexpected installed version')
-            if 'LedgeSync 0.1.0-alpha.1' not in run(['ledgesync', '--version']).stdout:
+            if run(['ledgesync', '--version']).stdout.strip() != 'LedgeSync ' + args.version:
                 raise ValueError('Installed CLI did not execute')
             if not os.access('/usr/bin/ledgesync-desktop', os.X_OK):
                 raise ValueError('Desktop launcher was not installed')
@@ -125,7 +131,7 @@ def main():
                 raise ValueError('APT did not exercise immutable by-hash indexes')
             report = ROOT / 'build/apt-validation'
             report.mkdir(parents=True, exist_ok=True)
-            (report / f'{"public" if args.public else "local"}-{arch}.json').write_text(json.dumps({'baseURL': base, 'architecture': arch, 'version': VERSION, 'signatureVerified': True, 'tamperedMetadataRejected': True, 'byHashForced': True, 'desktopInstalled': True, 'headlessCliInstalled': True, 'uninstallPreservedUserFixture': True}, indent=2) + '\n')
+            (report / f'{"public" if args.public else "local"}-{arch}.json').write_text(json.dumps({'baseURL': base, 'architecture': arch, 'version': version, 'signatureVerified': True, 'tamperedMetadataRejected': True, 'byHashForced': True, 'desktopInstalled': True, 'secretServiceInstalled': native_vault_recommended, 'headlessCliInstalled': True, 'uninstallPreservedUserFixture': True}, indent=2) + '\n')
         finally:
             run(['sudo', '-n', 'rm', '-f', str(source_path)], check=False)
             fixture.unlink(missing_ok=True)

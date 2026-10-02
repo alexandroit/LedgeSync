@@ -15,6 +15,6 @@
     "productName": "LedgeSync",
     "productVersion": "0.1.0",
     "copyright": "Copyright 2026 LedgeSync contributors. Apache-2.0.",
-    "comments": "Offline file-policy explorer. Cloud transfers are not enabled."
+    "comments": "Local policy explorer and Google Drive account authorization. Cloud transfers are not enabled."
   }
 }

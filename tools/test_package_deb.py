@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import io
+import json
+import copy
 from pathlib import Path
 import os
 import struct
@@ -11,13 +13,60 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from package_deb import (DEFAULT_MAINTAINER, DEBIAN_VERSION, ROOT, copy_notices,
+from package_deb import (DEFAULT_MAINTAINER, ROOT, copy_notices, debian_version, load_release,
                          dependencies, extract_release, needed_libraries,
                          publish_outputs, sha256, verify_archive, verify_elf,
                          write_control)
 
 
 class DebianPackageGuards(unittest.TestCase):
+    def release_fixture(self) -> dict:
+        return {"version": "0.1.0-alpha.2", "tag": "v0.1.0-alpha.2",
+                "applicationSourceCommit": "a" * 40, "sourceDateEpoch": 1790984728,
+                "targets": {"windows-amd64": {"desktop": {
+                    "name": "ledgesync-desktop-0.1.0-alpha.2-windows-amd64.zip",
+                    "url": "https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.2/ledgesync-desktop-0.1.0-alpha.2-windows-amd64.zip",
+                    "sha256": "b" * 64, "size": 123}}}}
+
+    def test_manifest_pins_release_identity_without_old_source_constants(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            manifest = Path(temporary) / "source.json"
+            good = self.release_fixture()
+            manifest.write_text(json.dumps(good))
+            release = load_release(manifest, "0.1.0-alpha.2")
+            self.assertEqual(release["debianVersion"], "0.1.0~alpha.2-1")
+            self.assertEqual(release["applicationSourceCommit"], "a" * 40)
+            self.assertEqual(release["sourceDateEpoch"], 1790984728)
+            self.assertEqual(release["manifestSha256"], sha256(manifest))
+            with self.assertRaises(ValueError):
+                load_release(manifest, "0.1.0-alpha.1")
+            cases = []
+            for key, value in (("version", "../../unsafe"), ("tag", "v0.1.0-alpha.1"),
+                               ("applicationSourceCommit", "main"), ("sourceDateEpoch", None),
+                               ("sourceDateEpoch", True)):
+                changed = copy.deepcopy(good)
+                changed[key] = value
+                cases.append(changed)
+            for key, value in (("url", "https://example.test/other.zip"),
+                               ("name", "old-release.zip"), ("sha256", "bad"), ("size", True)):
+                changed = copy.deepcopy(good)
+                changed["targets"]["windows-amd64"]["desktop"][key] = value
+                cases.append(changed)
+            for changed in cases:
+                manifest.write_text(json.dumps(changed))
+                with self.assertRaises(ValueError):
+                    load_release(manifest)
+            self.assertEqual(debian_version("1.2.3"), "1.2.3-1")
+
+    def test_desktop_recommends_native_secret_service(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            stage = Path(temporary)
+            release = self.release_fixture()
+            release["debianVersion"] = debian_version(release["version"])
+            control = write_control(stage, "ledgesync", "amd64", "ledgesync-cli", DEFAULT_MAINTAINER, release)
+            self.assertIn("Recommends: gnome-keyring", control)
+            self.assertIn("X-LedgeSync-Source-Revision: " + "a" * 40, control)
+
     def make_archive(self, path: Path, entries: list[tuple[str, bytes, str]]) -> None:
         with tarfile.open(path, "w:gz") as archive:
             for name, data, kind in entries:
@@ -123,8 +172,11 @@ class DebianPackageGuards(unittest.TestCase):
             binary = stage / "usr/bin/ledgesync"
             binary.parent.mkdir(parents=True)
             binary.write_bytes(b"fixture")
-            control = write_control(stage, "ledgesync-cli", "amd64", "", DEFAULT_MAINTAINER)
-            self.assertIn("Version: " + DEBIAN_VERSION, control)
+            release = self.release_fixture()
+            release["debianVersion"] = debian_version(release["version"])
+            control = write_control(stage, "ledgesync-cli", "amd64", "", DEFAULT_MAINTAINER, release)
+            self.assertIn("Version: " + release["debianVersion"], control)
+            self.assertNotIn("Recommends:", control)
             self.assertNotIn("Depends:", control)
             self.assertEqual({p.name for p in (stage / "DEBIAN").iterdir()}, {"control", "md5sums"})
             self.assertEqual(binary.stat().st_mode & 0o777, 0o755)

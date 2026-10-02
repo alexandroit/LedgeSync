@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LedgeSync
+GenericName=File policy explorer
+Comment=Browse local files and preview file selection
+Exec=ledgesync-desktop
+TryExec=ledgesync-desktop
+Icon=ledgesync
+Terminal=false
+Categories=Utility;FileTools;
+StartupNotify=true

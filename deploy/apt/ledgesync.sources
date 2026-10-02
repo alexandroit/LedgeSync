@@ -1,0 +1,6 @@
+Types: deb
+URIs: https://ledgesync.com/apt
+Suites: stable
+Components: main
+Architectures: amd64 arm64
+Signed-By: /etc/apt/keyrings/ledgesync-archive-keyring.gpg

@@ -110,3 +110,8 @@ sudo certbot renew --cert-name ledgesync.com --dry-run --non-interactive --run-d
 The production origin is updated through SSH. A GitHub Pages workflow run does
 not deploy to Ubuntu. After publishing website source, dispatch the Pages
 workflow as needed to keep the secondary copy current.
+
+The latest secondary Pages publication is
+[run 36947337099](https://github.com/alexandroit/LedgeSync/actions/runs/36947337099),
+with public HTML and stylesheet bytes matching source commit
+`2890e90f028c6ee038739b09423b372668e20a00`.

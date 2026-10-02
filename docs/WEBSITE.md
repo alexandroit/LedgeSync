@@ -39,7 +39,11 @@ reloading it: `/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx`.
 ## Verified deployment
 
 Verified on **2026-10-01 America/Toronto (2026-10-02 UTC)**. The deployed website
-source is commit `92eb75b51d978565e1dd8ef939d6cf6320da2299`.
+source is commit `188ba5de5c76b5562b6b7c6afa8e14f4a20ad45f`, which adds
+prominent graphical desktop downloads and the two published macOS DMGs.
+The previous release `92eb75b51d978565e1dd8ef939d6cf6320da2299` remains on the
+server as the content rollback target. This content-only update required no
+Nginx reload. Its CSS URL includes a content version to avoid stale CDN styling.
 
 | Check | Observed result |
 |---|---|
@@ -58,8 +62,8 @@ source is commit `92eb75b51d978565e1dd8ef939d6cf6320da2299`.
 SHA-256:
 
 ```text
-441cb0da7e6884ef813f469414ef95ed460dc532703cd8b1474b8ac7fdea12aa  dist/index.html
-e03a6c3838152b78220e0f985fb835b21e9928e63ce5bc0823e2eb5e79062152  dist/style.css
+354c2c41bb9d3640de4cf853ae2c6ecabb1f6d5480f3b5a25ab8a1d4261446f1  dist/index.html
+80e62473546283aac7165934a4426bebded1d8b8cd44b6f35dd9bb4edc47279f  dist/style.css
 ```
 
 ## Updates and rollback

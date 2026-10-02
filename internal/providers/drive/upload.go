@@ -3,6 +3,7 @@ package drive
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -85,8 +86,10 @@ func (c *Client) Upload(ctx context.Context, account, id, parent, name, operatio
 	if err != nil {
 		return Object{}, err
 	}
-	if o, err := c.verified(ctx, account, id, parent, name, operation, binaryMIME, size, md5); domain.ErrorCode(err) != "DRIVE_NOT_FOUND" {
-		return o, err
+	if !c.takeFresh(account, id) {
+		if o, err := c.verified(ctx, account, id, parent, name, operation, binaryMIME, size, md5); domain.ErrorCode(err) != "DRIVE_NOT_FOUND" {
+			return o, err
+		}
 	}
 	// Only the source is seeked; no local file writes or metadata changes occur.
 	length, err := source.Seek(0, io.SeekEnd)
@@ -175,10 +178,10 @@ func (c *Client) transfer(ctx context.Context, account, session string, source i
 		if !query && size > 0 && offset < size {
 			n := min(c.chunkSize, size-offset)
 			if _, err := source.Seek(offset, io.SeekStart); err != nil {
-				return domain.Fail("SOURCE_UNREADABLE", "The upload source cannot be read.")
+				return sourceError(ctx, err)
 			}
 			if _, err := io.ReadFull(source, buffer[:n]); err != nil {
-				return domain.Fail("SOURCE_CHANGED", "The upload source could not be read completely.")
+				return sourceError(ctx, err)
 			}
 			body = buffer[:n]
 			contentRange = fmt.Sprintf("bytes %d-%d/%d", offset, offset+n-1, size)
@@ -196,14 +199,17 @@ func (c *Client) transfer(ctx context.Context, account, session string, source i
 				if parseErr != nil {
 					return parseErr
 				}
-				if next > offset {
+				// A status query that reports where to resume is progress. A data
+				// chunk without progress, or committed bytes that are never
+				// finalized, is a stall and consumes the bounded retry budget.
+				if next > offset || (len(body) == 0 && next < size) {
 					failures = 0
 				} else {
 					failures++
 				}
 				offset = next
 				query = offset == size
-				if failures >= maxAttempts {
+				if failures >= c.attempts {
 					return unknown()
 				}
 				if failures > 0 {
@@ -222,7 +228,7 @@ func (c *Client) transfer(ctx context.Context, account, session string, source i
 			return err
 		}
 		failures++
-		if failures >= maxAttempts {
+		if failures >= c.attempts {
 			return unknown()
 		}
 		if err := c.backoff(ctx, failures-1, r.header); err != nil {
@@ -230,4 +236,17 @@ func (c *Client) transfer(ctx context.Context, account, session string, source i
 		}
 		query = true // Reconcile committed bytes before sending any further data.
 	}
+}
+
+// sourceError keeps the local reader's safe classification. A source that
+// changed while streaming is a per-file local condition, not a remote failure.
+func sourceError(ctx context.Context, err error) error {
+	if ctx.Err() != nil {
+		return cancelled()
+	}
+	var safe *domain.Error
+	if errors.As(err, &safe) && (safe.Code == "SOURCE_CHANGED" || safe.Code == "CANCELLED") {
+		return safe
+	}
+	return domain.Fail("SOURCE_CHANGED", "The upload source could not be read completely.")
 }

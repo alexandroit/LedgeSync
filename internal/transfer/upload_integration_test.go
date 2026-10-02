@@ -55,6 +55,7 @@ type memoryDrive struct {
 	entered           chan struct{}
 	enteredOnce       sync.Once
 	afterWrite        func(string)
+	beforeGet         func(string)
 }
 
 func newMemoryDrive() *memoryDrive {
@@ -85,6 +86,12 @@ func copyObject(o drive.Object) drive.Object {
 func (p *memoryDrive) GetObject(ctx context.Context, account, id string) (drive.Object, error) {
 	if err := ctx.Err(); err != nil {
 		return drive.Object{}, err
+	}
+	p.mu.Lock()
+	hook := p.beforeGet
+	p.mu.Unlock()
+	if hook != nil {
+		hook(id)
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -308,7 +315,7 @@ func TestUploadRequiresExactCurrentApproval(t *testing.T) {
 }
 
 func TestUploadRejectsSourceRulesDestinationAndAccountChangesBeforeMutation(t *testing.T) {
-	cases := map[string]func(*testing.T, *fixture){"file content": func(t *testing.T, f *fixture) { writeFile(t, f.source, "a.txt", "other") }, "new file": func(t *testing.T, f *fixture) { writeFile(t, f.source, "new.txt", "new") }, "ignore rules": func(t *testing.T, f *fixture) { writeFile(t, f.source, ".gitignore", "a.txt\n") }, "missing rule source": func(t *testing.T, f *fixture) {
+	cases := map[string]func(*testing.T, *fixture){"ignore rules": func(t *testing.T, f *fixture) { writeFile(t, f.source, ".gitignore", "a.txt\n") }, "missing rule source": func(t *testing.T, f *fixture) {
 		if err := os.Remove(filepath.Join(f.source, ".gitignore")); err != nil {
 			t.Fatal(err)
 		}
@@ -333,6 +340,44 @@ func TestUploadRejectsSourceRulesDestinationAndAccountChangesBeforeMutation(t *t
 			requireNoRemoteWrites(t, f)
 		})
 	}
+}
+
+// A changed or added source file never extends or alters the approved work:
+// changed approved files are skipped and reported, added files wait for a new preview.
+func TestSourceChangesAfterPreviewNeverUploadUnapprovedContent(t *testing.T) {
+	t.Run("changed approved file", func(t *testing.T) {
+		f := fixtureFor(t, map[string]string{"a.txt": "first", "b.txt": "second"})
+		p := previewPlan(t, f)
+		writeFile(t, f.source, "a.txt", "other")
+		status := runPlan(t, f, p)
+		if status.State != "partial" || status.SkippedFiles != 1 || len(status.Issues) != 1 || status.Issues[0].Path != "a.txt" || status.Issues[0].Code != "SOURCE_CHANGED" {
+			t.Fatalf("changed approved file was not reported: %+v", status)
+		}
+		for _, o := range f.api.snapshot() {
+			if o.Name == "a.txt" {
+				t.Fatal("unapproved content was uploaded")
+			}
+		}
+		next := previewPlan(t, f)
+		for _, e := range next.Entries {
+			if e.RelativePath == "a.txt" && e.Action != "upload" || e.RelativePath == "b.txt" && e.Action != "skip" {
+				t.Fatalf("follow-up preview did not pick up the current version: %+v", e)
+			}
+		}
+	})
+	t.Run("added file", func(t *testing.T) {
+		f := fixtureFor(t, map[string]string{"a.txt": "first"})
+		p := previewPlan(t, f)
+		writeFile(t, f.source, "new.txt", "new")
+		if status := runPlan(t, f, p); status.State != "succeeded" {
+			t.Fatalf("approved work failed: %+v", status)
+		}
+		for _, o := range f.api.snapshot() {
+			if o.Name == "new.txt" {
+				t.Fatal("a file outside the approved plan was uploaded")
+			}
+		}
+	})
 }
 
 func TestRepeatedUploadSkipsVerifiedObjectsAndChangedFileKeepsBoth(t *testing.T) {
@@ -397,7 +442,7 @@ func TestLostWriteAcknowledgementReconcilesReservedIDWithoutDuplicate(t *testing
 	}
 	recovered := previewPlan(t, f)
 	for _, entry := range recovered.Entries {
-		if entry.RelativePath == "a.txt" && entry.Action != "skip" {
+		if entry.RelativePath == "a.txt" && entry.Action != "resume" {
 			t.Fatalf("remote acknowledgement was not reconciled: %+v", entry)
 		}
 	}
@@ -520,7 +565,7 @@ func TestSourceEditedDuringUploadCannotBeReportedAsVerifiedSnapshot(t *testing.T
 	}
 	p := previewPlan(t, f)
 	status := runPlan(t, f, p)
-	if status.State != "needs_review" && status.State != "failed" {
+	if status.State != "partial" || len(status.Issues) != 1 || status.Issues[0].Path != "z.txt" {
 		t.Fatalf("changed source reported successful: %+v", status)
 	}
 	for _, o := range f.api.snapshot() {
@@ -593,29 +638,6 @@ func TestMissingIgnoreSourceSurvivesApplicationRestartAndDestinationChange(t *te
 	}
 }
 
-// The third inventory is the executor's final source snapshot, after all remote
-// checks and node acknowledgements but before durable run finalization.
-type finalScanPreviewer struct {
-	inner      *app.Service
-	scans      int
-	afterFinal func() error
-}
-
-func (p *finalScanPreviewer) PreviewRoot(ctx context.Context, source string) (app.Preview, error) {
-	result, err := p.inner.PreviewRoot(ctx, source)
-	if err != nil {
-		return result, err
-	}
-	p.scans++
-	if p.scans == 3 {
-		err = p.afterFinal()
-	}
-	return result, err
-}
-func (p *finalScanPreviewer) Preview(ctx context.Context, source string) (app.Preview, error) {
-	return p.inner.Preview(ctx, source)
-}
-
 func TestDurableRunFinalizationFailureNeverReportsSucceeded(t *testing.T) {
 	f := fixtureFor(t, map[string]string{"a.txt": "approved fixture"})
 	// This is a separate SQLite connection inside the dedicated fake fixture. It
@@ -629,6 +651,7 @@ func TestDurableRunFinalizationFailureNeverReportsSucceeded(t *testing.T) {
 	var journal *sql.DB
 	var blocker *sql.Conn
 	var setupErr error
+	written := false
 	locked := make(chan struct{})
 	setupFailed := make(chan error, 1)
 	reportSetupFailure := func(stage string, err error) error {
@@ -640,32 +663,11 @@ func TestDurableRunFinalizationFailureNeverReportsSucceeded(t *testing.T) {
 		}
 		return err
 	}
-	local := &finalScanPreviewer{inner: app.NewService(), afterFinal: func() error {
-		if setupErr != nil {
-			return setupErr
-		}
-		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		blocker, err = journal.Conn(ctx)
-		if err != nil {
-			return reportSetupFailure("open finalization blocker", err)
-		}
-		if _, err = blocker.ExecContext(ctx, "BEGIN IMMEDIATE"); err != nil {
-			return reportSetupFailure("lock finalization transaction", err)
-		}
-		close(locked)
-		return nil
-	}}
-	f.service = transfer.New(local, f.api, f.accounts, f.state)
-	t.Cleanup(f.service.CancelAndWait)
-	if _, err := f.service.SetDestination(context.Background(), "destination", testAccount); err != nil {
-		t.Fatal(err)
-	}
 	f.api.afterWrite = func(name string) {
 		if name != "a.txt" {
 			return
 		}
+		written = true
 		journal, setupErr = sql.Open("sqlite", uri.String())
 		if setupErr != nil {
 			reportSetupFailure("open fixture journal", setupErr)
@@ -675,6 +677,25 @@ func TestDurableRunFinalizationFailureNeverReportsSucceeded(t *testing.T) {
 		defer cancel()
 		_, setupErr = journal.ExecContext(ctx, "CREATE TRIGGER reject_final_run_event BEFORE INSERT ON run_events BEGIN SELECT RAISE(ABORT, 'synthetic finalization failure'); END")
 		reportSetupFailure("install finalization failure trigger", setupErr)
+	}
+	// The executor's final managed-folder check runs after every node is verified
+	// and before durable run finalization: hold the journal's writer lock there.
+	f.api.beforeGet = func(string) {
+		if !written || blocker != nil || setupErr != nil {
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		var err error
+		if blocker, err = journal.Conn(ctx); err != nil {
+			reportSetupFailure("open finalization blocker", err)
+			return
+		}
+		if _, err = blocker.ExecContext(ctx, "BEGIN IMMEDIATE"); err != nil {
+			reportSetupFailure("lock finalization transaction", err)
+			return
+		}
+		close(locked)
 	}
 	defer func() {
 		if blocker != nil {

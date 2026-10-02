@@ -27,10 +27,12 @@ type group struct {
 	priority        int
 	rules, dirRules []rule
 }
+
 type Engine struct {
 	groups        []group
 	composition   string
 	caseSensitive bool
+	count         int
 }
 
 func New(c config.Config, s policy.Snapshot) (*Engine, error) {
@@ -38,8 +40,6 @@ func New(c config.Config, s policy.Snapshot) (*Engine, error) {
 		return nil, err
 	}
 	e := &Engine{composition: c.Filters.Composition, caseSensitive: c.Source.CaseSensitive}
-	count := 0
-	compiledBeforeGroup := 0
 	for _, g := range c.Filters.Groups {
 		if !g.Enabled {
 			continue
@@ -56,56 +56,8 @@ func New(c config.Config, s policy.Snapshot) (*Engine, error) {
 			if m.GroupID != g.ID {
 				continue
 			}
-			lines := strings.Split(m.Content, "\n")
-			for i, line := range lines {
-				if len(line) > MaxLineBytes {
-					return nil, domain.Fail("RULE_PARSE_ERROR", "%s:%d exceeds line limit", m.Source, i+1)
-				}
-				line = strings.TrimSuffix(line, "\r")
-				if i == 0 && g.Dialect == "gitignore" {
-					line = strings.TrimPrefix(line, "\ufeff")
-				}
-				p := domain.Provenance{Adapter: m.Adapter, Mechanism: m.Mechanism, Dialect: m.Dialect, ProfileVersion: m.ProfileVersion, Source: m.Source, Line: i + 1, Pattern: line, Scope: m.Scope}
-				if g.Dialect == "gitignore" {
-					r, skip, err := parseGit(line, p, c.Source.CaseSensitive)
-					if err != nil {
-						return nil, domain.Fail("RULE_PARSE_ERROR", "%s:%d: %s", m.Source, i+1, err)
-					}
-					if !skip {
-						compiled.rules = append(compiled.rules, r)
-						count++
-					}
-				} else {
-					line = strings.TrimSpace(line)
-					if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
-						continue
-					}
-					if g.Dialect == "rclone-filter" && line == "!" {
-						compiled.rules = nil
-						compiled.dirRules = nil
-						continue
-					}
-					allow := g.Dialect == "rclone-include"
-					pattern := line
-					if g.Dialect == "rclone-filter" {
-						if strings.HasPrefix(line, "+ ") {
-							allow = true
-						} else if !strings.HasPrefix(line, "- ") {
-							return nil, domain.Fail("RULE_PARSE_ERROR", "%s:%d: expected + pattern, - pattern, or !", m.Source, i+1)
-						}
-						pattern = line[2:]
-					}
-					if err := compiled.addRclone(pattern, allow, p, !c.Source.CaseSensitive); err != nil {
-						return nil, domain.Fail("RULE_PARSE_ERROR", "%s:%d: %s", m.Source, i+1, err)
-					}
-					count++
-				}
-				if count > MaxRules {
-					return nil, domain.Fail("RULE_PARSE_ERROR", "compiled rule limit exceeded")
-				}
-				if compiledBeforeGroup+len(compiled.rules)+len(compiled.dirRules) > MaxRules {
-					return nil, domain.Fail("RULE_PARSE_ERROR", "expanded rule limit exceeded")
-				}
+			if err := e.compile(&compiled, m); err != nil {
+				return nil, err
 			}
 		}
 		if g.Dialect == "rclone-include" {
@@ -113,10 +65,10 @@ func New(c config.Config, s policy.Snapshot) (*Engine, error) {
 			if err := compiled.addRclone("/**", false, p, !c.Source.CaseSensitive); err != nil {
 				return nil, err
 			}
+			e.count++
 		}
 		e.groups = append(e.groups, compiled)
-		compiledBeforeGroup += len(compiled.rules) + len(compiled.dirRules)
-		if compiledBeforeGroup > MaxRules {
+		if e.count > MaxRules {
 			return nil, domain.Fail("RULE_PARSE_ERROR", "expanded rule limit exceeded")
 		}
 	}
@@ -124,19 +76,113 @@ func New(c config.Config, s policy.Snapshot) (*Engine, error) {
 	return e, nil
 }
 
+// NewTraversal returns a conservative engine holding only the enabled Gitignore
+// groups, initially without rules. Hierarchical Gitignore rules can only affect
+// paths below their own directory, so a top-down scan that adds every rule file
+// before considering that directory's children evaluates each directory exactly
+// as the complete engine would. Other dialects never prune traversal.
+func NewTraversal(c config.Config) (*Engine, error) {
+	if err := c.Validate(); err != nil {
+		return nil, err
+	}
+	e := &Engine{composition: "conservative", caseSensitive: c.Source.CaseSensitive}
+	for _, g := range c.Filters.Groups {
+		if g.Enabled && g.Dialect == "gitignore" {
+			e.groups = append(e.groups, group{id: g.ID, dialect: g.Dialect, priority: g.Priority})
+		}
+	}
+	sort.Slice(e.groups, func(i, j int) bool { return e.groups[i].priority > e.groups[j].priority })
+	return e, nil
+}
+
+// Add compiles one more rule file into its group. Callers add an ancestor
+// directory's materials before any descendant directory's materials.
+func (e *Engine) Add(m policy.Material) error {
+	for i := range e.groups {
+		if e.groups[i].id == m.GroupID {
+			return e.compile(&e.groups[i], m)
+		}
+	}
+	return nil
+}
+
+// Groups reports whether the engine can decide anything.
+func (e *Engine) Groups() int { return len(e.groups) }
+
+func (e *Engine) compile(compiled *group, m policy.Material) error {
+	lines := strings.Split(m.Content, "\n")
+	for i, line := range lines {
+		if len(line) > MaxLineBytes {
+			return domain.Fail("RULE_PARSE_ERROR", "%s:%d exceeds line limit", m.Source, i+1)
+		}
+		line = strings.TrimSuffix(line, "\r")
+		if i == 0 && compiled.dialect == "gitignore" {
+			line = strings.TrimPrefix(line, "\ufeff")
+		}
+		p := domain.Provenance{Adapter: m.Adapter, Mechanism: m.Mechanism, Dialect: m.Dialect, ProfileVersion: m.ProfileVersion, Source: m.Source, Line: i + 1, Pattern: line, Scope: m.Scope}
+		if compiled.dialect == "gitignore" {
+			r, skip, err := parseGit(line, p, e.caseSensitive)
+			if err != nil {
+				return domain.Fail("RULE_PARSE_ERROR", "%s:%d: %s", m.Source, i+1, err)
+			}
+			if !skip {
+				compiled.rules = append(compiled.rules, r)
+				e.count++
+			}
+		} else {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
+				continue
+			}
+			if compiled.dialect == "rclone-filter" && line == "!" {
+				e.count -= len(compiled.rules) + len(compiled.dirRules)
+				compiled.rules = nil
+				compiled.dirRules = nil
+				continue
+			}
+			allow := compiled.dialect == "rclone-include"
+			pattern := line
+			if compiled.dialect == "rclone-filter" {
+				if strings.HasPrefix(line, "+ ") {
+					allow = true
+				} else if !strings.HasPrefix(line, "- ") {
+					return domain.Fail("RULE_PARSE_ERROR", "%s:%d: expected + pattern, - pattern, or !", m.Source, i+1)
+				}
+				pattern = line[2:]
+			}
+			before := len(compiled.rules) + len(compiled.dirRules)
+			if err := compiled.addRclone(pattern, allow, p, !e.caseSensitive); err != nil {
+				return domain.Fail("RULE_PARSE_ERROR", "%s:%d: %s", m.Source, i+1, err)
+			}
+			e.count += len(compiled.rules) + len(compiled.dirRules) - before
+		}
+		if e.count > MaxRules {
+			return domain.Fail("RULE_PARSE_ERROR", "compiled rule limit exceeded")
+		}
+	}
+	return nil
+}
+
 func (e *Engine) Explain(ctx context.Context, p, kind string) (domain.Explanation, error) {
 	x := domain.Explanation{Path: p, Kind: kind, Composition: e.composition, Groups: []domain.GroupDecision{}}
 	if err := domain.ValidatePath(p); err != nil {
 		return x, err
 	}
-	if kind != "file" && kind != "directory" {
+	match := kind
+	switch kind {
+	case "file", "directory":
+	case "symlink", "special":
+		// Ignore rules match links and special nodes like files: a trailing
+		// slash pattern never matches them and they are never traversed.
+		match = "file"
+	default:
 		return x, domain.Fail("NODE_UNSUPPORTED", "unsupported node type")
 	}
 	for _, g := range e.groups {
 		if ctx.Err() != nil {
 			return x, domain.Fail("CANCELLED", "filter evaluation cancelled")
 		}
-		decision := g.evaluate(p, kind, e.caseSensitive)
+		decision := g.evaluate(p, match, e.caseSensitive)
 		x.Groups = append(x.Groups, decision)
 	}
 	x.Decision, x.Reason = Compose(e.composition, x.Groups)

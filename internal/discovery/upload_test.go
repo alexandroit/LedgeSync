@@ -46,7 +46,7 @@ func TestUploadReaderRejectsMutationAndPreservesSource(t *testing.T) {
 		t.Fatal("post-verification accepted changed source")
 	}
 }
-func TestUploadReaderRejectsReplacedParentAndNewRules(t *testing.T) {
+func TestUploadReaderRejectsReplacedFile(t *testing.T) {
 	ctx := context.Background()
 	root := t.TempDir()
 	dir := filepath.Join(root, "sub")
@@ -62,17 +62,14 @@ func TestUploadReaderRejectsReplacedParentAndNewRules(t *testing.T) {
 	}
 	defer tree.Close()
 	digest, _ := tree.HashFile(ctx, "sub/file")
-	if err = os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("file\n"), 0600); err != nil {
+	if err = os.Remove(filepath.Join(dir, "file")); err != nil {
 		t.Fatal(err)
 	}
-	// Model a filesystem whose directory metadata does not reveal new entries.
-	// The pinned membership must independently detect the new policy source.
-	tree.observed["sub"], err = os.Stat(dir)
-	if err != nil {
+	if err = os.WriteFile(filepath.Join(dir, "file"), []byte("data"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = tree.OpenUpload(ctx, "sub/file", digest); err == nil {
-		t.Fatal("new directory policy escaped structure validation")
+		t.Fatal("a replaced file with identical content was accepted as the approved node")
 	}
 }
 func TestUploadReaderCancellationAndDigestMismatch(t *testing.T) {

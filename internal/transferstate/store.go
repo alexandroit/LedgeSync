@@ -10,7 +10,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/alexandroit/LedgeSync/internal/domain"
@@ -20,6 +22,8 @@ import (
 type Node struct {
 	Path, Kind, Name, ID, ParentID, OperationID, SHA256, MD5, Status string
 	Size                                                             int64
+	// Generation distinguishes a replacement copy from the original identity.
+	Generation int `json:",omitempty"`
 }
 
 type Project struct {
@@ -95,66 +99,26 @@ func Open(dir, source string) (*Store, error) {
 		}
 	}()
 	filename := filepath.Join(abs, "transfers.sqlite")
-	private, e := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|noFollowFlag, 0600)
-	if e != nil {
-		err = failure()
-		return nil, err
-	}
-	if st, e := private.Stat(); e != nil || !privateNode(filename, st, false) {
-		private.Close()
-		err = failure()
-		return nil, err
-	}
-	private.Close()
-	uriPath := filepath.ToSlash(filename)
-	if filepath.VolumeName(filename) != "" && !strings.HasPrefix(uriPath, "/") {
-		uriPath = "/" + uriPath
-	}
-	dsn := url.URL{Scheme: "file", Path: uriPath}
-	query := url.Values{"_defensive": {"1"}, "_dqs": {"0"}, "_pragma": {"trusted_schema(OFF)"}}
-	dsn.RawQuery = query.Encode()
-	s.db, err = sql.Open("sqlite", dsn.String())
-	if err != nil {
-		err = failure()
-		return nil, err
-	}
-	s.db.SetMaxOpenConns(1)
-	for _, q := range []string{"PRAGMA foreign_keys=ON", "PRAGMA journal_mode=DELETE", "PRAGMA synchronous=EXTRA", "PRAGMA busy_timeout=1000"} {
-		if _, err = s.db.Exec(q); err != nil {
-			err = failure()
-			return nil, err
-		}
-	}
-	var mode string
-	var synchronous, foreignKeys, trusted int
-	if s.db.QueryRow("PRAGMA journal_mode").Scan(&mode) != nil || mode != "delete" || s.db.QueryRow("PRAGMA synchronous").Scan(&synchronous) != nil || synchronous != 3 || s.db.QueryRow("PRAGMA foreign_keys").Scan(&foreignKeys) != nil || foreignKeys != 1 || s.db.QueryRow("PRAGMA trusted_schema").Scan(&trusted) != nil || trusted != 0 {
-		err = failure()
+	if s.db, err = openPrivateSQLite(filename, time.Second); err != nil {
 		return nil, err
 	}
 	var version int
-	if err = s.db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version > 1 {
+	if err = s.db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version > schemaVersion {
 		err = failure()
 		return nil, err
 	}
 	if version == 0 {
-		tx, e := s.db.Begin()
-		if e != nil {
-			err = failure()
+		if err = s.exec(schemaV1 + "\n" + migrationV2); err != nil {
 			return nil, err
 		}
-		_, e = tx.Exec(`CREATE TABLE projects (id TEXT PRIMARY KEY, source_identity TEXT NOT NULL, account_ref TEXT NOT NULL, destination_id TEXT NOT NULL);
-CREATE TABLE operations (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), payload BLOB NOT NULL);
-CREATE TABLE runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), approved_plan BLOB NOT NULL, state TEXT NOT NULL);
-CREATE TABLE run_events (run_id TEXT NOT NULL REFERENCES runs(id), sequence INTEGER PRIMARY KEY AUTOINCREMENT, state TEXT NOT NULL);
-CREATE TABLE rule_snapshots (source_id TEXT NOT NULL, config_digest TEXT NOT NULL, sources BLOB NOT NULL, PRIMARY KEY(source_id,config_digest));
-PRAGMA user_version=1;`)
-		if e != nil {
-			tx.Rollback()
-			err = failure()
+		version = schemaVersion
+	}
+	if version == 1 {
+		// Preserve a consistent copy of the previous journal before changing it.
+		if err = backupJournal(s.db, filepath.Join(abs, "transfers.v1-backup.sqlite")); err != nil {
 			return nil, err
 		}
-		if e = tx.Commit(); e != nil {
-			err = failure()
+		if err = s.exec(migrationV2); err != nil {
 			return nil, err
 		}
 	}
@@ -313,7 +277,7 @@ func (s *Store) SaveNode(key string, n Node) error {
 }
 
 func validNode(n Node) bool {
-	if n.Status != "intent" && n.Status != "acknowledged" && n.Status != "verified" {
+	if n.Status != "intent" && n.Status != "acknowledged" && n.Status != "verified" || n.Generation < 0 {
 		return false
 	}
 	for _, id := range []string{n.ID, n.ParentID, n.OperationID} {
@@ -356,19 +320,27 @@ func (s *Store) BeginRun(id, key string, plan any) error {
 	if err != nil {
 		return failure()
 	}
-	_, err = s.db.Exec("INSERT INTO runs(id,project_id,approved_plan,state) VALUES(?,?,?,'uploading')", id, key, b)
+	_, err = s.db.Exec("INSERT INTO runs(id,project_id,approved_plan,state,started_at) VALUES(?,?,?,'uploading',?)", id, key, b, time.Now().UTC().Format(time.RFC3339))
 	if err != nil {
 		return failure()
 	}
 	return nil
 }
-func (s *Store) FinishRun(id, state string) error {
+
+// MaxSummaryBytes bounds the stored per-run summary, including per-item issues.
+const MaxSummaryBytes = 1 << 20
+
+func (s *Store) FinishRun(id, state string, summary any) error {
+	b, err := json.Marshal(summary)
+	if err != nil || len(b) > MaxSummaryBytes {
+		return failure()
+	}
 	tx, err := s.db.Begin()
 	if err != nil {
 		return failure()
 	}
 	defer tx.Rollback()
-	if _, err = tx.Exec("UPDATE runs SET state=? WHERE id=?", state, id); err != nil {
+	if _, err = tx.Exec("UPDATE runs SET state=?, summary=?, finished_at=? WHERE id=?", state, b, time.Now().UTC().Format(time.RFC3339), id); err != nil {
 		return failure()
 	}
 	if _, err = tx.Exec("INSERT INTO run_events(run_id,state) VALUES(?,?)", id, state); err != nil {
@@ -378,4 +350,97 @@ func (s *Store) FinishRun(id, state string) error {
 		return failure()
 	}
 	return nil
+}
+
+const schemaVersion = 2
+
+const schemaV1 = `CREATE TABLE projects (id TEXT PRIMARY KEY, source_identity TEXT NOT NULL, account_ref TEXT NOT NULL, destination_id TEXT NOT NULL);
+CREATE TABLE operations (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), payload BLOB NOT NULL);
+CREATE TABLE runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES projects(id), approved_plan BLOB NOT NULL, state TEXT NOT NULL);
+CREATE TABLE run_events (run_id TEXT NOT NULL REFERENCES runs(id), sequence INTEGER PRIMARY KEY AUTOINCREMENT, state TEXT NOT NULL);
+CREATE TABLE rule_snapshots (source_id TEXT NOT NULL, config_digest TEXT NOT NULL, sources BLOB NOT NULL, PRIMARY KEY(source_id,config_digest));
+PRAGMA user_version=1;`
+
+// migrationV2 adds bounded run summaries and timestamps. Existing rows remain.
+const migrationV2 = `ALTER TABLE runs ADD COLUMN summary BLOB;
+ALTER TABLE runs ADD COLUMN started_at TEXT NOT NULL DEFAULT '';
+ALTER TABLE runs ADD COLUMN finished_at TEXT NOT NULL DEFAULT '';
+PRAGMA user_version=2;`
+
+func (s *Store) exec(script string) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return failure()
+	}
+	if _, err = tx.Exec(script); err != nil {
+		_ = tx.Rollback()
+		return failure()
+	}
+	if err = tx.Commit(); err != nil {
+		return failure()
+	}
+	return nil
+}
+
+// backupJournal writes a consistent private copy. An existing backup from an
+// earlier migration attempt is kept rather than overwritten.
+func backupJournal(db *sql.DB, filename string) error {
+	if st, err := os.Lstat(filename); err == nil {
+		if !privateNode(filename, st, false) {
+			return failure()
+		}
+		return nil
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return failure()
+	}
+	if _, err := db.Exec("VACUUM INTO ?", filename); err != nil {
+		_ = os.Remove(filename)
+		return failure()
+	}
+	if err := os.Chmod(filename, 0600); err != nil {
+		return failure()
+	}
+	if st, err := os.Lstat(filename); err != nil || !privateNode(filename, st, false) {
+		return failure()
+	}
+	return nil
+}
+
+// openPrivateSQLite opens a database file that must already be, or is created
+// as, a private regular file, with defensive settings verified after opening.
+func openPrivateSQLite(filename string, busy time.Duration) (*sql.DB, error) {
+	private, e := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|noFollowFlag, 0600)
+	if e != nil {
+		return nil, failure()
+	}
+	if st, e := private.Stat(); e != nil || !privateNode(filename, st, false) {
+		private.Close()
+		return nil, failure()
+	}
+	private.Close()
+	uriPath := filepath.ToSlash(filename)
+	if filepath.VolumeName(filename) != "" && !strings.HasPrefix(uriPath, "/") {
+		uriPath = "/" + uriPath
+	}
+	dsn := url.URL{Scheme: "file", Path: uriPath}
+	query := url.Values{"_defensive": {"1"}, "_dqs": {"0"}, "_pragma": {"trusted_schema(OFF)"}}
+	dsn.RawQuery = query.Encode()
+	db, err := sql.Open("sqlite", dsn.String())
+	if err != nil {
+		return nil, failure()
+	}
+	db.SetMaxOpenConns(1)
+	for _, q := range []string{"PRAGMA foreign_keys=ON", "PRAGMA journal_mode=DELETE", "PRAGMA synchronous=EXTRA", "PRAGMA busy_timeout=" + strconv.FormatInt(busy.Milliseconds(), 10)} {
+		if _, err = db.Exec(q); err != nil {
+			db.Close()
+			return nil, failure()
+		}
+	}
+	var mode string
+	var synchronous, foreignKeys, trusted int
+	if db.QueryRow("PRAGMA journal_mode").Scan(&mode) != nil || mode != "delete" || db.QueryRow("PRAGMA synchronous").Scan(&synchronous) != nil || synchronous != 3 || db.QueryRow("PRAGMA foreign_keys").Scan(&foreignKeys) != nil || foreignKeys != 1 || db.QueryRow("PRAGMA trusted_schema").Scan(&trusted) != nil || trusted != 0 {
+		db.Close()
+		return nil, failure()
+	}
+	return db, nil
 }

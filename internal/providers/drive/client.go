@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -71,11 +72,58 @@ type wireObject struct {
 type Client struct {
 	auth      Authorizer
 	chunkSize int64
+	attempts  int
 	wait      func(context.Context, time.Duration) error
+	now       func() time.Time
+	mu        sync.Mutex
+	parents   map[string]parentCheck
+	fresh     map[string]bool
 }
 
-func New(auth Authorizer) *Client {
-	return &Client{auth: auth, chunkSize: 8 << 20, wait: waitContext}
+type parentCheck struct {
+	canonical string
+	expires   time.Time
+}
+
+// parentCacheTTL bounds how long a verified writable parent is trusted between
+// creations in the same folder. The executor separately re-verifies folders.
+const parentCacheTTL = 30 * time.Second
+
+// rootAlias is Drive's alias for My Drive. With drive.file the root's metadata
+// is not readable, but it is a valid parent and parent-query term.
+const rootAlias = "root"
+
+// Options tune bounded transport behavior. Zero values select safe defaults.
+type Options struct {
+	// ChunkSize is the resumable upload chunk size: a multiple of 256 KiB, at most 8 MiB.
+	ChunkSize int64
+	// MaxAttempts bounds attempts for one retryable request or upload chunk.
+	MaxAttempts int
+	// Wait replaces the backoff sleeper; tests use it to avoid real delays.
+	Wait func(context.Context, time.Duration) error
+}
+
+func New(auth Authorizer) *Client { return NewWithOptions(auth, Options{}) }
+
+func NewWithOptions(auth Authorizer, o Options) *Client {
+	c := &Client{auth: auth, chunkSize: 8 << 20, attempts: maxAttempts, wait: waitContext, now: time.Now, parents: map[string]parentCheck{}, fresh: map[string]bool{}}
+	if o.ChunkSize != 0 {
+		c.chunkSize = o.ChunkSize
+	}
+	if o.MaxAttempts > 0 {
+		c.attempts = min(o.MaxAttempts, 21)
+	}
+	if o.Wait != nil {
+		c.wait = o.Wait
+	}
+	return c
+}
+
+// WithRetries returns a client that makes at most maxRetries+1 attempts for a
+// retryable request or upload chunk. It shares no mutable caches with c.
+func (c *Client) WithRetries(maxRetries int) *Client {
+	attempts := min(max(maxRetries, 0), 20) + 1
+	return &Client{auth: c.auth, chunkSize: c.chunkSize, attempts: attempts, wait: c.wait, now: c.now, parents: map[string]parentCheck{}, fresh: map[string]bool{}}
 }
 
 func waitContext(ctx context.Context, delay time.Duration) error {
@@ -267,7 +315,7 @@ func (c *Client) backoff(ctx context.Context, attempt int, header http.Header) e
 }
 
 func (c *Client) get(ctx context.Context, account, endpoint string, target any) error {
-	for attempt := 0; attempt < maxAttempts; attempt++ {
+	for attempt := 0; attempt < c.attempts; attempt++ {
 		r, err := c.request(ctx, account, http.MethodGet, endpoint, nil, nil)
 		if err == nil && r.status == http.StatusOK {
 			if err = json.Unmarshal(r.data, target); err != nil {
@@ -278,7 +326,7 @@ func (c *Client) get(ctx context.Context, account, endpoint string, target any) 
 		if err == nil {
 			err = responseError(r)
 		}
-		if !retryable(err) || attempt == maxAttempts-1 {
+		if !retryable(err) || attempt == c.attempts-1 {
 			return err
 		}
 		if err = c.backoff(ctx, attempt, r.header); err != nil {
@@ -408,7 +456,28 @@ func (c *Client) GenerateIDs(ctx context.Context, account string, count int) ([]
 		}
 		seen[id] = true
 	}
+	c.mu.Lock()
+	if len(c.fresh)+len(result.IDs) <= 100000 {
+		for _, id := range result.IDs {
+			c.fresh[account+"\x00"+id] = true
+		}
+	}
+	c.mu.Unlock()
 	return result.IDs, nil
+}
+
+// takeFresh reports whether id was reserved by this client and never used.
+// Such an ID cannot exist yet, so the pre-creation existence read is skipped;
+// any conflict on creation is still reconciled by identity.
+func (c *Client) takeFresh(account, id string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	key := account + "\x00" + id
+	if c.fresh[key] {
+		delete(c.fresh, key)
+		return true
+	}
+	return false
 }
 
 func hasParent(o Object, parent string) bool { return len(o.Parents) == 1 && o.Parents[0] == parent }
@@ -438,21 +507,121 @@ func (c *Client) verified(ctx context.Context, account, id, parent, name, operat
 	if err != nil {
 		return Object{}, err
 	}
-	if err = verify(o, id, parent, name, operation, mime, size, md5); err != nil {
+	expected := parent
+	if parent == rootAlias && len(o.Parents) == 1 {
+		// The object reports My Drive's canonical ID. Accept it only after a
+		// parent query confirms that this exact object is a child of My Drive.
+		if err = c.confirmRootChild(ctx, account, o, operation); err != nil {
+			return Object{}, err
+		}
+		expected = o.Parents[0]
+	}
+	if err = verify(o, id, expected, name, operation, mime, size, md5); err != nil {
 		return Object{}, err
 	}
 	return o, nil
 }
 
+func (c *Client) confirmRootChild(ctx context.Context, account string, o Object, operation string) error {
+	if !validID(operation) {
+		return domain.Fail("DRIVE_INVALID_INPUT", "The Drive creation intent is invalid.")
+	}
+	query := "'root' in parents and trashed = false and appProperties has { key='" + operationProperty + "' and value='" + operation + "' }"
+	params := url.Values{"q": {query}, "pageSize": {"100"}, "spaces": {"drive"}, "corpora": {"user"}, "fields": {"nextPageToken,incompleteSearch,files(id,parents)"}}
+	var page struct {
+		Files []struct {
+			ID      string   `json:"id"`
+			Parents []string `json:"parents"`
+		} `json:"files"`
+		IncompleteSearch bool `json:"incompleteSearch"`
+	}
+	if err := c.get(ctx, account, apiURL+"?"+params.Encode(), &page); err != nil {
+		return err
+	}
+	if page.IncompleteSearch {
+		return domain.Fail("DRIVE_INCOMPLETE_LISTING", "Google Drive could not confirm the copy's location. Retry before continuing.")
+	}
+	for _, f := range page.Files {
+		if f.ID == o.ID && len(f.Parents) == 1 && f.Parents[0] == o.Parents[0] {
+			return nil
+		}
+	}
+	return domain.Fail("DRIVE_IDENTITY_MISMATCH", "The Drive object is not in My Drive as approved. No existing object was overwritten.")
+}
+
+// writableParent returns the canonical parent ID. My Drive may be unreadable
+// under drive.file; it then remains the "root" alias and creation proves access.
 func (c *Client) writableParent(ctx context.Context, account, parent string) (string, error) {
+	key := account + "\x00" + parent
+	c.mu.Lock()
+	cached, ok := c.parents[key]
+	c.mu.Unlock()
+	if ok && c.now().Before(cached.expires) {
+		return cached.canonical, nil
+	}
 	folder, err := c.GetFolder(ctx, account, parent)
+	if parent == rootAlias && domain.ErrorCode(err) == "DRIVE_NOT_FOUND" {
+		return rootAlias, nil
+	}
 	if err != nil {
 		return "", err
 	}
 	if !folder.CanAddChildren {
 		return "", domain.Fail("DRIVE_PERMISSION_DENIED", "The selected Drive folder does not allow adding files.")
 	}
+	c.mu.Lock()
+	c.parents[key] = parentCheck{canonical: folder.ID, expires: c.now().Add(parentCacheTTL)}
+	c.mu.Unlock()
 	return folder.ID, nil
+}
+
+// ListChildren returns every non-trashed child of parent visible to the app.
+// The listing is consumed to exhaustion; an incomplete listing is an error.
+func (c *Client) ListChildren(ctx context.Context, account, parent string) ([]Object, error) {
+	if err := validateInput(account, parent); err != nil {
+		return nil, err
+	}
+	query := "'" + parent + "' in parents and trashed = false"
+	var out []Object
+	token := ""
+	for pages := 0; ; pages++ {
+		if pages >= 1000 {
+			return nil, malformed()
+		}
+		params := url.Values{"q": {query}, "pageSize": {"1000"}, "spaces": {"drive"}, "corpora": {"user"}, "fields": {"nextPageToken,incompleteSearch,files(" + objectFields + ")"}}
+		if token != "" {
+			params.Set("pageToken", token)
+		}
+		var page struct {
+			Files            []wireObject `json:"files"`
+			NextPageToken    string       `json:"nextPageToken"`
+			IncompleteSearch bool         `json:"incompleteSearch"`
+		}
+		if err := c.get(ctx, account, apiURL+"?"+params.Encode(), &page); err != nil {
+			return nil, err
+		}
+		if page.IncompleteSearch {
+			return nil, domain.Fail("DRIVE_INCOMPLETE_LISTING", "Google Drive could not complete the folder listing. Retry before continuing.")
+		}
+		if len(page.Files) > 1000 || len(page.NextPageToken) > 8192 || (page.NextPageToken != "" && page.NextPageToken == token) || strings.ContainsAny(page.NextPageToken, "\x00\r\n") {
+			return nil, malformed()
+		}
+		for _, f := range page.Files {
+			if !validID(f.ID) || f.Name == "" || f.MimeType == "" || f.Size < 0 || f.DriveID != "" {
+				return nil, malformed()
+			}
+			for _, id := range f.Parents {
+				if !validID(id) {
+					return nil, malformed()
+				}
+			}
+			out = append(out, f.Object)
+		}
+		if page.NextPageToken == "" {
+			return out, nil
+		}
+		token = page.NextPageToken
+	}
 }
 
 func metadata(id, parent, name, operation, mime string) []byte {
@@ -471,8 +640,10 @@ func (c *Client) CreateFolder(ctx context.Context, account, id, parent, name, op
 		return Object{}, err
 	}
 	parent = canonicalParent
-	if o, err := c.verified(ctx, account, id, parent, name, operation, folderMIME, 0, ""); domain.ErrorCode(err) != "DRIVE_NOT_FOUND" {
-		return o, err
+	if !c.takeFresh(account, id) {
+		if o, err := c.verified(ctx, account, id, parent, name, operation, folderMIME, 0, ""); domain.ErrorCode(err) != "DRIVE_NOT_FOUND" {
+			return o, err
+		}
 	}
 	r, sendErr := c.request(ctx, account, http.MethodPost, apiURL+"?"+url.Values{"fields": {objectFields}}.Encode(), metadata(id, parent, name, operation, folderMIME), http.Header{"Content-Type": {"application/json; charset=UTF-8"}})
 	if sendErr == nil && r.status != http.StatusOK && r.status != http.StatusCreated && r.status != http.StatusConflict {

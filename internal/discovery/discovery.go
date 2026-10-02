@@ -5,7 +5,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -19,6 +21,24 @@ import (
 const MaxDepth = 512
 const MaxEntries = 250000
 
+// Entry kinds. Links and special nodes are recorded but never followed, opened or copied.
+const (
+	KindFile      = "file"
+	KindDirectory = "directory"
+	KindSymlink   = "symlink"
+	KindSpecial   = "special"
+)
+
+// Options customize traversal. Callbacks run on the scanning goroutine, top-down.
+type Options struct {
+	// Directory runs after a directory's complete listing has been recorded and
+	// before any of its subdirectories is considered for traversal.
+	Directory func(ctx context.Context, t *Tree, dir string) error
+	// Prune runs before entering a subdirectory. A pruned directory remains an
+	// entry; its descendants are neither listed nor read.
+	Prune func(ctx context.Context, t *Tree, dir string) (bool, error)
+}
+
 type Tree struct {
 	root        *os.Root
 	rootPath    string
@@ -26,6 +46,7 @@ type Tree struct {
 	entries     []domain.Entry
 	observed    map[string]os.FileInfo
 	directories []string
+	pruned      map[string]bool
 	membership  map[string]string
 	identity    string
 }
@@ -35,13 +56,33 @@ func (t *Tree) RootPath() string        { return t.rootPath }
 func (t *Tree) Identity() string        { return t.identity }
 func (t *Tree) Entries() []domain.Entry { return append([]domain.Entry{}, t.entries...) }
 func (t *Tree) Has(p string) bool       { _, ok := t.observed[p]; return ok }
+
+// Pruned reports whether a directory was recorded without reading its descendants.
+func (t *Tree) Pruned(p string) bool { return t.pruned[p] }
+
+// Info returns the metadata observed for p during the scan.
+func (t *Tree) Info(p string) (os.FileInfo, bool) { i, ok := t.observed[p]; return i, ok }
+
+// Directories returns the listed directories in traversal order, including ".".
+func (t *Tree) Directories() []string {
+	return append([]string{"."}, t.directories...)
+}
+
 func cancelled(ctx context.Context) error {
 	if ctx.Err() != nil {
 		return domain.Fail("CANCELLED", "local scan cancelled")
 	}
 	return nil
 }
-func Scan(ctx context.Context, rootPath string) (tree *Tree, err error) {
+
+func Scan(ctx context.Context, rootPath string) (*Tree, error) {
+	return ScanWith(ctx, rootPath, Options{})
+}
+
+// ScanWith lists the tree top-down. A directory's complete listing is recorded
+// before any child directory is entered, so rule files that can affect a child
+// are always known to Options.Directory before Options.Prune decides about it.
+func ScanWith(ctx context.Context, rootPath string, opts Options) (tree *Tree, err error) {
 	if err = cancelled(ctx); err != nil {
 		return nil, err
 	}
@@ -57,7 +98,7 @@ func Scan(ctx context.Context, rootPath string) (tree *Tree, err error) {
 	if err != nil {
 		return nil, domain.Fail("SOURCE_UNAVAILABLE", "cannot open source root")
 	}
-	tree = &Tree{root: r, rootPath: rootPath, rootInfo: info, entries: []domain.Entry{}, observed: map[string]os.FileInfo{}, membership: map[string]string{}}
+	tree = &Tree{root: r, rootPath: rootPath, rootInfo: info, entries: []domain.Entry{}, observed: map[string]os.FileInfo{}, pruned: map[string]bool{}, membership: map[string]string{}}
 	defer func() {
 		if err != nil {
 			r.Close()
@@ -104,9 +145,13 @@ func Scan(ctx context.Context, rootPath string) (tree *Tree, err error) {
 		}
 		sort.Slice(children, func(i, j int) bool { return children[i].Name() < children[j].Name() })
 		tree.membership[dir] = membershipDigest(children)
-		for _, child := range children {
+		var subdirectories []string
+		for i, child := range children {
 			if err := cancelled(ctx); err != nil {
 				return err
+			}
+			if i > 0 && children[i-1].Name() == child.Name() {
+				return domain.Fail("SCAN_INCOMPLETE", "directory listing repeated an entry: %s", dir)
 			}
 			p := child.Name()
 			if dir != "." {
@@ -119,46 +164,90 @@ func Scan(ctx context.Context, rootPath string) (tree *Tree, err error) {
 				return domain.Fail("SCAN_INCOMPLETE", "entry limit %d exceeded", MaxEntries)
 			}
 			stat, e := r.Lstat(p)
+			if errors.Is(e, fs.ErrNotExist) {
+				// Removed after the listing: equivalent to removal before the scan.
+				continue
+			}
 			if e != nil {
 				return domain.Fail("SCAN_INCOMPLETE", "cannot inspect %s", p)
 			}
-			kind := "file"
-			size := stat.Size()
-			if stat.IsDir() {
-				kind = "directory"
-				size = 0
-			} else if !stat.Mode().IsRegular() {
-				return domain.Fail("NODE_UNSUPPORTED", "symlinks and special nodes are unsupported: %s", p)
+			kind, size := KindFile, stat.Size()
+			switch {
+			case stat.Mode()&os.ModeSymlink != 0:
+				kind, size = KindSymlink, 0
+			case stat.IsDir():
+				kind, size = KindDirectory, 0
+			case !stat.Mode().IsRegular():
+				kind, size = KindSpecial, 0
 			}
 			tree.observed[p] = stat
 			tree.entries = append(tree.entries, domain.Entry{Path: p, Name: path.Base(p), Kind: kind, Size: size, ModifiedAt: stat.ModTime().UTC().Format(time.RFC3339Nano)})
-			if kind == "directory" {
-				tree.directories = append(tree.directories, p)
-				if err := walk(p, depth+1); err != nil {
-					return err
-				}
+			if kind == KindDirectory {
+				subdirectories = append(subdirectories, p)
 			}
 		}
-		after, e := r.Lstat(dir)
-		if e != nil || !os.SameFile(before, after) || !before.ModTime().Equal(after.ModTime()) {
-			return domain.Fail("SCAN_INCOMPLETE", "directory changed during scan: %s", dir)
+		if opts.Directory != nil {
+			if err := opts.Directory(ctx, tree, dir); err != nil {
+				return err
+			}
+		}
+		for _, p := range subdirectories {
+			if opts.Prune != nil {
+				prune, err := opts.Prune(ctx, tree, p)
+				if err != nil {
+					return err
+				}
+				if prune {
+					tree.pruned[p] = true
+					continue
+				}
+			}
+			tree.directories = append(tree.directories, p)
+			if err := walk(p, depth+1); err != nil {
+				return err
+			}
 		}
 		return nil
 	}
 	if err = walk(".", 0); err != nil {
 		return nil, err
 	}
-	if err = tree.Revalidate(); err != nil {
+	if err = tree.RootUnchanged(); err != nil {
 		return nil, err
 	}
 	return tree, nil
 }
+
+// RootUnchanged checks that the selected root is still the same directory.
+// Membership changes inside the root are evaluated per entry by callers.
+func (t *Tree) RootUnchanged() error {
+	info, err := os.Lstat(t.rootPath)
+	if err != nil || !info.IsDir() || !os.SameFile(t.rootInfo, info) {
+		return domain.Fail("SOURCE_UNAVAILABLE", "the source folder is missing, was replaced, or its volume is unavailable")
+	}
+	return nil
+}
+
+// Revalidate strictly checks every observed entry, including the root's metadata.
 func (t *Tree) Revalidate() error {
 	info, err := os.Lstat(t.rootPath)
 	if err != nil || !os.SameFile(t.rootInfo, info) || !info.ModTime().Equal(t.rootInfo.ModTime()) {
 		return domain.Fail("SOURCE_UNAVAILABLE", "source root changed during scan")
 	}
-	for p, before := range t.observed {
+	paths := make([]string, 0, len(t.observed))
+	for p := range t.observed {
+		paths = append(paths, p)
+	}
+	return t.RevalidatePaths(paths)
+}
+
+// RevalidatePaths checks that the given observed entries are unchanged.
+func (t *Tree) RevalidatePaths(paths []string) error {
+	for _, p := range paths {
+		before, ok := t.observed[p]
+		if !ok {
+			return domain.Fail("SCAN_INCOMPLETE", "source entry was not observed: %s", p)
+		}
 		after, err := t.root.Lstat(p)
 		if err != nil || !same(before, after) {
 			return domain.Fail("SCAN_INCOMPLETE", "source entry changed during scan: %s", p)
@@ -166,8 +255,62 @@ func (t *Tree) Revalidate() error {
 	}
 	return nil
 }
+
+// Same reports whether two observations describe the same unchanged node.
+func Same(a, b os.FileInfo) bool { return same(a, b) }
+
 func same(a, b os.FileInfo) bool {
-	return os.SameFile(a, b) && a.Size() == b.Size() && a.Mode() == b.Mode() && a.ModTime().Equal(b.ModTime())
+	return a != nil && b != nil && os.SameFile(a, b) && a.Size() == b.Size() && a.Mode() == b.Mode() && a.ModTime().Equal(b.ModTime())
+}
+
+// CheckPolicySources detects policy changes without rereading every rule file.
+// Known sources must be unchanged; no selector may have gained a new file in any
+// traversed directory, and absent root-relative sources must still be absent.
+func (t *Tree) CheckPolicySources(ctx context.Context, known, basenames, rootFiles []string) error {
+	present := map[string]bool{}
+	for _, p := range known {
+		present[p] = true
+		before, ok := t.observed[p]
+		if !ok {
+			return domain.Fail("RULES_CHANGED", "an ignore-policy source was not part of the approved scan: %s", p)
+		}
+		after, err := t.root.Lstat(p)
+		if err != nil || !same(before, after) {
+			return domain.Fail("RULES_CHANGED", "ignore-policy source changed: %s", p)
+		}
+	}
+	absent := func(p string) error {
+		if present[p] {
+			return nil
+		}
+		if _, err := t.root.Lstat(p); !errors.Is(err, fs.ErrNotExist) {
+			if err == nil {
+				return domain.Fail("RULES_CHANGED", "a new ignore-policy source appeared: %s", p)
+			}
+			return domain.Fail("RULES_CHANGED", "cannot check ignore-policy source: %s", p)
+		}
+		return nil
+	}
+	for _, dir := range t.Directories() {
+		if err := cancelled(ctx); err != nil {
+			return err
+		}
+		for _, name := range basenames {
+			p := name
+			if dir != "." {
+				p = dir + "/" + name
+			}
+			if err := absent(p); err != nil {
+				return err
+			}
+		}
+	}
+	for _, p := range rootFiles {
+		if err := absent(p); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ReadFile reads only a previously observed regular file with pre/post identity checks.

@@ -252,6 +252,8 @@ func report(w io.Writer, err error) int {
 		return 130
 	case "CONFLICT", "PLAN_STALE":
 		return 4
+	case "PARTIAL":
+		return 3
 	default:
 		return 6
 	}

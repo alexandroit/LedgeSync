@@ -26,6 +26,17 @@ Open the disk image and drag `LedgeSync.app` to `Applications`. Requires macOS
 macOS may block downloaded apps. See [installation and validation limits](docs/PLATFORMS.md).
 For Windows and Ubuntu, use the [desktop download section](https://ledgesync.com/#downloads).
 
+**Windows:** download the [x64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-amd64-setup.exe)
+or [ARM64 setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/LedgeSync-0.1.0-alpha.1-windows-arm64-setup.exe).
+Opening it starts the installation wizard. It installs for the current user,
+creates a Start menu entry and registers an uninstaller in Windows Settings.
+These alpha installers are not Authenticode signed.
+
+**Ubuntu 24.04:** [add the signed LedgeSync APT repository once](docs/PLATFORMS.md#ubuntu-apt),
+then run `sudo apt-get update && sudo apt-get install ledgesync` for the graphical
+app. Use `ledgesync-cli` for headless servers. These packages come from the
+project's own repository, not Ubuntu's default package archive.
+
 The first implementation browses local folders, explains policy decisions and
 creates plans against an explicitly simulated, empty destination. Plans are
 deterministic for the same snapshots and creation time.

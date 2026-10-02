@@ -759,41 +759,46 @@ func (s *Service) Start(ctx context.Context, digest string) (Status, error) {
 		err := s.execute(ctx, a, run)
 		wasCancelled := ctx.Err() != nil
 		s.mu.Lock()
-		cancel()
-		s.busy = false
-		s.cancel = nil
-		if err != nil {
-			s.status.State = "failed"
-			s.status.ErrorCode = domain.ErrorCode(err)
-			s.status.Message = safeMessage(err)
-			if wasCancelled {
-				s.status.State = "cancelled"
-				s.status.ErrorCode = "CANCELLED"
-				s.status.Message = "Upload stopped. Completed files remain in Drive; create a new preview to reconcile and continue."
-			} else if code := domain.ErrorCode(err); code == "UNKNOWN_REMOTE_RESULT" || code == "REMOTE_CHANGED" || code == "STATE_UNAVAILABLE" || code == "DRIVE_VERIFICATION_FAILED" || code == "DRIVE_IDENTITY_MISMATCH" {
-				s.status.State = "needs_review"
-			}
-		} else if len(s.status.Issues) > 0 || s.status.SkippedFiles > 0 {
-			s.status.State = "partial"
-			s.status.Message = "Copied and verified the approved items that were unchanged. Some files changed after the preview and were not copied; preview again to copy their current versions."
-		} else {
-			s.status.State = "succeeded"
-			s.status.Message = "Folder upload completed. Every approved item was verified in Google Drive."
-			if s.status.PausedFiles > 0 {
-				s.status.Message = "Folder upload completed. Changed files paused by the conflict policy were not copied."
-			}
-		}
-		s.status.CurrentPath = ""
-		s.status.SentBytes = 0
-		s.status.FinishedAt = s.now().UTC().Format(time.RFC3339)
 		final := s.status
 		final.Issues = append([]Issue(nil), s.status.Issues...)
 		observers := append([]func(Status){}, s.observers...)
-		close(done)
 		s.mu.Unlock()
+		if err != nil {
+			final.State = "failed"
+			final.ErrorCode = domain.ErrorCode(err)
+			final.Message = safeMessage(err)
+			if wasCancelled {
+				final.State = "cancelled"
+				final.ErrorCode = "CANCELLED"
+				final.Message = "Upload stopped. Completed files remain in Drive; create a new preview to reconcile and continue."
+			} else if code := domain.ErrorCode(err); code == "UNKNOWN_REMOTE_RESULT" || code == "REMOTE_CHANGED" || code == "STATE_UNAVAILABLE" || code == "DRIVE_VERIFICATION_FAILED" || code == "DRIVE_IDENTITY_MISMATCH" {
+				final.State = "needs_review"
+			}
+		} else if len(final.Issues) > 0 || final.SkippedFiles > 0 {
+			final.State = "partial"
+			final.Message = "Copied and verified the approved items that were unchanged. Some files changed after the preview and were not copied; preview again to copy their current versions."
+		} else {
+			final.State = "succeeded"
+			final.Message = "Folder upload completed. Every approved item was verified in Google Drive."
+			if final.PausedFiles > 0 {
+				final.Message = "Folder upload completed. Changed files paused by the conflict policy were not copied."
+			}
+		}
+		final.CurrentPath = ""
+		final.SentBytes = 0
+		final.FinishedAt = s.now().UTC().Format(time.RFC3339)
+		// Observers (run history) complete before the terminal state becomes
+		// visible, so a client never sees a finished run without its record.
 		for _, fn := range observers {
 			fn(final)
 		}
+		s.mu.Lock()
+		cancel()
+		s.status = final
+		s.busy = false
+		s.cancel = nil
+		close(done)
+		s.mu.Unlock()
 	}()
 	return initial, nil
 }

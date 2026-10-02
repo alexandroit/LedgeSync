@@ -19,6 +19,11 @@ func (s *Service) cachedStatus() Status {
 }
 func (s *Service) publish(r *record, err error) (Status, error) {
 	st := Status{State: "setup_required", Scope: Scope, Message: ErrSetup.Error()}
+	if s.bundled != nil {
+		st.ClientConfigured = true
+		st.State = "disconnected"
+		st.Message = "Ready to request access in your system browser."
+	}
 	if r != nil && r.Client != nil {
 		st.ClientConfigured = true
 		st.State = "disconnected"
@@ -33,6 +38,10 @@ func (s *Service) publish(r *record, err error) (Status, error) {
 				st.Message = ErrReconnect.Error()
 			}
 		}
+	}
+	if s.clientChanged(r) {
+		st.State = "client_changed"
+		st.Message = ErrClientChanged.Error()
 	}
 	if err != nil {
 		st.Message = err.Error()
@@ -49,13 +58,29 @@ func (s *Service) publish(r *record, err error) (Status, error) {
 	s.mu.Unlock()
 	return st, err
 }
+
+// clientChanged keeps a previously authorized account bound to its original
+// client until an explicit Disconnect. A new release must never refresh or
+// silently replace an old client's grant, even if the account appears identical.
+func (s *Service) clientChanged(r *record) bool {
+	return s.bundled != nil && r != nil && r.Client != nil && r.Credential != nil && *s.bundled != *r.Client
+}
+
+func (s *Service) bundledClient() *clientConfig {
+	if s.bundled == nil {
+		return nil
+	}
+	client := *s.bundled
+	return &client
+}
+
 func (s *Service) load() (*record, error) {
 	if s.store == nil {
 		return nil, ErrStorage
 	}
 	data, err := s.store.Get(storageKey)
 	if errors.Is(err, ErrNotFound) {
-		return &record{Version: 1}, nil
+		return &record{Version: 1, Client: s.bundledClient()}, nil
 	}
 	if err != nil || len(data) > 64*1024 {
 		return nil, ErrStorage
@@ -68,6 +93,11 @@ func (s *Service) load() (*record, error) {
 		if !safeSecret(c.RefreshToken) || !validAccount(c.Account) {
 			return nil, ErrStorage
 		}
+	}
+	// A client-only legacy record contains no grant to migrate or discard. Use
+	// the immutable application configuration without changing the saved entry.
+	if s.bundled != nil && r.Credential == nil {
+		r.Client = s.bundledClient()
 	}
 	if s.runtime != nil && s.runtime.Credential != nil && r.Credential != nil && s.runtime.Client.ID == r.Client.ID && s.runtime.Client.Secret == r.Client.Secret && s.runtime.Credential.RefreshToken == r.Credential.RefreshToken && s.runtime.Credential.Account.Reference == r.Credential.Account.Reference {
 		r.Credential.AccessToken = s.runtime.Credential.AccessToken
@@ -123,6 +153,9 @@ func (s *Service) ConfigureClient(ctx context.Context, data []byte) (Status, err
 	if err != nil {
 		return s.publish(nil, err)
 	}
+	if s.bundled != nil {
+		return s.publish(r, ErrManagedClient)
+	}
 	if r.Credential != nil {
 		return s.publish(r, ErrConnected)
 	}
@@ -165,6 +198,9 @@ func (s *Service) Connect(ctx context.Context) (Status, error) {
 	if r.Client == nil {
 		return s.publish(r, ErrSetup)
 	}
+	if s.clientChanged(r) {
+		return s.publish(r, ErrClientChanged)
+	}
 	if r.Credential != nil && !r.Credential.Reconnect {
 		return s.publish(r, ErrConnected)
 	}
@@ -206,6 +242,9 @@ func (s *Service) Check(ctx context.Context) (Status, error) {
 	}
 	if r.Client == nil {
 		return s.publish(r, ErrSetup)
+	}
+	if s.clientChanged(r) {
+		return s.publish(r, ErrClientChanged)
 	}
 	if r.Credential == nil {
 		return s.publish(r, ErrReconnect)
@@ -262,7 +301,8 @@ func (s *Service) checkFailure(ctx context.Context, r *record, err error) (Statu
 	return s.publish(r, err)
 }
 
-// Disconnect removes local account tokens only. The client configuration remains.
+// Disconnect removes local account tokens only. Bundled services select their
+// application client; legacy services retain the imported client configuration.
 // Revocation at Google and cloud-file deletion are separate actions.
 func (s *Service) Disconnect(ctx context.Context) (Status, error) {
 	s.Cancel()
@@ -278,6 +318,9 @@ func (s *Service) Disconnect(ctx context.Context) (Status, error) {
 		return s.publish(r, nil)
 	}
 	next := &record{Version: 1, Client: r.Client}
+	if s.bundled != nil {
+		next.Client = s.bundledClient()
+	}
 	if err = s.save(ctx, next); err != nil {
 		return s.publish(r, err)
 	}

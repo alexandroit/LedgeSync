@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/alexandroit/LedgeSync/internal/connections"
 	"github.com/alexandroit/LedgeSync/internal/driveauth"
 )
 
-type googleDriveService interface {
+// GoogleDriveService exposes account actions, never client configuration or tokens.
+type GoogleDriveService interface {
 	Status(context.Context) (driveauth.Status, error)
-	ConfigureClient(context.Context, []byte) (driveauth.Status, error)
 	Connect(context.Context) (driveauth.Status, error)
 	Check(context.Context) (driveauth.Status, error)
 	Disconnect(context.Context) (driveauth.Status, error)
@@ -18,12 +17,11 @@ type googleDriveService interface {
 }
 
 // NewWithGoogleDrive exposes narrow account operations, never raw tokens or URLs.
-func NewWithGoogleDrive(service previewService, folderPicker, configPicker, clientPicker Picker,
-	google googleDriveService, openSetup func() error) *App {
+func NewWithGoogleDrive(service previewService, folderPicker, configPicker Picker,
+	google GoogleDriveService, showAfterConnect func()) *App {
 	a := New(service, folderPicker, configPicker)
 	a.google = google
-	a.clientPicker = clientPicker
-	a.openGoogleSetup = openSetup
+	a.showAfterConnect = showAfterConnect
 	a.connectionContext, a.closeConnections = context.WithCancel(context.Background())
 	return a
 }
@@ -32,7 +30,7 @@ var errGoogleUnavailable = errors.New("OAUTH_UNAVAILABLE: Google Drive authoriza
 
 func (a *App) GoogleDriveStatus() (driveauth.Status, error) {
 	if a.google == nil {
-		return driveauth.Status{}, errGoogleUnavailable
+		return driveauth.Status{State: "setup_required", Scope: driveauth.Scope, Message: "Google Drive connection is not configured in this build. Install an official LedgeSync release."}, nil
 	}
 	status, err := a.google.Status(a.connectionContext)
 	// Wails rejects an error result and drops its accompanying value. A locked
@@ -42,33 +40,15 @@ func (a *App) GoogleDriveStatus() (driveauth.Status, error) {
 	}
 	return status, err
 }
-func (a *App) ImportGoogleOAuthClient() (*driveauth.Status, error) {
-	if a.google == nil || a.clientPicker == nil {
-		return nil, errGoogleUnavailable
-	}
-	path, err := a.clientPicker()
-	if err != nil {
-		return nil, errors.New("OAUTH_CLIENT_PICKER: the client configuration picker could not be opened")
-	}
-	if path == "" {
-		return nil, nil
-	}
-	data, err := connections.ReadClientFile(path)
-	if err != nil {
-		return nil, err
-	}
-	defer clear(data)
-	status, err := a.google.ConfigureClient(a.connectionContext, data)
-	if err != nil {
-		return nil, err
-	}
-	return &status, nil
-}
 func (a *App) ConnectGoogleDrive() (driveauth.Status, error) {
 	if a.google == nil {
 		return driveauth.Status{}, errGoogleUnavailable
 	}
-	return a.google.Connect(a.connectionContext)
+	status, err := a.google.Connect(a.connectionContext)
+	if err == nil && status.State == "connected" && a.connectionContext.Err() == nil && a.showAfterConnect != nil {
+		a.showAfterConnect()
+	}
+	return status, err
 }
 func (a *App) CheckGoogleDrive() (driveauth.Status, error) {
 	if a.google == nil {
@@ -86,15 +66,6 @@ func (a *App) CancelGoogleDrive() {
 	if a.google != nil {
 		a.google.Cancel()
 	}
-}
-func (a *App) OpenGoogleOAuthSetup() error {
-	if a.openGoogleSetup == nil {
-		return errGoogleUnavailable
-	}
-	if err := a.openGoogleSetup(); err != nil {
-		return errors.New("OAUTH_BROWSER: the Google Cloud setup page could not be opened in your browser")
-	}
-	return nil
 }
 func (a *App) Shutdown() {
 	a.Cancel()

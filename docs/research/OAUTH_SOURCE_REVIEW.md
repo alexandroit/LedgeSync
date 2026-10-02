@@ -111,3 +111,19 @@ of a fail-closed cross-process OAuth transaction lock. Cross-process credential
 serialization remains a separate implementation gate.
 
 Reference: [Microsoft ShellExecuteW](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew).
+
+## Alpha.3 bundled-client follow-up
+
+The owner selected direct desktop-to-Google authorization with a shared,
+publisher-configured Desktop client. Alpha.3 removes the runtime client-import
+and Cloud-setup bindings. Strict client validation is reused at construction;
+the build helper also rejects Web/service-account/token-bearing inputs and
+arbitrary endpoints. This is application metadata, not a confidential server
+secret. Original JSON/generated source remain outside Git; distributed binaries
+necessarily contain recoverable public-client configuration.
+
+Fresh status uses the compiled client without writing to the vault. Existing
+same-client grants remain usable; changed-client grants retain their account
+and are blocked until explicit local disconnect. Synthetic regressions cover
+failed consent, restart refresh, changed ID/secret, failed disconnect and vault
+errors. No Google account authorization was performed during this update.

@@ -28,6 +28,10 @@ func main() {
 	var mu sync.RWMutex
 	var windowContext context.Context
 	getContext := func() context.Context { mu.RLock(); defer mu.RUnlock(); return windowContext }
+	var google desktop.GoogleDriveService
+	if configured, err := connections.NewGoogleDrive(systembrowser.OpenURL); err == nil {
+		google = configured
+	}
 	bridge := desktop.NewWithGoogleDrive(app.NewService(),
 		func() (string, error) {
 			return runtime.OpenDirectoryDialog(getContext(), runtime.OpenDialogOptions{Title: "Choose a local source folder"})
@@ -35,12 +39,12 @@ func main() {
 		func() (string, error) {
 			return runtime.OpenFileDialog(getContext(), runtime.OpenDialogOptions{Title: "Open LedgeSync configuration", Filters: []runtime.FileFilter{{DisplayName: "LedgeSync JSON configuration", Pattern: "*.json"}}})
 		},
-		func() (string, error) {
-			return runtime.OpenFileDialog(getContext(), runtime.OpenDialogOptions{Title: "Import Google OAuth Desktop app configuration", Filters: []runtime.FileFilter{{DisplayName: "Google OAuth client JSON", Pattern: "*.json"}}})
-		},
-		connections.NewGoogleDrive(systembrowser.OpenURL),
-		func() error {
-			return systembrowser.OpenURL(systembrowser.SetupURL)
+		google,
+		func() {
+			if ctx := getContext(); ctx != nil && ctx.Err() == nil {
+				runtime.WindowUnminimise(ctx)
+				runtime.Show(ctx)
+			}
 		},
 	)
 	err = wails.Run(&options.App{

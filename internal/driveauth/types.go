@@ -17,23 +17,26 @@ const tokenEndpoint = "https://oauth2.googleapis.com/token"
 const aboutEndpoint = "https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress,permissionId)"
 
 var (
-	ErrNotFound  = errors.New("credential not found")
-	ErrStorage   = errors.New("The operating system credential vault is unavailable or its saved entry is invalid. Unlock the vault and try again.")
-	ErrBusy      = errors.New("A Google Drive authorization operation is already running.")
-	ErrSetup     = errors.New("Import a Google OAuth Desktop app client JSON file before connecting.")
-	ErrClient    = errors.New("Choose a valid Google OAuth Desktop app client JSON file downloaded from Google Cloud.")
-	ErrConnected = errors.New("Disconnect the current account before replacing its OAuth client or connecting a different account.")
-	ErrDenied    = errors.New("Google Drive access was not granted. You can connect again when ready.")
-	ErrCanceled  = errors.New("Google Drive authorization was canceled.")
-	ErrTimeout   = errors.New("Google Drive authorization timed out. Connect again to restart.")
-	ErrBrowser   = errors.New("The system browser could not be opened. Check your default browser and try again.")
-	ErrCallback  = errors.New("The authorization callback was invalid. Connect again to restart.")
-	ErrNetwork   = errors.New("Google could not be reached. Check your connection and try again.")
-	ErrToken     = errors.New("Google returned an invalid authorization response. Connect again to restart.")
-	ErrScope     = errors.New("The authorization did not grant exactly the requested Google Drive file access. Connect again.")
-	ErrReconnect = errors.New("Google authorization has expired or was revoked. Connect again to authorize access.")
-	ErrIdentity  = errors.New("The authorized Google account changed. Disconnect before selecting another account.")
-	ErrProvider  = errors.New("Google Drive account access could not be checked. Confirm that the Drive API is enabled for this OAuth client and try again.")
+	ErrNotFound      = errors.New("credential not found")
+	ErrStorage       = errors.New("The operating system credential vault is unavailable or its saved entry is invalid. Unlock the vault and try again.")
+	ErrBusy          = errors.New("A Google Drive authorization operation is already running.")
+	ErrSetup         = errors.New("This LedgeSync build does not contain a valid Google Drive authorization configuration. Install a correctly configured build.")
+	ErrClient        = errors.New("Choose a valid Google OAuth Desktop app client JSON file downloaded from Google Cloud.")
+	ErrBuildConfig   = errors.New("This LedgeSync build does not contain a valid Google Drive authorization configuration. Install a correctly configured build.")
+	ErrManagedClient = errors.New("The Google Drive authorization configuration is provided by this LedgeSync build and cannot be replaced in the application.")
+	ErrClientChanged = errors.New("This LedgeSync build uses a different Google authorization client. Disconnect the saved account before connecting again.")
+	ErrConnected     = errors.New("Disconnect the current account before replacing its OAuth client or connecting a different account.")
+	ErrDenied        = errors.New("Google Drive access was not granted. You can connect again when ready.")
+	ErrCanceled      = errors.New("Google Drive authorization was canceled.")
+	ErrTimeout       = errors.New("Google Drive authorization timed out. Connect again to restart.")
+	ErrBrowser       = errors.New("The system browser could not be opened. Check your default browser and try again.")
+	ErrCallback      = errors.New("The authorization callback was invalid. Connect again to restart.")
+	ErrNetwork       = errors.New("Google could not be reached. Check your connection and try again.")
+	ErrToken         = errors.New("Google returned an invalid authorization response. Connect again to restart.")
+	ErrScope         = errors.New("The authorization did not grant exactly the requested Google Drive file access. Connect again.")
+	ErrReconnect     = errors.New("Google authorization has expired or was revoked. Connect again to authorize access.")
+	ErrIdentity      = errors.New("The authorized Google account changed. Disconnect before selecting another account.")
+	ErrProvider      = errors.New("Google Drive account access could not be checked. Confirm that the Drive API is enabled for this OAuth client and try again.")
 )
 
 // Store must use an OS credential vault, never a plaintext fallback. Missing
@@ -89,6 +92,7 @@ type Service struct {
 	timeout                     time.Duration
 	runtime                     *record // access tokens are process-local, never serialized
 	now                         func() time.Time
+	bundled                     *clientConfig // immutable application client; never supplied by the frontend
 }
 
 func New(store Store, openURL func(string) error) *Service {
@@ -98,4 +102,19 @@ func New(store Store, openURL func(string) error) *Service {
 		timeout: 3 * time.Minute, now: time.Now,
 		cached: Status{State: "setup_required", Scope: Scope, Message: ErrSetup.Error()},
 	}
+}
+
+// NewWithClient creates a service with the application's installed-client
+// configuration. Parsing is strict and errors never contain configuration data.
+// Construction does not read or write the credential vault. The parsed client is
+// independent of clientJSON, which callers may clear after this function returns.
+func NewWithClient(store Store, openURL func(string) error, clientJSON []byte) (*Service, error) {
+	client, err := parseClient(clientJSON)
+	if err != nil {
+		return nil, ErrBuildConfig
+	}
+	s := New(store, openURL)
+	s.bundled = client
+	s.cached = Status{State: "disconnected", ClientConfigured: true, Scope: Scope, Message: "Ready to request access in your system browser."}
+	return s, nil
 }

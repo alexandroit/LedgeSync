@@ -2,15 +2,14 @@ import './style.css';
 import type { DesktopBridge, DriveConnectionStatus, Entry, Explanation, Operation, Preview } from './types';
 
 type View = 'files' | 'preview' | 'policies' | 'connections';
-type DriveAction = 'status' | 'import' | 'connect' | 'check' | 'disconnect';
+type DriveAction = 'status' | 'connect' | 'check' | 'disconnect';
 const state = {
   preview: null as Preview | null, view: 'files' as View, path: '', query: '',
   showExcluded: false, grid: false, selected: '', busy: false, error: '',
   filter: 'all', page: 0, history: [''], historyIndex: 0,
   drive: null as DriveConnectionStatus | null,
   driveBusy: '' as DriveAction | '', driveError: '', driveCancelling: false,
-  driveLoaded: false, driveOpeningSetup: false,
-  driveSetupExpanded: null as boolean | null,
+  driveLoaded: false,
   driveRevision: 0,
   driveCancelIntent: false,
 };
@@ -102,15 +101,13 @@ async function driveAction(action: DriveAction) {
   if (action === 'connect') state.driveCancelIntent = false;
   state.driveBusy = action; state.driveError = ''; render();
   try {
-    const methods = { status: 'GoogleDriveStatus', import: 'ImportGoogleOAuthClient', connect: 'ConnectGoogleDrive', check: 'CheckGoogleDrive', disconnect: 'DisconnectGoogleDrive' } as const;
+    const methods = { status: 'GoogleDriveStatus', connect: 'ConnectGoogleDrive', check: 'CheckGoogleDrive', disconnect: 'DisconnectGoogleDrive' } as const;
     const result = await bridge()[methods[action]]();
-    // The native file picker returns null when dismissed; keep the previous state.
-    if (result) { setDriveStatus(result); state.driveError = ''; }
+    setDriveStatus(result); state.driveError = '';
   } catch {
     // Transport exceptions are not a safe display surface for credentials or provider responses.
     const messages: Record<DriveAction, string> = {
       status: 'Could not read the Google Drive connection. Open the current LedgeSync desktop application and try again.',
-      import: 'Could not import the OAuth client. Choose the JSON downloaded for a Google Cloud Desktop app client and try again.',
       connect: 'Google Drive authorization could not be completed. Try connecting again from the desktop application.',
       check: 'Could not check the Google Drive connection. Check your network connection and try again.',
       disconnect: 'Could not remove the local Google Drive credentials. Check that your system credential vault is available and try again.',
@@ -156,13 +153,6 @@ async function cancelDrive() {
     state.driveError = 'Could not cancel authorization. You can close the Google authorization page; the pending request will time out.';
   } finally { state.driveCancelling = false; render(); }
 }
-async function openGoogleSetup() {
-  if (state.driveOpeningSetup) return;
-  state.driveOpeningSetup = true; state.driveError = ''; render();
-  try { await bridge().OpenGoogleOAuthSetup(); }
-  catch { state.driveError = 'Could not open your browser. Open console.cloud.google.com in your browser to configure a Desktop app OAuth client.'; }
-  finally { state.driveOpeningSetup = false; render(); }
-}
 function bytes(size: number): string {
   if (size < 1024) return `${size} B`;
   const units = ['KiB', 'MiB', 'GiB', 'TiB'];
@@ -200,7 +190,7 @@ function render() {
     item.disabled = true; item.title = 'Planned for a later release'; item.append(el('small', '', 'Later')); nav.append(item);
   }
   sidebar.append(nav);
-  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', 'Developer alpha · 0.1.0-alpha.2'), el('p', '', state.drive?.state === 'connected' ? 'Google Drive connected. Cloud transfers are not available yet.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : 'Connect Google Drive in Connections.'));
+  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', 'Developer alpha · 0.1.0-alpha.3'), el('p', '', state.drive?.state === 'connected' ? 'Google Drive connected. Cloud transfers are not available yet.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
   sidebar.append(offline); shell.append(sidebar);
 
   const workspace = el('main', 'workspace');
@@ -256,21 +246,21 @@ function renderConnections(container: HTMLElement) {
   const title = el('div');
   const h1 = el('h1', '', 'Connections'); h1.id = 'drive-heading'; h1.tabIndex = -1;
   title.append(el('p', 'eyebrow', 'ACCOUNT ACCESS'), h1); heading.append(title); container.append(heading);
-  container.append(el('p', 'section-description', 'Authorize Google Drive in your system browser. LedgeSync keeps account tokens in your operating system credential vault.'));
+  container.append(el('p', 'section-description', 'Connect your Google account, authorize LedgeSync in your browser, and return here. Your access is saved in this computer’s credential vault.'));
   const limits = el('div', 'notice');
-  limits.append(icon('info'), el('p', '', 'Google Drive authorization is available in this build. Cloud browsing and file transfers are not implemented yet. Files and Sync pairs still show local files and a simulated destination.'));
+  limits.append(icon('info'), el('p', '', 'Cloud browsing and file transfers are not implemented yet. Files and Sync pairs still show local files and a simulated destination.'));
   container.append(limits);
   if (state.driveError) { const error = el('div', 'error', state.driveError); error.setAttribute('role', 'alert'); container.append(error); }
 
   const card = el('article', 'connection-card'); card.setAttribute('aria-label', 'Google Drive connection');
   const cardHeading = el('div', 'connection-heading');
   const provider = el('div', 'connection-provider'); provider.append(icon('cloud'), el('h2', '', 'Google Drive'));
-  const labels: Record<DriveConnectionStatus['state'], string> = { setup_required: 'Setup required', disconnected: 'Not connected', connecting: 'Waiting for authorization', connected: 'Connected', reconnect_required: 'Reconnect required', storage_unavailable: 'Credential vault unavailable' };
+  const labels: Record<DriveConnectionStatus['state'], string> = { setup_required: 'Connection unavailable', disconnected: 'Not connected', connecting: 'Waiting for authorization', connected: 'Connected', reconnect_required: 'Reconnect required', client_changed: 'New authorization required', storage_unavailable: 'Credential vault unavailable' };
   cardHeading.append(provider, badge(state.driveBusy === 'connect' ? labels.connecting : state.drive ? labels[state.drive.state] : 'Not checked', state.drive?.state === 'connected' ? 'connected' : ''));
   card.append(cardHeading);
   const status = el('div', 'connection-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.setAttribute('aria-atomic', 'true');
   const pending = state.driveBusy === 'connect' || state.drive?.state === 'connecting';
-  const pendingLabels: Record<DriveAction, string> = { status: 'Reading the saved connection…', import: 'Choose the Desktop app OAuth client JSON in the file picker…', connect: 'Complete authorization in your browser, then return to LedgeSync. You can cancel this request here.', check: 'Checking account authorization with Google…', disconnect: 'Removing local account credentials…' };
+  const pendingLabels: Record<DriveAction, string> = { status: 'Reading the saved connection…', connect: 'Complete authorization in your browser, then return to LedgeSync. You can cancel this request here.', check: 'Checking account authorization with Google…', disconnect: 'Removing local account credentials…' };
   if (state.driveBusy || pending) status.append(el('span', 'spinner'), el('p', '', state.driveCancelling ? 'Cancelling authorization…' : pendingLabels[state.driveBusy || 'connect']));
   else status.append(el('p', '', state.drive?.message || 'Read the saved connection to get started.'));
   card.append(status);
@@ -290,9 +280,13 @@ function renderConnections(container: HTMLElement) {
     actions.append(driveButton('Retry connection status', () => void driveAction('status'), 'status'));
   } else if (state.drive.state === 'connected') {
     actions.append(driveButton('Check connection', () => void driveAction('check'), 'check'), driveButton('Disconnect account', () => void driveAction('disconnect'), 'disconnect'));
+  } else if (state.drive.state === 'client_changed') {
+    card.append(el('p', 'connection-guidance', 'This computer has authorization from an earlier LedgeSync configuration. Disconnect it first, then connect again to authorize this version.'));
+    actions.append(driveButton('Disconnect account', () => void driveAction('disconnect'), 'disconnect'));
+  } else if (state.drive.state === 'setup_required') {
+    card.append(el('p', 'connection-guidance', 'Google sign-in is not configured in this build. Install the official LedgeSync application from ledgesync.com to connect your account.'));
   } else {
     if (state.drive.clientConfigured) actions.append(driveButton(state.drive.state === 'reconnect_required' ? 'Reconnect Google Drive' : 'Connect Google Drive', () => void driveAction('connect'), 'connect', true));
-    if (!state.drive.account) actions.append(driveButton(state.drive.clientConfigured ? 'Replace OAuth client JSON' : 'Import OAuth client JSON', () => void driveAction('import'), 'import', !state.drive.clientConfigured));
     if (state.drive.account) actions.append(driveButton('Disconnect account', () => void driveAction('disconnect'), 'disconnect'));
   }
   card.append(actions);
@@ -303,21 +297,7 @@ function renderConnections(container: HTMLElement) {
   if (state.drive?.account) access.append(el('p', 'disconnect-help', 'Disconnect removes this account’s tokens from this computer. It does not delete Drive files or revoke the Google permission grant. You can revoke the grant separately in your Google Account connections settings.'));
   card.append(access); container.append(card);
 
-  const setup = el('details', 'connection-setup'); setup.open = state.driveSetupExpanded ?? !state.drive?.clientConfigured;
-  setup.addEventListener('toggle', () => { if (setup.isConnected) state.driveSetupExpanded = setup.open; });
-  setup.append(el('summary', '', 'Set up your Google Cloud OAuth client'));
-  setup.append(el('p', '', 'This build requires your own Desktop app OAuth client. You only need to import its configuration once on this computer.'));
-  const steps = el('ol');
-  for (const text of [
-    'Create or choose a project in Google Cloud Console, then enable the Google Drive API.',
-    'Open Google Auth platform. Configure Branding and Audience. For personal testing, choose External and add your Google account under Test users.',
-    'In Data Access, add https://www.googleapis.com/auth/drive.file. This is the permission LedgeSync requests.',
-    'Open Clients, choose Create client, select Desktop app, and download the client JSON. Import that file above, then choose Connect Google Drive.',
-  ]) steps.append(el('li', '', text));
-  setup.append(steps);
-  const open = driveButton(state.driveOpeningSetup ? 'Opening browser…' : 'Open Google Cloud setup', () => void openGoogleSetup(), 'setup'); open.disabled = state.driveOpeningSetup; setup.append(open);
-  setup.append(el('p', 'muted', 'Sign in and approve access only on Google’s page in your browser. Do not paste passwords, authorization codes, or tokens into LedgeSync. Keep the downloaded client JSON out of shared projects and source control.'));
-  container.append(setup);
+  container.append(el('p', 'muted', 'Sign in and approve access only on Google’s page in your browser. LedgeSync never asks for your Google password or a pasted access token.'));
 }
 
 function renderEmpty(container: HTMLElement) {

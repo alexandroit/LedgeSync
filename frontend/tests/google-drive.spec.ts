@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import type { DriveConnectionStatus, Preview } from '../src/types';
 
 const scope = 'https://www.googleapis.com/auth/drive.file';
-const setup: DriveConnectionStatus = { state: 'setup_required', clientConfigured: false, message: 'Import a Desktop app OAuth client to connect Google Drive.', scope };
+const setup: DriveConnectionStatus = { state: 'setup_required', clientConfigured: false, message: 'Google sign-in is not configured in this build.', scope };
 const disconnected: DriveConnectionStatus = { state: 'disconnected', clientConfigured: true, message: 'Ready to authorize Google Drive.', scope };
 const connected: DriveConnectionStatus = { state: 'connected', clientConfigured: true, message: 'Google Drive authorization is saved in the system credential vault.', scope, account: { reference: 'google-drive:fixture-account', displayName: 'Fixture Account', email: 'fixture@example.invalid' } };
 
@@ -11,7 +11,6 @@ interface Harness {
   complete(result: DriveConnectionStatus): void;
   fail(): void;
   setStatus(result: DriveConnectionStatus): void;
-  setImport(result: DriveConnectionStatus | null): void;
   setCheck(result: DriveConnectionStatus): void;
 }
 declare global { interface Window { driveHarness: Harness; injected?: boolean } }
@@ -20,7 +19,6 @@ async function start(page: Page, initial: DriveConnectionStatus) {
   await page.addInitScript(({ initial, disconnected }) => {
     // Replace the native transport only. The actual application renders and owns the flow.
     let current = initial;
-    let imported: DriveConnectionStatus | null = disconnected;
     let checked: DriveConnectionStatus | null = null;
     let resolveConnect: ((value: DriveConnectionStatus) => void) | undefined;
     let rejectConnect: ((reason: Error) => void) | undefined;
@@ -30,18 +28,15 @@ async function start(page: Page, initial: DriveConnectionStatus) {
       complete(result) { current = result; resolveConnect?.(result); },
       fail() { rejectConnect?.(new Error('sensitive-transport-value <script>window.injected=true</script>')); },
       setStatus(result) { current = result; },
-      setImport(result) { imported = result; },
       setCheck(result) { checked = result; },
     };
     window.go = { desktop: { App: {
       OpenFolder: async () => null, OpenConfiguration: async () => null, Refresh: async () => null, Cancel: async () => {},
       GoogleDriveStatus: async () => { calls.push('status'); return current; },
-      ImportGoogleOAuthClient: async () => { calls.push('import'); if (imported) current = imported; return imported; },
       ConnectGoogleDrive: async () => { calls.push('connect'); return new Promise<DriveConnectionStatus>((resolve, reject) => { resolveConnect = resolve; rejectConnect = reject; }); },
       CheckGoogleDrive: async () => { calls.push('check'); if (checked) current = checked; return current; },
       DisconnectGoogleDrive: async () => { calls.push('disconnect'); current = disconnected; return current; },
       CancelGoogleDrive: async () => { calls.push('cancel'); current = { ...disconnected, message: 'Authorization cancelled.' }; rejectConnect?.(new Error('Google Drive authorization was canceled.')); },
-      OpenGoogleOAuthSetup: async () => { calls.push('setup'); },
     } } };
   }, { initial, disconnected });
   await page.goto('/');
@@ -49,53 +44,66 @@ async function start(page: Page, initial: DriveConnectionStatus) {
   await expect(page.getByRole('heading', { name: 'Connections', exact: true })).toBeVisible();
 }
 
-test('setup explains Desktop app credentials, uses native setup action, and reads vault once', async ({ page }) => {
-  await start(page, setup);
-  await expect(page.getByText('Setup required', { exact: true })).toBeVisible();
-  await expect(page.getByText('This build requires your own Desktop app OAuth client.', { exact: false })).toBeVisible();
-  await expect(page.getByText('Open Clients, choose Create client, select Desktop app', { exact: false })).toBeVisible();
-  await expect(page.getByText('Cloud browsing and file transfers are not implemented yet.', { exact: false })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Connect Google Drive', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('searchbox')).toBeDisabled();
+test('a fresh official build is ready for one-click authorization without client setup', async ({ page }) => {
+  await start(page, disconnected);
+  const card = page.getByRole('article', { name: 'Google Drive connection' });
+  await expect(card.getByRole('button')).toHaveCount(1);
+  await expect(card.getByRole('button', { name: 'Connect Google Drive', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: /OAuth|JSON|Cloud setup/ })).toHaveCount(0);
+  await expect(page.locator('body')).not.toContainText('Google Cloud');
   await expect(page.locator('input:not([type="search"]), textarea')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Open Google Cloud setup', exact: true }).click();
-  await expect.poll(() => page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'setup']);
+  await expect(page.getByRole('searchbox')).toBeDisabled();
   await page.getByRole('button', { name: 'Files', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'See what belongs.' })).toBeVisible();
   await page.getByRole('button', { name: 'Connections', exact: true }).click();
-  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'setup']);
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
+  await card.getByRole('button', { name: 'Connect Google Drive', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Complete authorization in your browser');
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'connect']);
+  await page.evaluate(result => window.driveHarness.complete(result), connected);
+  await expect(card.getByText('Connected', { exact: true })).toBeVisible();
 });
 
-test('native import cancellation preserves setup and a later import enables authorization', async ({ page }) => {
+test('an unconfigured build directs users to the official app without exposing developer setup', async ({ page }) => {
   await start(page, setup);
-  await page.evaluate(() => window.driveHarness.setImport(null));
-  await page.getByRole('button', { name: 'Import OAuth client JSON', exact: true }).click();
-  await expect(page.getByText('Setup required', { exact: true })).toBeVisible();
-  await expect(page.getByRole('alert')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Import OAuth client JSON', exact: true })).toBeEnabled();
-  await page.evaluate(status => window.driveHarness.setImport(status), disconnected);
-  await page.getByRole('button', { name: 'Import OAuth client JSON', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Connect Google Drive', exact: true })).toBeEnabled();
-  await expect(page.getByText('Not connected', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Replace OAuth client JSON', exact: true })).toBeVisible();
+  await expect(page.getByText('Connection unavailable', { exact: true })).toBeVisible();
+  await expect(page.getByText('Install the official LedgeSync application from ledgesync.com', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Connect Google Drive|OAuth|JSON|Cloud setup/ })).toHaveCount(0);
+  await expect(page.locator('body')).not.toContainText('Google Cloud');
+  await expect(page.locator('input:not([type="search"]), textarea')).toHaveCount(0);
+  await expect(page.getByText('Cloud browsing and file transfers are not implemented yet.', { exact: false })).toBeVisible();
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
 });
 
-test('opening the setup browser keeps an expanded guide in place', async ({ page }) => {
-  await start(page, disconnected);
-  await page.getByText('Set up your Google Cloud OAuth client', { exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Open Google Cloud setup', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Open Google Cloud setup', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Open Google Cloud setup', exact: true })).toBeVisible();
-  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'setup']);
+test('legacy authorization retains identity until explicit disconnect then offers the new one-click flow', async ({ page }) => {
+  const legacy: DriveConnectionStatus = { ...connected, state: 'client_changed', message: 'The saved authorization belongs to a different app configuration.' };
+  await start(page, legacy);
+  const card = page.getByRole('article', { name: 'Google Drive connection' });
+  await expect(card.getByText('New authorization required', { exact: true })).toBeVisible();
+  await expect(card.getByText('fixture@example.invalid', { exact: true })).toBeVisible();
+  await expect(card.getByText('Disconnect it first, then connect again to authorize this version.', { exact: false })).toBeVisible();
+  await expect(card.getByRole('button')).toHaveCount(1);
+  await expect(card.getByRole('button', { name: 'Disconnect account', exact: true })).toBeEnabled();
+  await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status']);
+  await card.getByRole('button', { name: 'Disconnect account', exact: true }).click();
+  await expect(card.getByText('fixture@example.invalid', { exact: true })).toHaveCount(0);
+  await card.getByRole('button', { name: 'Connect Google Drive', exact: true }).click();
+  expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'disconnect', 'connect']);
+  await page.evaluate(result => window.driveHarness.complete(result), connected);
+  await expect(card.getByText('Connected', { exact: true })).toBeVisible();
 });
 
-test('import errors are redacted and do not leave controls pending', async ({ page }) => {
-  await start(page, setup);
-  await page.evaluate(() => { window.go!.desktop!.App!.ImportGoogleOAuthClient = async () => { throw new Error('sensitive-client-configuration'); }; });
-  await page.getByRole('button', { name: 'Import OAuth client JSON', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('Could not import the OAuth client.');
-  await expect(page.locator('body')).not.toContainText('sensitive-client-configuration');
-  await expect(page.getByRole('button', { name: 'Import OAuth client JSON', exact: true })).toBeEnabled();
+test('failed legacy disconnection preserves identity and never enables authorization with the new client', async ({ page }) => {
+  await start(page, { ...connected, state: 'client_changed', message: 'Disconnect the previous app authorization.' });
+  await page.evaluate(() => { window.go!.desktop!.App!.DisconnectGoogleDrive = async () => { throw new Error('sensitive-vault-response'); }; });
+  await page.getByRole('button', { name: 'Disconnect account', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Could not remove the local Google Drive credentials.');
+  await expect(page.getByText('fixture@example.invalid', { exact: true })).toBeVisible();
+  await expect(page.getByText('New authorization required', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Connect Google Drive|Reconnect Google Drive|Check connection/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Disconnect account', exact: true })).toBeEnabled();
+  await expect(page.locator('body')).not.toContainText('sensitive-vault-response');
 });
 
 test('browser authorization shows pending cancellation then connected identity as literal text', async ({ page }) => {
@@ -165,7 +173,7 @@ test('a connected account does not turn the local simulated plan into a Drive pl
   await expect(page.getByText('This preview uses a simulated destination and cannot be applied', { exact: false })).toBeVisible();
   await expect(page.locator('body')).not.toContainText('Google Drive is not connected');
   await expect(page.getByText('Google Drive connected. Cloud transfers are not available yet.', { exact: true })).toBeVisible();
-  await expect(page.getByText('Developer alpha · 0.1.0-alpha.2', { exact: true })).toBeVisible();
+  await expect(page.getByText('Developer alpha · 0.1.0-alpha.3', { exact: true })).toBeVisible();
 });
 
 test('account check reports reconnection and disconnect removes displayed account without cloud deletion claims', async ({ page }) => {
@@ -204,20 +212,20 @@ test('a rejected check reconciles the persisted reconnect state discarded by Wai
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'check', 'status']);
 });
 
-for (const operation of ['import', 'connect', 'disconnect'] as const) {
+for (const operation of ['connect', 'disconnect'] as const) {
   test(`a rejected ${operation} reconciles the vault-unavailable state`, async ({ page }) => {
     const initial = operation === 'disconnect' ? connected : disconnected;
     await start(page, initial);
     const unavailable: DriveConnectionStatus = { state: 'storage_unavailable', clientConfigured: false, scope, message: 'Unlock the operating system credential vault and try again.' };
     await page.evaluate(({ operation, unavailable }) => {
-      const methods = { import: 'ImportGoogleOAuthClient', connect: 'ConnectGoogleDrive', disconnect: 'DisconnectGoogleDrive' } as const;
+      const methods = { connect: 'ConnectGoogleDrive', disconnect: 'DisconnectGoogleDrive' } as const;
       window.go!.desktop!.App![methods[operation]] = async () => {
         window.driveHarness.calls.push(operation);
         window.driveHarness.setStatus(unavailable);
         throw 'sensitive-vault-error';
       };
     }, { operation, unavailable });
-    const labels = { import: 'Replace OAuth client JSON', connect: 'Connect Google Drive', disconnect: 'Disconnect account' };
+    const labels = { connect: 'Connect Google Drive', disconnect: 'Disconnect account' };
     await page.getByRole('button', { name: labels[operation], exact: true }).click();
     await expect(page.getByText('Credential vault unavailable', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Retry connection status', exact: true })).toBeEnabled();
@@ -254,9 +262,9 @@ test('unavailable vault requires explicit retry and never offers plaintext crede
   await expect(page.getByRole('button', { name: 'Import OAuth client JSON', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Connect Google Drive', exact: true })).toHaveCount(0);
   await expect(page.locator('textarea, input:not([type="search"])')).toHaveCount(0);
-  await page.evaluate(result => window.driveHarness.setStatus(result), setup);
+  await page.evaluate(result => window.driveHarness.setStatus(result), disconnected);
   await page.getByRole('button', { name: 'Retry connection status', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Import OAuth client JSON', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Connect Google Drive', exact: true })).toBeEnabled();
   expect(await page.evaluate(() => window.driveHarness.calls)).toEqual(['status', 'status']);
 });
 

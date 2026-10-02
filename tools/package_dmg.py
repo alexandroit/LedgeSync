@@ -164,7 +164,7 @@ def package(app: Path, architecture: str, version: str, output: Path, notices_ro
             "3. Open LedgeSync from Applications.\n\n"
             "Developer alpha: browse local files, inspect ignore rules, and preview\n"
             "a simulated destination. Google Drive transfers are not enabled.\n"
-            "Connect Google Drive from Connections using your own Desktop OAuth client.\nNo service, login item, preauthorized account, or schedule is installed.\n\n"
+            "Open Connections and choose Connect Google Drive to authorize in your browser.\nNo service, login item, preauthorized account, or schedule is installed.\n\n"
             "Developer distribution: no trusted publisher signature or notarization\n"
             "is provided by this packaging process. The existing application's\n"
             "signature is preserved; current alpha apps use an ad-hoc signature.\n"

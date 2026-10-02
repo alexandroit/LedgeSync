@@ -1,10 +1,11 @@
 # Platform builds and installation
 
-LedgeSync **0.1.0-alpha.2** adds Google Drive authorization in the desktop app.
+LedgeSync **0.1.0-alpha.3 source** adds one-click Google Drive authorization with
+a bundled Desktop client. Alpha.3 release validation/publication is pending.
 The desktop and CLI share the local policy/preview engine; the headless CLI
 remains offline and has no account-authorization workflow. No package installs
 a service, schedules jobs, connects an account automatically, uploads files or
-enables deletion. Connecting requires explicit setup and browser consent.
+enables deletion. Connecting requires an explicit click and browser consent.
 
 [Alpha.2 is published](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.2).
 The previous alpha.1 assets remain unchanged. Evidence for the two releases is
@@ -27,14 +28,14 @@ ARM means ARM64 in this project; there are no 32-bit packages. Windows Server
 desktop use is not an acceptance target; use the CLI for Server Core/headless
 systems. No macOS Server-specific package or operating-system service is required.
 
-## Alpha.2 authorization and validation boundary
+## Alpha.3 authorization and validation boundary
 
-Read [Google Drive setup](GOOGLE_DRIVE_AUTH.md) before connecting. Alpha.2 requires
-your own Google OAuth **Desktop app** client; no shared client is bundled. Import
-its JSON through **Connections**, then authorize the limited `drive.file` scope
-in your system browser. Only one account is supported. Connecting, checking,
-reconnecting and disconnecting do not browse or transfer cloud files; every
-file preview still uses a simulated empty destination.
+Read [Google Drive connection](GOOGLE_DRIVE_AUTH.md). Official alpha.3 builds
+include the publisher's Desktop client. Choose **Connections → Connect Google
+Drive** and authorize the limited `drive.file` scope in your system browser.
+End users do not create clients or import JSON. Only one account is supported.
+Connecting, checking, reconnecting and disconnecting do not browse or transfer
+cloud files; every file preview still uses a simulated empty destination.
 
 Credentials use macOS Keychain, Windows Credential Manager or Ubuntu Secret
 Service. Ubuntu requires an active graphical user's D-Bus session and an unlocked
@@ -45,10 +46,10 @@ The `ledgesync-cli` package does not require a keyring or connect to Google.
 Local synthetic OAuth and frontend tests do not establish real Google consent,
 refresh or revocation. Native credential storage was separately tested on
 disposable runner accounts as recorded below.
-Real Google account acceptance remains pending until an owner-created OAuth
-client is configured; no personal account was used in automated tests.
+The owner supplied a Desktop client for alpha.3. Real Google account acceptance
+remains pending; no personal account was used in automated tests.
 
-## Observed alpha.2 release results
+## Historical alpha.2 release results
 
 Application source: `42474b558d3b1557318f9cb0ae714748869f90b3`.
 [Build run 36949133758](https://github.com/alexandroit/LedgeSync/actions/runs/36949133758)
@@ -261,10 +262,13 @@ required.
 ```sh
 go test ./...
 go build -trimpath -o build/cli/ ./cmd/ledgesync
-python3 tools/package_cli.py --version 0.1.0-alpha.2
+python3 tools/package_cli.py --version 0.1.0-alpha.3
 ```
 
-For the desktop, run `npm ci` in `frontend`, then from `cmd/ledgesync-desktop`:
+For desktop OAuth, first follow [maintainer build configuration](OAUTH_BUILD.md).
+Without that optional build input, the local explorer works and account connection
+is explicitly unavailable. Run `npm ci` in `frontend`, then from
+`cmd/ledgesync-desktop`:
 
 ```sh
 go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -tags desktop -nosyncgomod -m -trimpath
@@ -282,7 +286,7 @@ bundle identifier is `com.ledgesync.app`; the minimum macOS version is 13.0.
 To create the macOS disk image from an existing native app:
 
 ```sh
-python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch arm64 --version 0.1.0-alpha.2 --output build/packages
+python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch arm64 --version 0.1.0-alpha.3 --output build/packages
 ```
 
 Use `--arch amd64` for an Intel build. The script requires macOS, verifies the

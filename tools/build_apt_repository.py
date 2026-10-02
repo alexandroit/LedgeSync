@@ -17,7 +17,6 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 ARCHES = ('amd64', 'arm64')
 PACKAGES = ('ledgesync', 'ledgesync-cli')
-VERSION = '0.1.0~alpha.1-1'
 
 
 def run(arguments, cwd=None):
@@ -28,24 +27,34 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def build(packages, destination, gnupghome, key, previous=None):
-    if not re.fullmatch(r'[A-Fa-f0-9]{40}', key):
-        raise ValueError('Use the full fingerprint of the existing signing key')
-    if destination.exists() or destination.is_symlink():
-        raise ValueError('Refusing to replace an APT snapshot')
+def validate_packages(packages, expected_version):
+    if (not isinstance(expected_version, str) or len(expected_version) > 80
+            or not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:~[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?-[1-9][0-9]*', expected_version)):
+        raise ValueError('Use an explicit LedgeSync Debian package version, for example 0.1.0~alpha.2-1')
     inputs = sorted(packages.glob('*.deb'))
     identities = set()
     for package in inputs:
+        if package.is_symlink() or not package.is_file() or package.stat().st_size > 512 * 1024 * 1024:
+            raise ValueError('APT input packages must be bounded regular files')
         fields = run(['dpkg-deb', '-f', str(package), 'Package', 'Version', 'Architecture']).decode()
         control = dict(line.split(': ', 1) for line in fields.splitlines())
         name, version, arch = (control[field] for field in ('Package', 'Version', 'Architecture'))
-        if name not in PACKAGES or version != VERSION or arch not in ARCHES:
+        if name not in PACKAGES or version != expected_version or arch not in ARCHES:
             raise ValueError(f'Unexpected package metadata: {package.name}')
         if package.name != f'{name}_{version}_{arch}.deb' or (name, arch) in identities:
             raise ValueError('Unexpected or duplicate package filename')
         identities.add((name, arch))
     if identities != {(name, arch) for name in PACKAGES for arch in ARCHES}:
         raise ValueError('Both desktop and CLI packages are required for both architectures')
+    return inputs
+
+
+def build(packages, destination, gnupghome, key, previous=None, *, version):
+    if not re.fullmatch(r'[A-Fa-f0-9]{40}', key):
+        raise ValueError('Use the full fingerprint of the existing signing key')
+    if destination.exists() or destination.is_symlink():
+        raise ValueError('Refusing to replace an APT snapshot')
+    inputs = validate_packages(packages, version)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.apt-snapshot-', dir=destination.parent) as temporary:
         stage = Path(temporary) / 'public'
@@ -113,7 +122,7 @@ def build(packages, destination, gnupghome, key, previous=None):
         run(['gpgv', '--keyring', str(keyring), str(release_dir / 'InRelease')])
         shutil.copyfile(ROOT / 'deploy/apt/ledgesync.sources', stage / 'ledgesync.sources')
         (stage / 'signing-key-fingerprint.txt').write_text(key.upper() + '\n')
-        evidence = {'packages': {p.name: digest(p) for p in inputs}, 'signingFingerprint': key.upper()}
+        evidence = {'version': version, 'packages': {p.name: digest(p) for p in inputs}, 'signingFingerprint': key.upper()}
         (stage / 'repository.json').write_text(json.dumps(evidence, indent=2) + '\n')
         for path in stage.rglob('*'):
             path.chmod(0o755 if path.is_dir() else 0o644)
@@ -129,8 +138,9 @@ def main():
     parser.add_argument('--gnupghome', type=Path, required=True)
     parser.add_argument('--key', required=True)
     parser.add_argument('--previous', type=Path)
+    parser.add_argument('--version', required=True, help='Exact Debian package version, e.g. 0.1.0~alpha.2-1')
     args = parser.parse_args()
-    build(args.packages.resolve(), args.output.resolve(), args.gnupghome.resolve(), args.key, args.previous)
+    build(args.packages.resolve(), args.output.resolve(), args.gnupghome.resolve(), args.key, args.previous, version=args.version)
 
 
 if __name__ == '__main__':

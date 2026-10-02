@@ -46,14 +46,17 @@ renewal/publication is not an application auto-update service.
    the server. No application is installed on the production host by this flow.
 4. Run `tools/build_apt_repository.py` with `--packages`, a new `--output`
    snapshot path, the protected `--gnupghome`, and the full public `--key`
-   fingerprint. For subsequent publications pass `--previous` with the prior
+   fingerprint. Supply the exact Debian package version explicitly, for example
+   `--version '0.1.0~alpha.2-1'`; all four input packages must match it. For
+   subsequent publications pass `--previous` with the prior
    public snapshot to retain old pool files and by-hash indexes. The tool signs
    with the existing server key and verifies the resulting signature. It never
    exports private key material or activates a snapshot itself.
 5. Record the previous public symlink target, then create a sibling temporary
    symlink to the verified new snapshot and replace `public` atomically. Preserve
    previous snapshots for rollback. Content-only updates need no Nginx reload.
-6. Dispatch `installers.yml` with `verify_public_apt=true`. Both native Ubuntu
+6. Dispatch `installers.yml` with `verify_public_apt=true` and the expected
+   application `version` (for example `0.1.0-alpha.2`). Both native Ubuntu
    runners fetch the HTTPS public key, check it against the pinned key, reject
    tampered signed metadata, force by-hash fetching, run `apt-get install
    ledgesync`, remove it, install the headless CLI separately and verify removal

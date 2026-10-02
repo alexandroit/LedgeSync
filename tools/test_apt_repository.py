@@ -73,7 +73,7 @@ def main():
             keys = run(['gpg', '--homedir', str(gnupg), '--batch', '--with-colons', '--list-keys']).stdout
             fingerprint = next(line.split(':')[9] for line in keys.splitlines() if line.startswith('fpr:'))
             public = work / 'public'
-            build(args.packages.resolve(), public, gnupg, fingerprint)
+            build(args.packages.resolve(), public, gnupg, fingerprint, version=version)
             keyfile.write_bytes((public / 'ledgesync-archive-keyring.gpg').read_bytes())
 
             class Handler(http.server.SimpleHTTPRequestHandler):

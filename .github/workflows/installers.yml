@@ -15,6 +15,7 @@ on:
       - 'tools/fetch_installer_inputs.py'
       - 'tools/build_apt_repository.py'
       - 'tools/test_apt_repository.py'
+      - 'tools/test_build_apt_repository.py'
   workflow_dispatch:
     inputs:
       version:
@@ -97,6 +98,7 @@ jobs:
           python-version: '3.13'
       - name: Native packaging and GUI test dependencies
         run: sudo apt-get update && sudo apt-get install -y dpkg-dev binutils desktop-file-utils libgtk-3-dev libwebkit2gtk-4.1-dev xvfb dbus-x11
+      - run: python3 tools/test_build_apt_repository.py
       - run: python3 tools/fetch_installer_inputs.py --platform linux --arch ${{ matrix.arch }} --version "$LEDGESYNC_RELEASE_VERSION" --manifest "$LEDGESYNC_SOURCE_MANIFEST"
       - run: python3 tools/test_package_deb.py
       - name: Package verified desktop and CLI archives

@@ -20,7 +20,7 @@ VersionInfoVersion={#NumericVersion}
 VersionInfoDescription=LedgeSync graphical installer
 DefaultDirName={localappdata}\Programs\LedgeSync
 DefaultGroupName=LedgeSync
-DisableProgramGroupPage=yes
+DisableProgramGroupPage=no
 DisableDirPage=no
 DisableWelcomePage=no
 PrivilegesRequired=lowest
@@ -60,7 +60,7 @@ Source: "{#PayloadDir}\INSTALL.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PayloadDir}\INNO_SETUP_LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{userprograms}\{groupname}\LedgeSync"; Filename: "{app}\LedgeSync.exe"; WorkingDir: "{app}"; AppUserModelID: "com.ledgesync.app"
+Name: "{group}\LedgeSync"; Filename: "{app}\LedgeSync.exe"; WorkingDir: "{app}"; AppUserModelID: "com.ledgesync.app"
 Name: "{userdesktop}\LedgeSync"; Filename: "{app}\LedgeSync.exe"; WorkingDir: "{app}"; Tasks: desktopicon; AppUserModelID: "com.ledgesync.app"
 
 [Run]

@@ -276,6 +276,14 @@ try {
     if ($ReportPath) {
         $ReportPath = [System.IO.Path]::GetFullPath($ReportPath)
         [void][System.IO.Directory]::CreateDirectory((Split-Path -Parent $ReportPath))
+        # Keep native installer evidence alongside the report for CI uploads,
+        # including when an assertion fails before uninstall can run.
+        $report.logs = @()
+        foreach ($log in Get-ChildItem -LiteralPath $testRoot -Filter '*.log' -File) {
+            $logPath = Join-Path (Split-Path -Parent $ReportPath) ([System.IO.Path]::GetFileNameWithoutExtension($ReportPath) + '-' + $log.Name)
+            Copy-Item -LiteralPath $log.FullName -Destination $logPath
+            $report.logs += $logPath
+        }
         [System.IO.File]::WriteAllText($ReportPath, ($report | ConvertTo-Json -Depth 8))
     }
     $report | ConvertTo-Json -Depth 8 | Write-Output

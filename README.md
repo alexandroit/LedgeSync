@@ -1,6 +1,6 @@
 # LedgeSync
 
-LedgeSync copies explicitly approved local folders to Google Drive, preserving
+LedgeSync is designed to copy explicitly approved local folders to Google Drive, preserving
 the included hierarchy and empty folders while applying your ignore policies.
 The desktop is the primary interface; the native CLI uses the same authorization,
 filtering, approval, transfer and recovery services.
@@ -22,6 +22,11 @@ serves alpha.4, and public installation checks passed on both Ubuntu architectur
 The [website](https://ledgesync.com/) and secondary GitHub Pages copy serve the
 updated release. Exact delivery evidence is in the
 [publication status](docs/PLATFORMS.md#alpha4-native-validation-and-publication-gates).
+
+> **Current blocking report (2026-10-02):** the owner reports that the application
+> is not synchronizing files. The recorded distribution checks below do not prove
+> the live upload journey or resolve that failure. Continue diagnosis and completion
+> through [the continuation handoff](HANDOFF.md).
 
 ## Downloads
 
@@ -81,7 +86,7 @@ user credential vault:
 
 ```sh
 ledgesync auth connect
-ledgesync copy --root "/path/to/project" --destination picker
+ledgesync copy --root "./local-folder" --destination picker
 ```
 
 Review the complete preview and type its exact digest to approve. For an SSH
@@ -144,12 +149,13 @@ Its exact release, installer and APT evidence remains in the
 Without publisher configuration, local development remains available:
 
 ```sh
+mkdir -p ./build
 go run ./cmd/ledgesync --help
-go run ./cmd/ledgesync browse --root /path/to/project --json
+go run ./cmd/ledgesync browse --root ./local-folder --json
 go run ./cmd/ledgesync config validate --config project.json
 go run ./cmd/ledgesync explain --config project.json --path src/main.go --json
-go run ./cmd/ledgesync plan --config project.json --output /outside/source/plan.json
-go run ./cmd/ledgesync plan inspect --plan /outside/source/plan.json
+go run ./cmd/ledgesync plan --config project.json --output ./build/preview.json
+go run ./cmd/ledgesync plan inspect --plan ./build/preview.json
 go run ./cmd/ledgesync capabilities
 ```
 

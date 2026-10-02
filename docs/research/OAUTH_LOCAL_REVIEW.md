@@ -65,14 +65,19 @@ build-helper and CLI implementation, then ran the existing regressions.
 ## Commands and results
 
 Commands below ran from the project root unless a different directory is noted.
-All credentials in tests were synthetic. Existing tests that Go reported as
-cached remain cache results, not newly exercised native integrations.
+Their workstation-specific paths are now portable transcriptions; the results
+are historical and were not rerun for the path update. Output paths are relative
+to the repository root; Go cache paths are derived from that root because Go
+requires absolute values. Prepare `build/security-review` before the output
+redirection below (`mkdir -p build/security-review`). All credentials in tests
+were synthetic. Existing tests that Go reported as cached remain cache results,
+not newly exercised native integrations.
 
-| Exact command | Result |
+| Command (portable transcription) | Recorded result |
 | --- | --- |
 | `go test ./internal/driveauth ./cmd/ledgesync ./internal/connections` | Pass |
 | `python3 tools/test_configure_oauth_client.py` | Pass, 9 tests, including both synthetic build tags |
-| `go test -json ./... > /tmp/ledgesync-oauth-review-tests.jsonl` | Pass, 333 test/subtest pass events, 2 explicit test skips; 12 tested packages, 3 packages without tests |
+| `go test -json ./... > build/security-review/ledgesync-oauth-review-tests.jsonl` | Pass, 333 test/subtest pass events, 2 explicit test skips; 12 tested packages, 3 packages without tests |
 | `go test -race ./...` | Pass |
 | `go vet ./...` | Pass |
 | `npm test` (in `frontend`) | Pass, all 30 Playwright tests |
@@ -86,7 +91,7 @@ cached remain cache results, not newly exercised native integrations.
 | `GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags oauth -o build/security-review/ledgesync-windows-amd64.exe ./cmd/ledgesync` | Pass, cross-compilation only |
 | `GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags oauth -o build/security-review/ledgesync-windows-arm64.exe ./cmd/ledgesync` | Failed initially: system-volume temporary build directory ran out of space |
 | `mkdir -p build/security-review/go-tmp build/security-review/go-cache` | Pass, isolated directories on SSD |
-| `GOCACHE=/Volumes/SSD/storage/drive/Projects/LedgeSync/build/security-review/go-cache GOTMPDIR=/Volumes/SSD/storage/drive/Projects/LedgeSync/build/security-review/go-tmp GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags oauth -o build/security-review/ledgesync-windows-arm64.exe ./cmd/ledgesync` | Pass on retry, cross-compilation only; no user files/shared caches deleted |
+| `GOCACHE="$(pwd)/build/security-review/go-cache" GOTMPDIR="$(pwd)/build/security-review/go-tmp" GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags oauth -o build/security-review/ledgesync-windows-arm64.exe ./cmd/ledgesync` | Pass on retry, cross-compilation only; no user files/shared caches deleted |
 | `.venv/bin/python tools/validate_docs.py` | Pass, 43 Markdown files, 147 local links; zero failures/skips |
 | `git diff --check` | Pass |
 

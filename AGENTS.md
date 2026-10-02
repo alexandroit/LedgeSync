@@ -40,6 +40,18 @@ Use immutable policy/rule snapshots and explain traces. Every explanation must i
 
 Implement tests before or alongside each behavior. Add a regression test for every bug. Use differential tests against pinned Git/rclone versions, fuzz parsers/path handling, run race tests, and exercise recovery after crashes and network failures. Do not claim full compatibility based on a few hand-picked patterns.
 
+## Workspace paths and current continuation
+
+Resolve the repository root from the active checkout. Keep repository references
+and examples relative; derive absolute runtime cache paths only when a tool
+requires them. Do not hardcode a workstation volume/user directory. Installed
+OS/server paths in platform runbooks are separate technical destinations.
+
+Read [the current continuation handoff](HANDOFF.md) before selecting
+work. The latest owner report is that files do not synchronize; historical release
+or CI evidence does not resolve that report. Preserve and diagnose the existing
+application rather than repeating an obsolete offline bootstrap.
+
 ## Workflow
 
 Before editing, read the relevant specs and current status. Select the next dependency-ready backlog slice. Make the smallest useful vertical change, run applicable checks, inspect the diff, and update documentation plus status. Maintain a clean boundary between a tested feature, an experimental feature, and a roadmap item.

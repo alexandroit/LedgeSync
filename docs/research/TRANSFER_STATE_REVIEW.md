@@ -76,10 +76,17 @@ the transfer slice, separately from this dependency review.
 
 ## Verification and limits
 
-With `GOMODCACHE=/Volumes/SSD/storage/data/go/pkg/mod`, and `GOCACHE`, `GOTMPDIR`
-and `TMPDIR` on the task-owned SSD build directory, these commands passed:
+With SSD-backed module/build caches and task-owned temporary directories, these
+commands passed during the recorded review. The block below is a portable
+transcription for use from the repository root, not a new execution. Go requires
+absolute cache paths, which are derived from the current directory.
 
 ```sh
+mkdir -p build/go-modcache build/security-review/go-cache build/security-review/go-tmp
+export GOMODCACHE="$(pwd)/build/go-modcache"
+export GOCACHE="$(pwd)/build/security-review/go-cache"
+export GOTMPDIR="$(pwd)/build/security-review/go-tmp"
+export TMPDIR="$GOTMPDIR"
 go mod verify
 python3 tools/collect_licenses.py
 python3 tools/verify_licenses.py

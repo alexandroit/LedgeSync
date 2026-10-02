@@ -96,9 +96,17 @@ All fixtures were synthetic. No developer credential vault, personal tokens,
 Drive account, or real upload source was accessed. No changes were committed or
 published by this review task.
 
-The following checks passed on this macOS ARM64 host:
+The following checks passed on the review's macOS ARM64 host. The commands and
+cache setup below are portable transcriptions for use from the repository root,
+not a new execution. Go requires absolute cache paths; derive them from the
+current checkout rather than a fixed workstation location.
 
 ```sh
+mkdir -p build/go-modcache build/security-review/go-cache build/security-review/go-tmp
+export GOMODCACHE="$(pwd)/build/go-modcache"
+export GOCACHE="$(pwd)/build/security-review/go-cache"
+export GOTMPDIR="$(pwd)/build/security-review/go-tmp"
+export TMPDIR="$GOTMPDIR"
 CGO_ENABLED=0 go test -count=1 ./internal/transferstate
 CGO_ENABLED=1 go test -race -count=1 ./internal/transferstate ./internal/credentialvault
 GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go test -c -o build/security-review/transferstate-darwin-amd64.test ./internal/transferstate
@@ -111,9 +119,8 @@ GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go test -c -o build/security-review/creden
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go vet ./internal/credentialvault
 ```
 
-Commands used `GOMODCACHE=/Volumes/SSD/storage/data/go/pkg/mod` and
-`GOCACHE=$PWD/build/security-review/go-cache`; `GOTMPDIR` and `TMPDIR` both used
-`$PWD/build/security-review/go-tmp`. The native-vault opt-in was not enabled.
+The recorded execution used SSD-backed module/build caches and temporary
+directories. The native-vault opt-in was not enabled.
 
 macOS executed ACL grant rejection despite unchanged private mode, replaced
 identity/hardlink rejection, and malformed ACL-buffer tests. Windows fixtures

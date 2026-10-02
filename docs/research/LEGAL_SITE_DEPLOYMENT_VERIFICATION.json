@@ -1,0 +1,138 @@
+{
+  "verified_at_utc": "2026-10-02",
+  "website_source_commit": "43f7ab6ada2711795ca0b14df6bc333f6344e131",
+  "previous_release": "5c702076b39a8170f2065c3262f5060d7b65698f",
+  "pages_run": "https://github.com/alexandroit/LedgeSync/actions/runs/36957112425",
+  "public_contact": "alex@alexandro.net",
+  "checks": [
+    {
+      "mode": "public",
+      "path": "/",
+      "status": 200,
+      "sha256": "e4ca67fbfeea5cdd7d1051a5e588bfee75d08b7acf166658061b814ef6766e8c"
+    },
+    {
+      "mode": "public",
+      "path": "/privacy-policy",
+      "status": 200,
+      "sha256": "5229ebc90bcb72aaa51bf2a784a2e9471c3f98fa2e1b7572153692d1a30cb57e"
+    },
+    {
+      "mode": "public",
+      "path": "/public-term",
+      "status": 200,
+      "sha256": "9f50e21d537a6cd9ab8cdff2eddc678ddf0aaf7bc77191856613bf269d79a81b"
+    },
+    {
+      "mode": "public",
+      "path": "/assets/ledgesync-logo.png",
+      "status": 200,
+      "sha256": "04e7fc46d3fea57f921e60347c75ddbd853645f2f00174cb765efeb0e757a602"
+    },
+    {
+      "mode": "public",
+      "path": "/assets/ledgesync-logo.svg",
+      "status": 200,
+      "sha256": "24274afdbb8f394cebdb4bf8be2aac3d4f6729e3d0fd26a512dbeaeef3f71ac1"
+    },
+    {
+      "mode": "public",
+      "path": "/assets/legal.css?v=1",
+      "status": 200,
+      "sha256": "c8bcfb6d477b878e6597ce7f76a0cd6f01b69591a2d1ce1d0117356db3a292af"
+    },
+    {
+      "mode": "public",
+      "path": "/style.css?v=1c913bddba4f",
+      "status": 200,
+      "sha256": "1c913bddba4fbf3e42d2d59766ae16427a6cbfd56f5342b81aae133b392e1504"
+    },
+    {
+      "mode": "origin",
+      "path": "/",
+      "status": 200,
+      "sha256": "e4ca67fbfeea5cdd7d1051a5e588bfee75d08b7acf166658061b814ef6766e8c"
+    },
+    {
+      "mode": "origin",
+      "path": "/privacy-policy",
+      "status": 200,
+      "sha256": "5229ebc90bcb72aaa51bf2a784a2e9471c3f98fa2e1b7572153692d1a30cb57e"
+    },
+    {
+      "mode": "origin",
+      "path": "/public-term",
+      "status": 200,
+      "sha256": "9f50e21d537a6cd9ab8cdff2eddc678ddf0aaf7bc77191856613bf269d79a81b"
+    },
+    {
+      "mode": "origin",
+      "path": "/assets/ledgesync-logo.png",
+      "status": 200,
+      "sha256": "04e7fc46d3fea57f921e60347c75ddbd853645f2f00174cb765efeb0e757a602"
+    },
+    {
+      "mode": "origin",
+      "path": "/assets/ledgesync-logo.svg",
+      "status": 200,
+      "sha256": "24274afdbb8f394cebdb4bf8be2aac3d4f6729e3d0fd26a512dbeaeef3f71ac1"
+    },
+    {
+      "mode": "origin",
+      "path": "/assets/legal.css?v=1",
+      "status": 200,
+      "sha256": "c8bcfb6d477b878e6597ce7f76a0cd6f01b69591a2d1ce1d0117356db3a292af"
+    },
+    {
+      "mode": "origin",
+      "path": "/style.css?v=1c913bddba4f",
+      "status": 200,
+      "sha256": "1c913bddba4fbf3e42d2d59766ae16427a6cbfd56f5342b81aae133b392e1504"
+    },
+    {
+      "url": "https://ledgesync.com/not-a-legal-route",
+      "status": 404
+    },
+    {
+      "url": "https://ledgesync.com/.git/config",
+      "status": 403
+    },
+    {
+      "url": "https://hipermusicas.com/",
+      "status": 200
+    },
+    {
+      "url": "https://ledgesync.com/apt/dists/stable/InRelease",
+      "status": 200
+    },
+    {
+      "mode": "secondary-pages",
+      "url": "https://alexandroit.github.io/LedgeSync/privacy-policy/",
+      "status": 200,
+      "sha256": "5229ebc90bcb72aaa51bf2a784a2e9471c3f98fa2e1b7572153692d1a30cb57e"
+    },
+    {
+      "mode": "secondary-pages",
+      "url": "https://alexandroit.github.io/LedgeSync/public-term/",
+      "status": 200,
+      "sha256": "9f50e21d537a6cd9ab8cdff2eddc678ddf0aaf7bc77191856613bf269d79a81b"
+    },
+    {
+      "mode": "secondary-pages",
+      "url": "https://alexandroit.github.io/LedgeSync/assets/ledgesync-logo.png",
+      "status": 200,
+      "sha256": "04e7fc46d3fea57f921e60347c75ddbd853645f2f00174cb765efeb0e757a602"
+    }
+  ],
+  "nginx_template_sha256": "85c8d97b2ce4c7f79e22fe2ce2caade3dfc6b16ddb6c2cf137a1f08d495b7ce0",
+  "shared_nginx_sha256": "5d58ae3b6fc32497a2d73af54df4d94dd2ff2e56295b32f28d75452fe4378277",
+  "hipermusicas_vhost_sha256": "650c1711739543f081f1fc0fce8ed6561e3f84e1ff2983ee612b1079b7d27e9d",
+  "hipermusicas_pid_before_and_after": 1521428,
+  "apt_inrelease_sha256_unchanged": "b32f41022cd884d3f96c8d513c19f791574a83d0b7fb8aef033c1399f3ad121d",
+  "browser_visual_qa": "not requested; not performed",
+  "notes": [
+    "Initial strict public byte comparison detected Cloudflare email obfuscation. Scoped no-transform response headers corrected it; all final legal-page bytes match the source.",
+    "Initial local link check incorrectly treated the separate /apt/ location as a static asset. Corrected boundary and verified public APT response separately.",
+    "No Google Cloud configuration, DNS records, application release assets or APT content changed."
+  ]
+}

@@ -15,6 +15,32 @@ site is now live there. The owner subsequently requested Google Drive token
 authorization, then selected a bundled Desktop client with one-click browser
 consent. The current change does not enable cloud transfers.
 
+## Public privacy, terms and branding publication
+
+Published `https://ledgesync.com/privacy-policy` and
+`https://ledgesync.com/public-term` on the existing Ubuntu origin, with homepage
+footer links and the owner-supplied public contact `alex@alexandro.net`.
+Website source: `43f7ab6ada2711795ca0b14df6bc333f6344e131`. The existing app logo
+is available at `https://ledgesync.com/assets/ledgesync-logo.png` (512 × 512,
+4,072 bytes), with an unchanged SVG companion. No logo redesign was performed.
+
+Validation: static HTML/title/heading/local-reference checks passed (51 local
+references); original PNG byte identity and dimensions passed; `nginx -t`
+passed before graceful reloads. Public and direct-origin HTTPS content matched
+all seven source files; 18 origin/public checks and three secondary Pages checks
+passed. Pages workflow 36957112425 succeeded. An initial CDN email transformation
+was fixed with scoped `no-transform` headers. HiperMusicas retained its PID and
+configuration hashes, and APT metadata was unchanged. No browser visual QA was
+requested or performed. See [deployment evidence](research/LEGAL_SITE_DEPLOYMENT_VERIFICATION.json),
+[website operations](WEBSITE.md) and [branding fields](BRANDING.md).
+
+This website publication does not publish the preceding local OAuth code edits
+or change application installers, DNS or shared Google Cloud settings. The
+existing private Sites preview was not republished; the requested production
+domain and secondary GitHub Pages copy were updated. Next owner step: enter the
+published URLs and PNG into Google's branding form, reviewing shared-project
+impact before saving project-wide changes.
+
 ## OAuth protection verification and hardening (unreleased source)
 
 The owner requested verification of existing protections and code fixes for

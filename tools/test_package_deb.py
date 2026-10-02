@@ -81,6 +81,16 @@ class DebianPackageGuards(unittest.TestCase):
                     info.size = len(data)
                 archive.addfile(info, io.BytesIO(data) if info.isreg() else None)
 
+    def test_cli_suggests_vault_without_graphical_library_dependencies(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            release = self.release_fixture()
+            release["debianVersion"] = debian_version(release["version"])
+            control = write_control(Path(temporary), "ledgesync-cli", "arm64", "", DEFAULT_MAINTAINER, release)
+            self.assertIn("Suggests: gnome-keyring", control)
+            self.assertNotIn("Depends:", control)
+            self.assertNotIn("Recommends:", control)
+            self.assertIn("unlocked Secret Service collection", control)
+
     def test_archive_hash_is_required_and_symlinks_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

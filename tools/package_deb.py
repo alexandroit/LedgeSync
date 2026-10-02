@@ -207,7 +207,7 @@ def dependencies(binary: Path, work: Path, architecture: str, maintainer: str) -
     (debian / "control").write_text(
         f"Source: ledgesync\nSection: utils\nPriority: optional\nMaintainer: {maintainer}\n\n"
         f"Package: ledgesync\nArchitecture: {architecture}\nDepends: ${{shlibs:Depends}}\n"
-        "Description: LedgeSync offline desktop\n Native dependency discovery only.\n",
+        "Description: LedgeSync desktop\n Native dependency discovery only.\n",
         encoding="utf-8",
     )
     output = run(["dpkg-shlibdeps", "-O", "-dDepends", "-e" + str(binary)], cwd=work)
@@ -247,8 +247,8 @@ def write_control(stage: Path, package: str, architecture: str, depends: str, ma
     control = stage / "DEBIAN"
     control.mkdir(mode=0o755)
     size = sum(math.ceil(file.stat().st_size / 1024) for file in stage.rglob("*") if file.is_file())
-    description = ("local file policy explorer and desktop previews" if package == "ledgesync"
-                   else "headless local file policy inspection and previews")
+    description = ("approved Google Drive folder copies and local file policies" if package == "ledgesync"
+                   else "interactive Google Drive copies and local file policies")
     text = (f"Package: {package}\nVersion: {release['debianVersion']}\nArchitecture: {architecture}\n"
             f"Section: utils\nPriority: optional\nMaintainer: {maintainer}\n"
             f"Installed-Size: {size}\nHomepage: https://ledgesync.com\n"
@@ -257,11 +257,27 @@ def write_control(stage: Path, package: str, architecture: str, depends: str, ma
         text += f"Depends: {depends}\n"
     if package == "ledgesync":
         text += "Recommends: gnome-keyring\n"
-    text += (f"Description: {description}\n"
-             " Browse local files, inspect Gitignore and rclone filter policies, and\n"
-             " preview a simulated destination using the shared LedgeSync engine.\n"
-             " This alpha does not transfer files to Google Drive, run a\n"
-             " background service, schedule jobs, overwrite data, or delete files.\n")
+    else:
+        text += "Suggests: gnome-keyring\n"
+    text += f"Description: {description}\n"
+    if package == "ledgesync":
+        text += (" Connect Google Drive in your browser, choose a parent folder, and\n"
+                 " preview and approve a manual copy of the included local hierarchy.\n"
+                 " Files and empty folders retain their structure; ignore rules apply.\n"
+                 " Verified unchanged copies are reused; changed files keep both\n"
+                 " versions. Keep the app open and preview again after interruption.\n"
+                 " Credentials require an unlocked native Secret Service collection;\n"
+                 " no plaintext token fallback is provided. Source files are read-only.\n"
+                 " No background service, scheduled job, shared-drive transfer,\n"
+                 " overwrite, remote deletion, or automatic resumption is enabled.\n")
+    else:
+        text += (" Inspect local policies or explicitly approve a Google Drive folder\n"
+                 " copy using the same native engine as the desktop application.\n"
+                 " Online commands require browser consent, the user's D-Bus session\n"
+                 " and an unlocked Secret Service collection such as GNOME Keyring.\n"
+                 " Headless browser consent requires a local SSH loopback tunnel.\n"
+                 " No plaintext token fallback, unattended service, scheduled job,\n"
+                 " overwrite or remote deletion is enabled. Source files are read-only.\n")
     (control / "control").write_text(text, encoding="utf-8")
     lines = []
     for file in sorted(stage.rglob("*")):
@@ -385,7 +401,8 @@ def package(architecture: str, desktop_archive: Path, desktop_hash: str,
             manifest["packages"].append({"package": package_name, "file": archive.name,
                 "version": release["debianVersion"], "architecture": architecture, "sha256": digest,
                 "size": archive.stat().st_size, "depends": depends,
-                "recommends": "gnome-keyring" if package_name == "ledgesync" else "", "binaryPath": "usr/bin/" + binary_name,
+                "recommends": "gnome-keyring" if package_name == "ledgesync" else "",
+                "suggests": "gnome-keyring" if package_name == "ledgesync-cli" else "", "binaryPath": "usr/bin/" + binary_name,
                 "binarySha256": binary_hash, "neededLibraries": needed, "noticeSha256": notices})
         # Verify both original downloads and staged executable inputs again before publication.
         verify_archive(desktop_archive, desktop_hash)

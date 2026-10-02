@@ -40,7 +40,7 @@ $report = [ordered]@{
     architecture = $Arch; version = $Version; installerSHA256 = (Get-FileHash -LiteralPath $Installer -Algorithm SHA256).Hash.ToLowerInvariant()
     nativeOS = [Environment]::OSVersion.VersionString; testDirectory = $testRoot
     wizard = [ordered]@{ status = 'not-requested'; detail = 'No GUI smoke requested.' }
-    checks = @(); status = 'running'
+    checks = @(); status = 'running'; payloadSha256 = [ordered]@{}
 }
 
 function Invoke-CheckedProcess([string] $File, [string[]] $Arguments) {
@@ -64,9 +64,11 @@ function Assert-Payload {
         $source = Join-Path $PayloadRoot $relative
         $installed = Join-Path $installDir $relative
         if (-not (Test-Path -LiteralPath $installed -PathType Leaf)) { throw "Missing installed payload: $relative" }
-        if ((Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $installed -Algorithm SHA256).Hash) {
+        $installedHash = (Get-FileHash -LiteralPath $installed -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ((Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant() -ne $installedHash) {
             throw "Installed bytes differ from released payload: $relative"
         }
+        $report.payloadSha256[$relative.Replace('\', '/')] = $installedHash
     }
     foreach ($relative in @('INSTALL.txt', 'INNO_SETUP_LICENSE.txt', 'unins000.exe')) {
         if (-not (Test-Path -LiteralPath (Join-Path $installDir $relative) -PathType Leaf)) { throw "Missing installation support file: $relative" }

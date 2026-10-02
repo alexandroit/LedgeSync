@@ -138,6 +138,10 @@ func BuildContext(ctx context.Context, c config.Config, sourceIdentity, rulesDig
 			appendOp("skip", e.Path, "Excluded by policy; any destination object is preserved.", nil, nil, 0, "")
 			continue
 		}
+		if e.Decision == "unsupported" {
+			appendOp("skip", e.Path, "Symbolic links and special files are never followed or copied.", nil, nil, 0, "")
+			continue
+		}
 		if e.Decision != "include" {
 			return p, domain.Fail("SCAN_INCOMPLETE", "source entry has no valid selection decision")
 		}

@@ -24,20 +24,23 @@ type UploadFile struct {
 	MD5            string
 }
 
+// OpenUpload hashes the observed file and opens it only when its SHA-256 equals
+// the approved digest. The MD5 of those exact bytes is what Drive must report
+// after upload; equality there proves the uploaded content is the approved one.
 func (t *Tree) OpenUpload(ctx context.Context, p, expectedSHA256 string) (*UploadFile, error) {
-	if err := t.RevalidateStructure(ctx); err != nil {
-		return nil, err
-	}
 	sha, md := sha256.New(), md5.New()
 	if err := t.read(ctx, p, 0, io.MultiWriter(sha, md)); err != nil {
-		return nil, err
+		if domain.ErrorCode(err) == "CANCELLED" {
+			return nil, err
+		}
+		return nil, domain.Fail("SOURCE_CHANGED", "This file changed or became unreadable after the preview: %s", p)
 	}
 	if hex.EncodeToString(sha.Sum(nil)) != expectedSHA256 {
-		return nil, domain.Fail("SOURCE_CHANGED", "Source content changed; create and approve a new preview.")
+		return nil, domain.Fail("SOURCE_CHANGED", "This file's content changed after the preview: %s", p)
 	}
 	f, err := t.root.OpenFile(p, os.O_RDONLY|safeReadFlags, 0)
 	if err != nil {
-		return nil, domain.Fail("SOURCE_UNAVAILABLE", "Cannot open the approved source file.")
+		return nil, domain.Fail("SOURCE_CHANGED", "This file can no longer be opened: %s", p)
 	}
 	u := &UploadFile{f: f, tree: t, ctx: ctx, path: p, expected: expectedSHA256, original: t.observed[p], MD5: hex.EncodeToString(md.Sum(nil))}
 	if err = u.check(); err != nil {
@@ -52,11 +55,11 @@ func (u *UploadFile) check() error {
 	}
 	st, err := u.f.Stat()
 	if err != nil || !same(u.original, st) {
-		return domain.Fail("SOURCE_CHANGED", "Source identity or metadata changed during upload.")
+		return domain.Fail("SOURCE_CHANGED", "This file changed while it was being copied: %s", u.path)
 	}
 	st, err = u.tree.root.Lstat(u.path)
 	if err != nil || !same(u.original, st) {
-		return domain.Fail("SOURCE_CHANGED", "Source path changed during upload.")
+		return domain.Fail("SOURCE_CHANGED", "This file was moved or replaced while it was being copied: %s", u.path)
 	}
 	return nil
 }
@@ -73,62 +76,11 @@ func (u *UploadFile) Seek(offset int64, whence int) (int64, error) {
 	return u.f.Seek(offset, whence)
 }
 func (u *UploadFile) Close() error { return u.f.Close() }
-func (u *UploadFile) Verify() error {
-	if err := u.check(); err != nil {
-		return err
-	}
-	actual, err := u.tree.HashFile(u.ctx, u.path)
-	if err != nil {
-		return err
-	}
-	if actual != u.expected {
-		return domain.Fail("SOURCE_CHANGED", "Source content changed during upload; review this transfer.")
-	}
-	return u.tree.RevalidateStructure(u.ctx)
-}
 
-// RevalidateStructure checks directory identities and actual membership.
-// Individual file contents are checked when streamed and in the final full scan.
-// This avoids re-statting every unrelated file before every upload chunk/file.
-func (t *Tree) RevalidateStructure(ctx context.Context) error {
-	info, err := os.Lstat(t.rootPath)
-	if err != nil || !os.SameFile(t.rootInfo, info) || !info.ModTime().Equal(t.rootInfo.ModTime()) {
-		return domain.Fail("SOURCE_CHANGED", "The source root or its entries changed during upload.")
-	}
-	for _, p := range t.directories {
-		after, err := t.root.Lstat(p)
-		if err != nil || !same(t.observed[p], after) {
-			return domain.Fail("SOURCE_CHANGED", "A source directory changed during upload.")
-		}
-	}
-	// Windows and some other filesystems do not reliably update directory mtime
-	// when an entry appears. Read the names: a new ignore source must not escape
-	// the pinned policy snapshot merely because its parent's timestamp is equal.
-	for dir, expected := range t.membership {
-		if err := cancelled(ctx); err != nil {
-			return err
-		}
-		f, err := t.root.OpenFile(dir, os.O_RDONLY|safeReadFlags, 0)
-		if err != nil {
-			return domain.Fail("SOURCE_CHANGED", "A source directory cannot be revalidated.")
-		}
-		before := t.rootInfo
-		if dir != "." {
-			before = t.observed[dir]
-		}
-		opened, e := f.Stat()
-		if e != nil || !os.SameFile(before, opened) {
-			f.Close()
-			return domain.Fail("SOURCE_CHANGED", "A source directory identity changed.")
-		}
-		children, e := f.ReadDir(-1)
-		f.Close()
-		if e != nil || membershipDigest(children) != expected {
-			return domain.Fail("SOURCE_CHANGED", "Source directory entries changed; create a new preview before uploading.")
-		}
-	}
-	return nil
-}
+// Verify confirms the source node was neither modified nor replaced while it
+// streamed. Content equality is established by the provider checksum of the
+// uploaded bytes against MD5, which OpenUpload bound to the approved SHA-256.
+func (u *UploadFile) Verify() error { return u.check() }
 
 func membershipDigest(entries []os.DirEntry) string {
 	names := make([]string, len(entries))

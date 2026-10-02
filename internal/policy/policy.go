@@ -67,6 +67,50 @@ func CapabilityFor(dialect string) (Capability, error) {
 	}
 	return Capability{}, domain.Fail("CAPABILITY_UNSUPPORTED", "unknown policy dialect")
 }
+// ReadMaterial snapshots one rule file for a group. Links, special nodes,
+// unreadable files and invalid text fail closed.
+func ReadMaterial(ctx context.Context, g config.Group, cap Capability, index int, p string, tree *discovery.Tree) (Material, error) {
+	content, err := tree.ReadFile(ctx, p, MaxRuleBytes)
+	if err != nil {
+		return Material{}, domain.Fail(domain.ErrorCode(err), "cannot snapshot rule source %s in group %s", p, g.ID)
+	}
+	if !utf8.Valid(content) || strings.ContainsRune(string(content), 0) {
+		return Material{}, domain.Fail("RULE_PARSE_ERROR", "rule source %s is not valid UTF-8 text", p)
+	}
+	scope := path.Dir(p)
+	if scope == "." || cap.Adapter == "rclone" {
+		scope = ""
+	}
+	return Material{g.ID, cap.Adapter, cap.Mechanism, g.Dialect, cap.ProfileVersion, p, scope, index, domain.HashBytes(content), string(content)}, nil
+}
+
+// Selectors returns every configured recursive basename and root-relative file
+// of enabled groups. Callers use them to detect policy sources that appear later.
+func Selectors(c config.Config) (basenames, rootFiles []string) {
+	seen := map[string]bool{}
+	for _, g := range c.Filters.Groups {
+		if !g.Enabled {
+			continue
+		}
+		for _, source := range g.Sources {
+			key := source.Type + "\x00" + source.Value
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			switch source.Type {
+			case "recursive-basename":
+				basenames = append(basenames, source.Value)
+			case "root-file":
+				rootFiles = append(rootFiles, source.Value)
+			}
+		}
+	}
+	sort.Strings(basenames)
+	sort.Strings(rootFiles)
+	return basenames, rootFiles
+}
+
 func Resolve(ctx context.Context, c config.Config, tree *discovery.Tree) (Snapshot, error) {
 	s := Snapshot{Materials: []Material{}}
 	entries := tree.Entries()
@@ -107,18 +151,11 @@ func Resolve(ctx context.Context, c config.Config, tree *discovery.Tree) (Snapsh
 					return s, domain.Fail("CONFIG_INVALID", "rule source %s resolves twice in group %s", p, g.ID)
 				}
 				seen[p] = true
-				content, err := tree.ReadFile(ctx, p, MaxRuleBytes)
+				m, err := ReadMaterial(ctx, g, cap, index, p, tree)
 				if err != nil {
-					return s, domain.Fail(domain.ErrorCode(err), "cannot snapshot rule source %s in group %s", p, g.ID)
+					return s, err
 				}
-				if !utf8.Valid(content) || strings.ContainsRune(string(content), 0) {
-					return s, domain.Fail("RULE_PARSE_ERROR", "rule source %s is not valid UTF-8 text", p)
-				}
-				scope := path.Dir(p)
-				if scope == "." || cap.Adapter == "rclone" {
-					scope = ""
-				}
-				s.Materials = append(s.Materials, Material{g.ID, cap.Adapter, cap.Mechanism, g.Dialect, cap.ProfileVersion, p, scope, index, domain.HashBytes(content), string(content)})
+				s.Materials = append(s.Materials, m)
 			}
 		}
 	}

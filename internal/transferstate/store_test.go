@@ -59,7 +59,7 @@ func TestStorePersistsIntentAcknowledgementAndVerifiedIdentity(t *testing.T) {
 	if err = store.SaveNode(project.Key, node); err != nil {
 		t.Fatal(err)
 	}
-	if err = store.FinishRun("run-id", "succeeded"); err != nil {
+	if err = store.FinishRun("run-id", "succeeded", map[string]string{"state": "succeeded"}); err != nil {
 		t.Fatal(err)
 	}
 	loaded, err = store.Load(project.Key)

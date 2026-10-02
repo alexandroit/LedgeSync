@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -289,7 +290,7 @@ func runOnline(ctx context.Context, args []string, in io.Reader, out, errOut io.
 			// Completion can occur between the status and busy snapshots.
 			current = services.copy.Status()
 		}
-		if current != previous {
+		if !reflect.DeepEqual(current, previous) {
 			if err = output(out, current); err != nil {
 				return report(errOut, domain.Fail("OUTPUT_UNAVAILABLE", "Progress output failed; upload was stopped. Preview again before continuing."))
 			}
@@ -301,6 +302,8 @@ func runOnline(ctx context.Context, args []string, in io.Reader, out, errOut io.
 				return 0
 			case "cancelled":
 				return report(errOut, domain.Fail("CANCELLED", "Upload stopped. Completed copies remain in Drive."))
+			case "partial":
+				return report(errOut, domain.Fail("PARTIAL", "Some approved files changed after the preview and were not copied. Run copy again to copy their current versions."))
 			case "needs_review":
 				return report(errOut, domain.Fail("CONFLICT", "Upload needs review. Create a fresh preview before continuing."))
 			default:

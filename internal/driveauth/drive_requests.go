@@ -226,6 +226,10 @@ func (s *Service) DoAuthorized(ctx context.Context, expectedAccountReference str
 	}
 }
 
+// AllowedDriveRequest reports whether req is inside the Drive request boundary
+// enforced by DoAuthorized. Test transports use it to exercise the same contract.
+func AllowedDriveRequest(req *http.Request) bool { return allowedDriveRequest(req) }
+
 func allowedDriveRequest(req *http.Request) bool {
 	if req == nil || req.URL == nil || req.RequestURI != "" || (req.Host != "" && req.Host != "www.googleapis.com") || len(req.Trailer) != 0 {
 		return false

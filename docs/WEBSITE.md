@@ -12,7 +12,8 @@ preview, not the production origin.
 
 ## Production layout
 
-The website consists of the tracked `dist/index.html` and `dist/style.css`.
+The website consists of tracked HTML/CSS in `dist/`, including the
+`privacy-policy/` and `public-term/` pages and existing logo assets in `assets/`.
 It needs no application process, Node service, database or backend.
 
 - Nginx configuration: `/etc/nginx/conf.d/ledgesync.conf`, from the tracked
@@ -42,12 +43,16 @@ reloading it: `/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx`.
 ## Verified deployment
 
 Verified on **2026-10-02 UTC**. Current source is
-`5c702076b39a8170f2065c3262f5060d7b65698f`, which links the alpha.3 macOS DMGs,
+`43f7ab6ada2711795ca0b14df6bc333f6344e131`, which adds public privacy/terms
+pages and the existing branding assets while retaining the alpha.3 macOS DMGs,
 Windows setup EXEs, Ubuntu APT packages and one-click Google Drive connection
 guide. The prior content release
-`82b2f6bf05e49d7e8f25c9f5e06e2db105d25636` remains on the server
-for rollback. The stylesheet is unchanged and retains `?v=adb26c666d23`.
-No Nginx reload or shared-vhost edit was required.
+`5c702076b39a8170f2065c3262f5060d7b65698f` remains on the server
+for rollback. The stylesheet uses `?v=1c913bddba4f`. Two exact legal routes were
+added only to the LedgeSync vhost, followed by validated graceful Nginx reloads.
+The legal responses use `Cache-Control: no-cache, no-transform` to keep the
+owner-supplied contact readable without Cloudflare email-decoding JavaScript.
+No shared-vhost edits were made.
 
 Both native Ubuntu architectures passed
 [alpha.3 public APT installation tests](https://github.com/alexandroit/LedgeSync/actions/runs/36954499569).
@@ -55,6 +60,11 @@ All four desktop download links returned HTTP 200. The 37 public release asset
 hashes and preservation of prior assets are recorded in
 [public download evidence](research/OAUTH_ONECLICK_PUBLIC_ASSETS.json); current production
 and Pages hashes are in [deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
+New legal-page and logo deployment checks are recorded in
+[legal-site evidence](research/LEGAL_SITE_DEPLOYMENT_VERIFICATION.json). Both
+requested URLs return HTTP 200 directly, and homepage links expose them.
+The public contact is `alex@alexandro.net`; see [branding fields](BRANDING.md).
+No Google Cloud project settings were changed.
 Routing/certificate renewal checks below were initially established during the
 original deployment; this content update rechecked public/origin content,
 Nginx configuration and the unaffected HiperMusicas service.
@@ -76,8 +86,8 @@ Nginx configuration and the unaffected HiperMusicas service.
 SHA-256:
 
 ```text
-e91fba4fb5cb751d6018f87c402f66eb8d8adf3b62f9c2bf2e8dfb3dd3c9c568  dist/index.html
-adb26c666d2320bd2a826d5b5e0685404239e72c2f1585c5db2f08d2cbe931ca  dist/style.css
+e4ca67fbfeea5cdd7d1051a5e588bfee75d08b7acf166658061b814ef6766e8c  dist/index.html
+1c913bddba4fbf3e42d2d59766ae16427a6cbfd56f5342b81aae133b392e1504  dist/style.css
 ```
 
 ## Updates and rollback
@@ -116,6 +126,6 @@ not deploy to Ubuntu. After publishing website source, dispatch the Pages
 workflow as needed to keep the secondary copy current.
 
 The latest secondary Pages publication is
-[run 36954520715](https://github.com/alexandroit/LedgeSync/actions/runs/36954520715),
+[run 36957112425](https://github.com/alexandroit/LedgeSync/actions/runs/36957112425),
 with public HTML and stylesheet bytes matching source commit
-`5c702076b39a8170f2065c3262f5060d7b65698f`.
+`43f7ab6ada2711795ca0b14df6bc333f6344e131`.

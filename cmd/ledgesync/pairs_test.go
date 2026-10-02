@@ -33,7 +33,9 @@ func cliPairFixture(t *testing.T) (pairFactory, *drivetest.Server, string) {
 	client := drive.NewWithOptions(server.Authorizer(cliAccount), drive.Options{ChunkSize: 256 << 10, Wait: func(ctx context.Context, _ time.Duration) error { return ctx.Err() }})
 	state := filepath.Join(t.TempDir(), "state")
 	local := app.NewService()
-	services := pairServices{store: projects.NewStore(state), accounts: cliAccounts{}, transfer: transfer.New(local, client, cliAccounts{}, state), local: local, restorer: client, stateDir: state}
+	store := projects.NewStore(state)
+	t.Cleanup(func() { _ = store.Close() })
+	services := pairServices{store: store, accounts: cliAccounts{}, transfer: transfer.New(local, client, cliAccounts{}, state), local: local, restorer: client, stateDir: state}
 	return func() (pairServices, error) { return services, nil }, server, state
 }
 

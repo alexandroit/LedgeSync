@@ -64,13 +64,14 @@ func newJourney(t *testing.T) *journey {
 	state := filepath.Join(t.TempDir(), "state")
 	local := app.NewService()
 	source := filepath.Join(t.TempDir(), "Client Work")
+	store := projects.NewStore(state)
 	a := NewDesktop(Options{
 		Preview:      local,
 		FolderPicker: func() (string, error) { return source, nil },
 		Google:       google,
 		Transfers:    transfer.New(local, client, google, state),
 		Automatic:    transfer.New(local, client, google, state),
-		Projects:     projects.NewStore(state),
+		Projects:     store,
 	})
 	t.Cleanup(a.Shutdown)
 	return &journey{t: t, server: server, google: google, app: a, source: source, state: state}
@@ -155,7 +156,8 @@ func TestDesktopJourneyMyDriveFirstCopyRepeatAndReopen(t *testing.T) {
 	}
 	// A restarted application reopens the saved pair without any approval.
 	restartedLocal := app.NewService()
-	restarted := NewDesktop(Options{Preview: restartedLocal, Google: j.google, Transfers: transfer.New(restartedLocal, drive.NewWithOptions(j.server.Authorizer(j.google.account), drive.Options{}), j.google, j.state), Projects: projects.NewStore(j.state)})
+	restartedStore := projects.NewStore(j.state)
+	restarted := NewDesktop(Options{Preview: restartedLocal, Google: j.google, Transfers: transfer.New(restartedLocal, drive.NewWithOptions(j.server.Authorizer(j.google.account), drive.Options{}), j.google, j.state), Projects: restartedStore})
 	t.Cleanup(restarted.Shutdown)
 	session, err := restarted.OpenProject(list[0].ID)
 	if err != nil || session.Destination == nil || session.DestinationError != nil || session.Preview == nil {

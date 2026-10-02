@@ -45,10 +45,7 @@ func OpenCatalog(dir string) (*Catalog, error) {
 		return nil, catalogFailure()
 	}
 	for _, name := range []string{"catalog.sqlite", "catalog.sqlite-journal", "catalog.sqlite-wal", "catalog.sqlite-shm"} {
-		filename := filepath.Join(abs, name)
-		if st, e := os.Lstat(filename); e == nil && !privateNode(filename, st, false) {
-			return nil, catalogFailure()
-		} else if e != nil && !errors.Is(e, os.ErrNotExist) {
+		if !privateOrAbsent(filepath.Join(abs, name)) {
 			return nil, catalogFailure()
 		}
 	}
@@ -262,4 +259,26 @@ func validCatalogID(id string) bool {
 		}
 	}
 	return true
+}
+
+// privateOrAbsent accepts a missing file or a private regular file. Another
+// connection's SQLite rollback journal may disappear between the existence check
+// and the ACL check; a vanished file is absent, never accepted unchecked.
+func privateOrAbsent(filename string) bool {
+	for attempt := 0; attempt < 3; attempt++ {
+		st, err := os.Lstat(filename)
+		if errors.Is(err, os.ErrNotExist) {
+			return true
+		}
+		if err != nil {
+			return false
+		}
+		if privateNode(filename, st, false) {
+			return true
+		}
+		if _, err = os.Lstat(filename); !errors.Is(err, os.ErrNotExist) {
+			return false
+		}
+	}
+	return false
 }

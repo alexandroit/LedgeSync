@@ -138,4 +138,7 @@ func (a *App) Shutdown() {
 		<-pending
 	}
 	a.waitAutomationIdle()
+	if a.projects != nil {
+		_ = a.projects.Close()
+	}
 }

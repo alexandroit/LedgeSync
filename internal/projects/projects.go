@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -163,15 +164,47 @@ func newID() string {
 	return "p" + hex.EncodeToString(b[:])
 }
 
-// Store wraps the private catalog with project semantics.
+// Store wraps the private catalog with project semantics. One connection is
+// shared by all callers in a process, so concurrent readers and writers are
+// serialized by SQLite rather than racing to open the file.
 type Store struct {
-	dir string
-	now func() time.Time
+	dir     string
+	now     func() time.Time
+	mu      sync.Mutex
+	catalog *transferstate.Catalog
 }
 
 func NewStore(dir string) *Store { return &Store{dir: dir, now: time.Now} }
 
-func (s *Store) open() (*transferstate.Catalog, error) { return transferstate.OpenCatalog(s.dir) }
+type sharedCatalog struct{ *transferstate.Catalog }
+
+// Close is a no-op: the shared connection stays open for the process.
+func (sharedCatalog) Close() error { return nil }
+
+func (s *Store) open() (sharedCatalog, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.catalog == nil {
+		c, err := transferstate.OpenCatalog(s.dir)
+		if err != nil {
+			return sharedCatalog{}, err
+		}
+		s.catalog = c
+	}
+	return sharedCatalog{s.catalog}, nil
+}
+
+// Close releases the shared catalog connection.
+func (s *Store) Close() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.catalog == nil {
+		return nil
+	}
+	err := s.catalog.Close()
+	s.catalog = nil
+	return err
+}
 
 // List returns all saved projects, most recently updated first.
 func (s *Store) List() ([]Project, error) {

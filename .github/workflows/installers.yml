@@ -60,6 +60,7 @@ jobs:
         shell: pwsh
         run: ./tools/test_windows_installer.ps1 -Installer build/installers/LedgeSync-0.1.0-alpha.1-windows-${{ matrix.arch }}-setup.exe -PayloadRoot build/installer-inputs/windows-${{ matrix.arch }}/desktop -Arch ${{ matrix.arch }} -ReportPath build/installers/windows-${{ matrix.arch }}-install-test.json -WizardSmoke
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
         with:
           name: ledgesync-windows-installer-${{ matrix.arch }}
           path: build/installers/

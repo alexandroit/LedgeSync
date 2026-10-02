@@ -110,14 +110,69 @@ function Find-Wizard {
 }
 
 function Find-WizardButton($Window, [string] $NamePattern) {
-    $condition = [System.Windows.Automation.PropertyCondition]::new(
-        [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
-        [System.Windows.Automation.ControlType]::Button)
-    $buttons = $Window.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+    $buttons = $Window.FindAll([System.Windows.Automation.TreeScope]::Descendants,
+        [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($button in $buttons) {
-        if (($button.Current.Name -replace '&', '') -match $NamePattern -and $button.Current.IsEnabled) { return $button }
+        # Native/theme providers can expose a custom button type or add arrow
+        # glyphs and directional formatting. Require an actual Invoke pattern.
+        $name = ($button.Current.Name -replace '[&\p{Cf}]', '').Trim()
+        if ($name -match $NamePattern -and $button.Current.IsEnabled -and -not $button.Current.IsOffscreen) {
+            $invoke = $null
+            if ($button.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref]$invoke)) { return $button }
+        }
     }
     return $null
+}
+
+function Wait-WizardButton([string] $NamePattern, [int] $TimeoutSeconds = 20) {
+    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    do {
+        $window = Find-Wizard
+        if ($window) {
+            $button = Find-WizardButton $window $NamePattern
+            if ($button) { return $button }
+        }
+        Start-Sleep -Milliseconds 250
+    } while ([DateTime]::UtcNow -lt $deadline)
+    return $null
+}
+
+function Save-WizardDiagnostics {
+    $basePath = if ($ReportPath) { [System.IO.Path]::ChangeExtension([System.IO.Path]::GetFullPath($ReportPath), 'wizard') } else { Join-Path $testRoot 'wizard' }
+    [void][System.IO.Directory]::CreateDirectory((Split-Path -Parent $basePath))
+    $window = Find-Wizard
+    $diagnostic = [ordered]@{ window = $null; controls = @() }
+    if ($window) {
+        $diagnostic.window = [ordered]@{ name = $window.Current.Name; processId = $window.Current.ProcessId; enabled = $window.Current.IsEnabled; bounds = $window.Current.BoundingRectangle.ToString() }
+        $controls = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+        foreach ($control in $controls) {
+            $diagnostic.controls += [ordered]@{
+                name = $control.Current.Name; type = $control.Current.ControlType.ProgrammaticName
+                className = $control.Current.ClassName; automationId = $control.Current.AutomationId
+                enabled = $control.Current.IsEnabled; offscreen = $control.Current.IsOffscreen
+                patterns = @($control.GetSupportedPatterns() | ForEach-Object { $_.ProgrammaticName })
+            }
+        }
+        # Capture only the controlled installer window's rectangle on the CI
+        # desktop, without an additional screenshot utility or dependency.
+        try {
+            Add-Type -AssemblyName System.Drawing
+            $bounds = $window.Current.BoundingRectangle
+            if (-not $bounds.IsEmpty -and $bounds.Width -gt 0 -and $bounds.Height -gt 0) {
+                $bitmap = [System.Drawing.Bitmap]::new([int]$bounds.Width, [int]$bounds.Height)
+                $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+                try {
+                    $graphics.CopyFromScreen([int]$bounds.X, [int]$bounds.Y, 0, 0, $bitmap.Size)
+                    $bitmap.Save(($basePath + '.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+                    $diagnostic.screenshot = $basePath + '.png'
+                } finally { $graphics.Dispose(); $bitmap.Dispose() }
+            }
+        } catch { $diagnostic.screenshotError = $_.Exception.Message }
+    }
+    $json = $diagnostic | ConvertTo-Json -Depth 8
+    [System.IO.File]::WriteAllText(($basePath + '.json'), $json)
+    Write-Host "Wizard diagnostics: $json"
+    return $basePath + '.json'
 }
 
 function Test-Wizard {
@@ -135,15 +190,14 @@ function Test-Wizard {
             $window = Find-Wizard
         } until ($window -or [DateTime]::UtcNow -gt $deadline)
         if (-not $window) { throw 'Interactive session did not show the LedgeSync setup wizard.' }
-        $next = Find-WizardButton $window '^Next\s*>'
+        $next = Wait-WizardButton '^Next\b'
         if (-not $next) { throw 'Setup wizard does not have an enabled Next button.' }
         $next.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-        Start-Sleep -Milliseconds 500
-        $window = Find-Wizard
-        $back = Find-WizardButton $window '^<\s*Back'
+        $back = Wait-WizardButton '^(?:[^\p{L}]*\s*)?Back\b'
         if (-not $back) { throw 'Next did not navigate to the next wizard page.' }
-        $cancel = Find-WizardButton $window '^Cancel$'
+        $cancel = Wait-WizardButton '^Cancel$' 5
         if (-not $cancel) { throw 'Setup wizard is missing Cancel.' }
+        $window = Find-Wizard
         $wizardProcessId = $window.Current.ProcessId
         $cancel.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
         # UIA providers may expose the owned modal dialog either beneath its
@@ -167,6 +221,10 @@ function Test-Wizard {
         if (-not $process.WaitForExit(10000)) { throw 'Wizard did not exit after cancellation.' }
         if (Test-Path -LiteralPath (Join-Path $installDir 'LedgeSync.exe')) { throw 'Cancelling the wizard unexpectedly installed the app.' }
         return [ordered]@{ status = 'passed'; detail = 'Actual welcome window, enabled Next, next page, and cancellation exercised through Windows UI Automation.' }
+    } catch {
+        $report.wizard = [ordered]@{ status = 'failed'; detail = $_.Exception.Message }
+        try { $report.wizard.diagnostics = Save-WizardDiagnostics } catch { $report.wizard.diagnosticsError = $_.Exception.Message }
+        throw
     } finally {
         $process.Refresh()
         if (-not $process.HasExited) { & taskkill.exe /PID $process.Id /T /F | Out-Null }

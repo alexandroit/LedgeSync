@@ -188,7 +188,11 @@ func (c *Client) request(ctx context.Context, account, method, endpoint string, 
 	if c.auth == nil {
 		return response{}, domain.Fail("AUTH_REQUIRED", "Connect Google Drive first.")
 	}
-	reqCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	limit := 2 * time.Minute
+	if method == http.MethodPut {
+		limit = 6 * time.Minute // an upload chunk; the authorizer bounds it at five minutes
+	}
+	reqCtx, cancel := context.WithTimeout(ctx, limit)
 	defer cancel()
 	req, err := http.NewRequestWithContext(reqCtx, method, endpoint, bytes.NewReader(body))
 	if err != nil {
@@ -728,7 +732,7 @@ func (c *Client) mediaRequest(ctx context.Context, account, endpoint, byteRange 
 	if ctx.Err() != nil {
 		return response{}, cancelled()
 	}
-	reqCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	reqCtx, cancel := context.WithTimeout(ctx, 6*time.Minute)
 	defer cancel()
 	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, endpoint, nil)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/connections"
 	"github.com/alexandroit/LedgeSync/internal/domain"
 	"github.com/alexandroit/LedgeSync/internal/projects"
+	"github.com/alexandroit/LedgeSync/internal/restore"
 	"github.com/alexandroit/LedgeSync/internal/transfer"
 )
 
@@ -48,6 +49,7 @@ func (s selection) source() transfer.Source {
 type App struct {
 	transfer          transferService
 	automation        transferService
+	automatic         *transfer.Service
 	projects          *projects.Store
 	scheduler         *projects.Scheduler
 	openDriveFolder   func(string) error
@@ -64,6 +66,11 @@ type App struct {
 	lifecycle         bool
 	automationBusy    bool
 	selected          selection
+	restoreProvider   restore.Provider
+	restorePicker     Picker
+	restoreRunner     *restore.Runner
+	restoreCancel     context.CancelFunc
+	restoreDone       chan struct{}
 	projectID         string
 	runProjectID      string
 	lastPlan          *transfer.Plan

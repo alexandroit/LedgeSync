@@ -28,9 +28,12 @@ type Project struct {
 	Policy      Policy               `json:"policy"`
 	Destination transfer.Destination `json:"destination"`
 	Automation  Automation           `json:"automation"`
-	CreatedAt   string               `json:"createdAt"`
-	UpdatedAt   string               `json:"updatedAt"`
-	LastRun     *RunSummary          `json:"lastRun,omitempty"`
+	// SourceIdentity is recorded from the approved preview so the journal copy
+	// can be found and restored even if the source folder is lost.
+	SourceIdentity string      `json:"sourceIdentity,omitempty"`
+	CreatedAt      string      `json:"createdAt"`
+	UpdatedAt      string      `json:"updatedAt"`
+	LastRun        *RunSummary `json:"lastRun,omitempty"`
 }
 
 // Policy is the editable selection and safety policy of a project that does not

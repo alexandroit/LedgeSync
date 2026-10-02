@@ -13,6 +13,7 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/connections"
 	"github.com/alexandroit/LedgeSync/internal/projects"
 	"github.com/alexandroit/LedgeSync/internal/providers/drive"
+	"github.com/alexandroit/LedgeSync/internal/restore"
 	"github.com/alexandroit/LedgeSync/internal/systembrowser"
 	"github.com/alexandroit/LedgeSync/internal/transfer"
 	"github.com/alexandroit/LedgeSync/internal/transferstate"
@@ -36,10 +37,12 @@ func main() {
 	var google desktop.GoogleDriveService
 	var transfers, automatic *transfer.Service
 	var saved *projects.Store
+	var restorer restore.Provider
 	if configured, err := connections.NewGoogleDrive(systembrowser.OpenURL); err == nil {
 		google = configured
 		if stateDir, err := transferstate.DefaultDirectory(); err == nil {
 			provider := drive.New(configured)
+			restorer = provider
 			transfers = transfer.New(local, provider, configured, stateDir)
 			// Automatic runs use their own service instance so they never replace
 			// the destination or approval the user is reviewing.
@@ -85,7 +88,11 @@ func main() {
 			runtime.BrowserOpenURL(ctx, destination)
 			return nil
 		},
-		OnChange: notify,
+		OnChange:        notify,
+		RestoreProvider: restorer,
+		RestorePicker: func() (string, error) {
+			return runtime.OpenDirectoryDialog(getContext(), runtime.OpenDialogOptions{Title: "Choose an empty folder for the restored copy", CanCreateDirectories: true})
+		},
 	})
 	err = wails.Run(&options.App{
 		Title: "LedgeSync", Width: 1280, Height: 820, MinWidth: 900, MinHeight: 620,

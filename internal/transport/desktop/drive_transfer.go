@@ -8,6 +8,7 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/domain"
 	"github.com/alexandroit/LedgeSync/internal/driveauth"
 	"github.com/alexandroit/LedgeSync/internal/projects"
+	"github.com/alexandroit/LedgeSync/internal/restore"
 	"github.com/alexandroit/LedgeSync/internal/transfer"
 )
 
@@ -46,6 +47,9 @@ type Options struct {
 	Projects         *projects.Store
 	OpenDriveFolder  func(string) error
 	OnChange         func()
+	// RestoreProvider and RestorePicker enable restore-to-new-location.
+	RestoreProvider restore.Provider
+	RestorePicker   Picker
 }
 
 // NewDesktop connects all bridges. Missing optional services leave the
@@ -53,12 +57,13 @@ type Options struct {
 func NewDesktop(o Options) *App {
 	a := NewWithGoogleDriveAndTransfers(o.Preview, o.FolderPicker, o.ConfigPicker, o.Google, o.ShowAfterConnect, o.Transfers, o.OpenDriveFolder)
 	a.projects = o.Projects
+	a.restoreProvider, a.restorePicker = o.RestoreProvider, o.RestorePicker
 	if o.Transfers != nil && o.Projects != nil {
 		o.Transfers.OnFinish(a.recordManualRun)
 	}
 	if o.Automatic != nil && o.Projects != nil && a.transfer != nil {
-		a.automation = o.Automatic
-		a.scheduler = projects.NewScheduler(o.Projects, automationRunner{a}, o.OnChange)
+		a.automation, a.automatic = o.Automatic, o.Automatic
+		a.scheduler = projects.NewScheduler(o.Projects, a.automationRunner(), o.OnChange)
 	}
 	return a
 }
@@ -306,6 +311,7 @@ func (a *App) beginLifecycle() (func(), error) {
 	if a.google != nil {
 		a.google.Cancel()
 	}
+	a.CancelRestore()
 	if a.automation != nil {
 		a.automation.CancelAndWait()
 		a.automation.Invalidate()

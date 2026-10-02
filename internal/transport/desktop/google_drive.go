@@ -125,6 +125,7 @@ func (a *App) Shutdown() {
 		a.closeConnections()
 	}
 	a.CancelGoogleDrive()
+	a.CancelRestore()
 	if a.automation != nil {
 		a.automation.CancelAndWait()
 		a.automation.Invalidate()

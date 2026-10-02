@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"math/rand/v2"
 	"net/http"
@@ -660,4 +661,105 @@ func (c *Client) CreateFolder(ctx context.Context, account, id, parent, name, op
 		return Object{}, unknown()
 	}
 	return o, err
+}
+
+// downloadChunk bounds one ranged media request so each fits the authorizer's
+// per-request deadline and memory stays bounded.
+const downloadChunk = 8 << 20
+
+// Download streams a binary file's content in ranged chunks to w. It never
+// follows redirects and rejects a response that does not match the request.
+func (c *Client) Download(ctx context.Context, account, id string, size int64, w io.Writer) error {
+	if err := validateInput(account, id); err != nil {
+		return err
+	}
+	if id == "root" || size < 0 {
+		return domain.Fail("DRIVE_INVALID_INPUT", "The Drive object reference is invalid.")
+	}
+	endpoint := apiURL + "/" + id + "?" + url.Values{"alt": {"media"}}.Encode()
+	if size == 0 {
+		r, err := c.mediaRequest(ctx, account, endpoint, "")
+		if err != nil {
+			return err
+		}
+		if r.status != http.StatusOK || len(r.data) != 0 {
+			return domain.Fail("DRIVE_INVALID_RESPONSE", "Google Drive returned unexpected content for an empty file.")
+		}
+		return nil
+	}
+	for offset := int64(0); offset < size; {
+		end := min(offset+downloadChunk, size) - 1
+		var r response
+		var err error
+		for attempt := 0; attempt < c.attempts; attempt++ {
+			r, err = c.mediaRequest(ctx, account, endpoint, fmt.Sprintf("bytes=%d-%d", offset, end))
+			if err == nil && r.status != http.StatusPartialContent && r.status != http.StatusOK {
+				err = responseError(r)
+			}
+			if err == nil || !retryable(err) || attempt == c.attempts-1 {
+				break
+			}
+			if e := c.backoff(ctx, attempt, r.header); e != nil {
+				return e
+			}
+		}
+		if err != nil {
+			return err
+		}
+		want := end - offset + 1
+		if r.status == http.StatusOK {
+			// A server may ignore Range for a single-chunk file; accept only the whole file.
+			if offset != 0 || int64(len(r.data)) != size {
+				return domain.Fail("DRIVE_INVALID_RESPONSE", "Google Drive returned an unexpected byte range.")
+			}
+			want = size
+		} else if int64(len(r.data)) != want || r.header.Get("Content-Range") != fmt.Sprintf("bytes %d-%d/%d", offset, end, size) {
+			return domain.Fail("DRIVE_INVALID_RESPONSE", "Google Drive returned an unexpected byte range.")
+		}
+		if _, err = w.Write(r.data); err != nil {
+			return domain.Fail("RESTORE_WRITE_FAILED", "The restored file could not be written.")
+		}
+		offset += want
+	}
+	return nil
+}
+
+func (c *Client) mediaRequest(ctx context.Context, account, endpoint, byteRange string) (response, error) {
+	if ctx.Err() != nil {
+		return response{}, cancelled()
+	}
+	reqCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return response{}, domain.Fail("DRIVE_INVALID_INPUT", "The Drive request is invalid.")
+	}
+	if byteRange != "" {
+		req.Header.Set("Range", byteRange)
+	}
+	resp, err := c.auth.DoAuthorized(reqCtx, account, req)
+	if err != nil {
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
+		if ctx.Err() != nil {
+			return response{}, cancelled()
+		}
+		return response{}, authorizerError(err)
+	}
+	if resp == nil || resp.Body == nil {
+		return response{}, malformed()
+	}
+	defer resp.Body.Close()
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, downloadChunk+1))
+	if err != nil {
+		if ctx.Err() != nil {
+			return response{}, cancelled()
+		}
+		return response{}, authorizerError(err)
+	}
+	if len(raw) > downloadChunk {
+		return response{}, malformed()
+	}
+	return response{resp.StatusCode, resp.Header.Clone(), raw}, nil
 }

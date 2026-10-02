@@ -327,6 +327,7 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 }
 
 var generatedPattern = regexp.MustCompile(`^/drive/v3/files/generateIds$`)
+var byteRange = regexp.MustCompile(`^bytes=(\d+)-(\d+)$`)
 
 func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
@@ -386,6 +387,20 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request, id string) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/octet-stream")
+		if m := byteRange.FindStringSubmatch(r.Header.Get("Range")); m != nil {
+			first, _ := strconv.Atoi(m[1])
+			last, _ := strconv.Atoi(m[2])
+			if first > last || first >= len(o.Content) {
+				driveError(w, http.StatusRequestedRangeNotSatisfiable, "invalidRange", "Range not satisfiable.")
+				return
+			}
+			last = min(last, len(o.Content)-1)
+			w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", first, last, len(o.Content)))
+			w.Header().Set("Content-Length", strconv.Itoa(last-first+1))
+			w.WriteHeader(http.StatusPartialContent)
+			_, _ = w.Write(o.Content[first : last+1])
+			return
+		}
 		w.Header().Set("Content-Length", strconv.Itoa(len(o.Content)))
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(o.Content)

@@ -1,6 +1,6 @@
 import './style.css';
 import { describe, guidanceFor, parseError } from './errors';
-import type { AutomationView, DesktopBridge, DriveConnectionStatus, DriveDestination, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, PolicyGroup, Preview, Project, ProjectPolicy, RunSummary, Settings, TransferState } from './types';
+import type { AutomationView, RestoreProgress, DesktopBridge, DriveConnectionStatus, DriveDestination, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, PolicyGroup, Preview, Project, ProjectPolicy, RunSummary, Settings, TransferState } from './types';
 
 type View = 'files' | 'preview' | 'policies' | 'connections' | 'activity' | 'history' | 'settings';
 const version = '0.1.0-alpha.5';
@@ -41,6 +41,9 @@ const state = {
   automationPoll: 0,
   policyDraft: null as ProjectPolicy | null,
   policyError: '',
+  restore: null as RestoreProgress | null,
+  restoreError: '',
+  restorePoll: 0,
   automationTrigger: 'interval' as 'interval' | 'watch',
   automationInterval: 900,
 };
@@ -1021,10 +1024,47 @@ function renderHistory(container: HTMLElement) {
   if (project?.lastRun && (project.lastRun.state === 'succeeded' || project.lastRun.state === 'partial') && optional('OpenProjectDriveFolder')) {
     container.append(button('Open copy in Google Drive', () => { const fn = optional('OpenProjectDriveFolder'); if (fn) void fn(project.id).catch(error => { state.historyError = describe(error, 'The Drive folder could not be opened.'); render(); }); }, 'button subtle', 'cloud'));
   }
+  if (project?.sourceIdentity && optional('RestoreProjectCopy')) {
+    const restore = button('Restore this copy to a new folder…', () => void startRestore(project.id), 'button subtle', 'history');
+    restore.disabled = state.restore?.state === 'restoring'; container.append(restore);
+    container.append(el('p', 'muted', 'Downloads the verified copy from Drive into an empty folder you choose, checking every file’s checksum. Your source folder is never changed.'));
+  }
+  renderRestore(container);
   if (state.historyError) { const error = el('div', 'error', state.historyError); error.setAttribute('role', 'alert'); container.append(error); }
   if (!state.runs.length) container.append(el('p', 'muted', 'No runs recorded for this selection.'));
   for (const run of state.runs) renderRun(container, run);
   renderPairList(container);
+}
+async function startRestore(id: string) {
+  const start = optional('RestoreProjectCopy');
+  if (!start) return;
+  state.restoreError = '';
+  try { const progress = await start(id); if (progress) state.restore = progress; }
+  catch (error) { state.restoreError = describe(error, 'The copy could not be restored.'); }
+  render(); scheduleRestorePoll();
+}
+function scheduleRestorePoll() {
+  window.clearTimeout(state.restorePoll);
+  if (state.restore?.state !== 'restoring') return;
+  state.restorePoll = window.setTimeout(async () => {
+    const status = optional('RestoreStatus');
+    if (status) { try { state.restore = await status() ?? state.restore; } catch { /* keep the last known progress */ } }
+    render(); scheduleRestorePoll();
+  }, 1000);
+}
+function renderRestore(container: HTMLElement) {
+  if (state.restoreError) { const error = el('div', 'error', state.restoreError); error.setAttribute('role', 'alert'); container.append(error); }
+  const r = state.restore;
+  if (!r) return;
+  const labels: Record<RestoreProgress['state'], string> = { restoring: 'Restoring copy', succeeded: 'Copy restored and verified', partial: 'Copy restored with missing items', failed: 'Restore failed', cancelled: 'Restore cancelled' };
+  const card = el('section', `transfer-card transfer-${r.state === 'restoring' ? 'uploading' : r.state}`); card.setAttribute('aria-label', 'Restore');
+  const status = el('div', 'transfer-announcement'); status.setAttribute('role', 'status'); status.append(el('h2', '', labels[r.state]), el('p', '', displayPath(r.message))); card.append(status);
+  const progress = el('progress'); progress.max = Math.max(r.totalBytes, 1); progress.value = Math.min(r.bytes, progress.max); progress.setAttribute('aria-label', 'Restored bytes'); card.append(progress);
+  card.append(el('p', 'transfer-counts', `${r.files} of ${r.totalFiles} files restored · ${bytes(r.bytes)} of ${bytes(r.totalBytes)}`), el('p', 'transfer-path', `Restore folder: ${displayPath(r.target)}`));
+  if (r.errorCode && guidanceFor(r.errorCode)) card.append(el('p', 'transfer-hint', guidanceFor(r.errorCode)));
+  if (r.issues?.length) { const d = el('details', 'transfer-issues'); d.open = true; d.append(el('summary', '', `${r.issues.length} item${r.issues.length === 1 ? '' : 's'} not restored`)); const ul = el('ul'); for (const issue of r.issues.slice(0, 100)) { const li = el('li'); li.append(el('code', '', displayPath(issue.path)), el('span', '', ` — ${issue.message}`)); ul.append(li); } d.append(ul); card.append(d); }
+  if (r.state === 'restoring') card.append(button('Cancel restore', () => { const fn = optional('CancelRestore'); if (fn) void fn().then(async () => { const status = optional('RestoreStatus'); if (status) state.restore = await status(); render(); }); }, 'button subtle'));
+  container.append(card);
 }
 async function loadSettings() {
   const get = optional('GetSettings');

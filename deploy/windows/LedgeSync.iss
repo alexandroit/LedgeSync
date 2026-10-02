@@ -67,6 +67,9 @@ Name: "{userdesktop}\LedgeSync"; Filename: "{app}\LedgeSync.exe"; WorkingDir: "{
 Filename: "{app}\LedgeSync.exe"; Description: "Open LedgeSync"; Flags: nowait postinstall skipifsilent unchecked
 
 [Code]
+const
+  RuntimeKey = 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
+
 function InitializeSetup: Boolean;
 var
   Version: TWindowsVersion;
@@ -91,8 +94,6 @@ begin
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
-const
-  RuntimeKey = 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
 begin
   Result := '';
   { Microsoft's documented per-machine 32-bit registry view and per-user key. }
@@ -100,5 +101,5 @@ begin
     Result := 'Microsoft Edge WebView2 Runtime is required. Install the Evergreen Runtime from https://developer.microsoft.com/microsoft-edge/webview2/ and run this installer again. LedgeSync does not download or install this prerequisite automatically.';
 end;
 
-; Intentionally no UninstallDelete, services, startup entries, scheduled tasks,
-; prerequisite downloads, or writes outside the per-user installation/shortcuts.
+{ Intentionally no UninstallDelete, services, startup entries, scheduled tasks,
+  prerequisite downloads, or writes outside the per-user installation/shortcuts. }

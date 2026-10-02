@@ -17,6 +17,11 @@ on:
       - 'tools/test_apt_repository.py'
   workflow_dispatch:
     inputs:
+      target:
+        description: Native packaging jobs to run
+        type: choice
+        options: [all, windows, ubuntu]
+        default: all
       verify_public_apt:
         description: Verify the deployed signed Ubuntu repository on both native architectures
         type: boolean
@@ -29,7 +34,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   windows:
-    if: inputs.verify_public_apt != true
+    if: inputs.verify_public_apt != true && inputs.target != 'ubuntu'
     strategy:
       fail-fast: false
       matrix:
@@ -60,7 +65,7 @@ jobs:
           path: build/installers/
           if-no-files-found: error
   ubuntu:
-    if: inputs.verify_public_apt != true
+    if: inputs.verify_public_apt != true && inputs.target != 'windows'
     strategy:
       fail-fast: false
       matrix:

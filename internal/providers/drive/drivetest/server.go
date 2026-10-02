@@ -78,6 +78,7 @@ type faultRule struct {
 type session struct {
 	meta     createRequest
 	size     int64
+	crd      string
 	received []byte
 	done     *Object
 }
@@ -452,7 +453,7 @@ func (s *Server) create(meta createRequest, content []byte) *Object {
 	}
 	delete(s.reserved, id)
 	s.version++
-	o := &Object{ID: id, Name: meta.Name, MimeType: meta.MimeType, Parents: []string{parent}, Content: content, CreatedByApp: true, CanAddChildren: true, Version: s.version}
+	o := &Object{ID: id, Name: meta.Name, MimeType: detectedType(meta.Name, meta.MimeType), Parents: []string{parent}, Content: content, CreatedByApp: true, CanAddChildren: true, Version: s.version}
 	if meta.AppProperties != nil {
 		o.AppProperties = map[string]string{}
 		for k, v := range meta.AppProperties {
@@ -461,6 +462,21 @@ func (s *Server) create(meta createRequest, content []byte) *Object {
 	}
 	s.objects[id] = o
 	return o
+}
+
+// Like Drive, a binary upload is stored with the media type detected from its
+// name (live: README.md became text/markdown).
+var detectedTypes = map[string]string{".md": "text/markdown", ".txt": "text/plain", ".js": "text/javascript", ".json": "application/json", ".png": "image/png", ".html": "text/html"}
+
+func detectedType(name, uploaded string) string {
+	if uploaded == "application/octet-stream" {
+		if i := strings.LastIndexByte(name, '.'); i > 0 {
+			if t, ok := detectedTypes[strings.ToLower(name[i:])]; ok {
+				return t
+			}
+		}
+	}
+	return uploaded
 }
 
 func decodeCreate(r *http.Request) (createRequest, bool) {
@@ -503,8 +519,14 @@ func (s *Server) startUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := s.nextID("session")
-	s.sessions[id] = &session{meta: meta, size: size}
-	w.Header().Set("Location", "https://www.googleapis.com/upload/drive/v3/files?"+url.Values{"uploadType": {"resumable"}, "upload_id": {id}}.Encode())
+	crd := s.nextID("crd")
+	s.sessions[id] = &session{meta: meta, size: size, crd: crd}
+	// Like Google, echo the initiation query and append the opaque session
+	// parameters upload_id and session_crd (observed in live responses).
+	echo := r.URL.Query()
+	echo.Set("upload_id", id)
+	echo.Set("session_crd", crd)
+	w.Header().Set("Location", "https://www.googleapis.com/upload/drive/v3/files?"+echo.Encode())
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -520,7 +542,7 @@ func (s *Server) putUpload(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	sess := s.sessions[r.URL.Query().Get("upload_id")]
-	if sess == nil {
+	if sess == nil || r.URL.Query().Get("session_crd") != sess.crd {
 		driveError(w, http.StatusNotFound, "notFound", "Upload session not found.")
 		return
 	}

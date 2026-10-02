@@ -60,7 +60,7 @@ def sign_native(system, binary):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="0.1.0-alpha.5")
+    parser.add_argument("--version", default="0.1.0-alpha.6")
     parser.add_argument("--platform", choices=["/".join(t) for t in TARGETS])
     parser.add_argument("--native", action="store_true", help="build with the native credential vault, on a matching host")
     parser.add_argument("--require-oauth-client", action="store_true", help="fail if publisher client injection is missing")

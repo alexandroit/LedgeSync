@@ -1,44 +1,74 @@
 # Manual Google Drive folder-copy acceptance
 
-## Alpha.5 candidate — automated and live acceptance status (2026-10-02)
+## Alpha.6 — automated and live acceptance status (2026-10-02)
+
+**Live Google acceptance: passed, after two fixes.** The owner connected their
+Google account with the restricted `drive.file` scope on the build Mac
+(macOS 27 arm64). [live_acceptance.py](../../tools/live_acceptance.py) uses only
+a synthetic fixture and a new `LedgeSync acceptance <timestamp>` pair in My
+Drive, and writes a redacted JSON report.
+
+1. The **official alpha.5 CLI** created the managed folder and then failed the
+   first file upload with `UNKNOWN_REMOTE_RESULT`; no file was uploaded. The
+   cause and both fixes are in the
+   [failure analysis](DRIVE_SYNC_FAILURE_ANALYSIS.md#live-acceptance-findings-alpha6).
+2. A CLI built from `a8c7a5d` (both fixes, publisher Desktop client) passed
+   **all 14 steps** in about two minutes. Its version string still read alpha.5,
+   because the version bump was a later commit. It was signed with the
+   developer's Apple Development certificate only so that the owner's Keychain
+   approval held across test builds; this is not a distribution signature.
+
+| Step | Result |
+|---|---|
+| Connected account | `drive.file` only |
+| Pair saved for My Drive | passed |
+| First copy verified by Drive | 7 files, 20,975,937 bytes. Covers a 20 MiB multi-chunk file, a zero-byte file, Unicode and space names, and nested and empty folders. 3 ignored items were not uploaded |
+| Independent download matches source SHA-256 | 7 files, 6 folders |
+| Unchanged repeat | only `skip`; no bytes sent |
+| Changed file | `keep-both`; succeeded |
+| `kill -9` during a 64 MiB multi-chunk upload | killed after more than 9 MiB sent |
+| Restart | `resume` of the reserved identity; succeeded |
+| Network cut mid-transfer by a local proxy | stopped as `failed` with `DRIVE_NETWORK`; no success claimed |
+| Copy after the network returns | succeeded |
+| Final tree after interruptions and changes | matches; `docs/guide.txt` keeps its first content and the change is one `.ledgesync-` version |
+| Automatic copies authorized from a reviewed preview | passed |
+| Authorized automatic run | new file copied; succeeded |
+| Ignore-rule change | automatic copies paused with `AUTOMATION_REVIEW_REQUIRED` |
+
+The report `build/live-acceptance/acceptance-20261002-164439.json` stays local
+and is not committed. The failed attempts left two more acceptance folders in
+the owner's My Drive. One holds only the empty managed folder. The other
+completed when retried with the fixed CLI; its uncertain upload was reconciled
+without duplicates. LedgeSync never deletes Drive files, so the owner removes
+the `LedgeSync acceptance …` folders manually.
+
+**Still pending, owner:** one manual desktop pass with the native Picker:
+1. Choose an existing folder.
+2. Preview and upload.
+3. Trash the managed folder in Drive.
+4. Confirm that the next preview offers **Copy again**.
 
 **Emulator acceptance: passed.** The real HTTP provider, executor, journal and
-desktop bridge were exercised against the `drive.file` emulator for: My Drive and
-Picker destinations; nested and empty folders; ignored files; zero-byte, Unicode
-and space-containing names; multi-chunk files; links in ignored folders; churn in
-ignored files; unchanged repeats (no new uploads); changed files (keep-both);
-added files; cancellation mid-file and resume of the same identity; lost
-acknowledgements, 5xx, 429 with `Retry-After`, dropped connections and expired
-upload sessions; rule changes during a run; destination trashed after preview;
-the managed folder trashed, a file deleted or renamed in Drive (copied again
-without touching the existing item); automatic copies that run and then pause
-when rules change; and restore with independent SHA-256 comparison. See the
-[failure analysis](DRIVE_SYNC_FAILURE_ANALYSIS.md) for the test names and
-commands.
+desktop bridge were exercised against the `drive.file` emulator. It now also
+models Google's `session_crd` session parameter and Drive-detected media types.
+The cases covered:
+- Destinations: My Drive and Picker.
+- Source content: nested and empty folders; ignored files; zero-byte, Unicode
+  and space-containing names; multi-chunk files; links in ignored folders;
+  churn in ignored files.
+- Repeat copies: unchanged repeats (no new uploads); changed files (keep-both);
+  added files.
+- Interruption and failure: cancellation mid-file and resume of the same
+  identity; lost acknowledgements; 5xx; 429 with `Retry-After`; dropped
+  connections; expired upload sessions.
+- Changes during or after a run: rule changes during a run; destination
+  trashed after preview; managed folder trashed, or a file deleted or renamed in
+  Drive (copied again without touching the existing item).
+- Automatic copies that run, then pause when rules change.
+- Restore, with an independent SHA-256 comparison.
 
-**Live Google acceptance: pending the owner's consent step.** A configured
-native CLI built from this source (publisher Desktop client, `drive.file`) opened
-Google's consent page on the build Mac on 2026-10-02; nobody completed it, and
-the attempt ended with `AUTH_TIMEOUT` after three minutes. No account was
-connected and nothing was written to Drive. To finish acceptance, the owner runs,
-from the repository root on a Mac with the configured build:
-
-```sh
-ledgesync auth connect            # approve in the browser with the test account
-python3 tools/live_acceptance.py --cli "$(command -v ledgesync)" --work build/live-acceptance
-```
-
-[live_acceptance.py](../../tools/live_acceptance.py) uses only a synthetic
-fixture and a new `LedgeSync acceptance <timestamp>` pair in My Drive. It
-verifies the first copy by restoring it and comparing SHA-256 values in Python,
-an unchanged repeat, a keep-both change, a `kill -9` during a 64 MiB upload and
-resume, a network loss through a local proxy that is cut mid-transfer, the final
-tree after both interruptions, an authorized automatic run and the pause after an
-ignore-rule change. It writes a redacted JSON report and never deletes Drive
-files; remove the acceptance folder in Drive afterwards. The native Picker and the
-desktop window still need one manual pass: choose an existing folder in the
-Picker, preview, upload, then trash the managed folder in Drive and confirm the
-next preview offers **Copy again**.
+See the [failure analysis](DRIVE_SYNC_FAILURE_ANALYSIS.md) for the test names
+and commands.
 
 ## Status and evidence boundary
 
@@ -152,21 +182,21 @@ exact tested artifact; do not substitute synthetic results for live evidence.
 
 | Check | Action and expected result | Status |
 |---|---|---|
-| Existing connection | Open the configured candidate; identify the intended account. Check the connection and reopen the app. No client JSON or token entry is requested. | Pending |
+| Existing connection | Open the configured candidate; identify the intended account. Check the connection and reopen the app. No client JSON or token entry is requested. | CLI passed live (`a8c7a5d`, 2026-10-02); desktop pending |
 | Native folder selection | Choose **Choose existing Drive folder**, select the disposable writable parent in Google's browser Picker and return. The application shows the selected parent and the same account. | Pending |
 | Selection cancellation | Start selection and cancel. The previous destination remains; no upload starts and a new preview is required. | Pending |
 | Account binding | If testing an explicitly authorized second disposable account, select it in the browser. The first saved account and destination must not be silently replaced. | Pending |
 | Preview only | Select the fixture and choose **Preview folder upload**. Inspect account, destination ID, root child, hierarchy, empty directory, sizes and exclusions. No remote object is created before approval. | Pending |
-| First copy | Choose **Upload folder**. Wait for verified completion, then use **Open destination folder on Google Drive**. The managed fixture root appears inside the parent, with all included entries and no excluded file. | Pending |
-| Independent integrity | Inspect the root and empty directory in Drive. Download only the newly created fixture files and compare sizes/SHA-256 with the recorded source values, including empty and multi-chunk files. The unrelated parent marker remains unchanged. | Pending |
-| Unchanged repeat | Preview and approve again with unchanged inputs. Entries show existing-copy verification, the same provider IDs remain, and no duplicate hierarchy/files appear. | Pending |
-| Local change / keep both | Edit one fixture file yourself, preview and approve. The original remote version remains and the changed version has a stable `.ledgesync-` suffix. A repeated unchanged run does not create another suffix copy. | Pending |
-| Cancel and continue | Start a sufficiently large fixture upload and choose **Cancel upload**. Completion is not reported. Already created objects remain. Preview again and continue using reconciled IDs. | Pending |
+| First copy | Choose **Upload folder**. Wait for verified completion, then use **Open destination folder on Google Drive**. The managed fixture root appears inside the parent, with all included entries and no excluded file. | CLI passed live (`a8c7a5d`, 2026-10-02); desktop pending |
+| Independent integrity | Inspect the root and empty directory in Drive. Download only the newly created fixture files and compare sizes/SHA-256 with the recorded source values, including empty and multi-chunk files. The unrelated parent marker remains unchanged. | CLI passed live (`a8c7a5d`, 2026-10-02); desktop pending |
+| Unchanged repeat | Preview and approve again with unchanged inputs. Entries show existing-copy verification, the same provider IDs remain, and no duplicate hierarchy/files appear. | CLI passed live (`a8c7a5d`, 2026-10-02); desktop pending |
+| Local change / keep both | Edit one fixture file yourself, preview and approve. The original remote version remains and the changed version has a stable `.ledgesync-` suffix. A repeated unchanged run does not create another suffix copy. | CLI passed live (`a8c7a5d`, 2026-10-02); desktop pending |
+| Cancel and continue | Start a sufficiently large fixture upload and choose **Cancel upload**. Completion is not reported. Already created objects remain. Preview again and continue using reconciled IDs. | CLI passed live (`a8c7a5d`, 2026-10-02); desktop pending |
 | Native close | During a transfer, close the window. **Keep Open**, Escape or dialog cancellation keeps the application active. **Stop and Close** stops/drains work before exit. Reopen, select the same source/destination and preview to continue. | Pending |
 | Changed source after approval | Produce a preview, then alter a fixture file before starting. The old approval is rejected; no changed bytes are accepted under that plan. | Pending |
 | Missing rule after restart | After a preview establishes the fixture rules, close the app and move its `.gitignore` outside the fixture yourself. Reopen and preview the same source. Upload remains blocked until the rule is restored or policy is explicitly reconfigured and newly approved. | Pending |
 | Remote alteration | Manually rename/move/change one of the app-created disposable objects, then preview again. The app reports review/failure and does not silently overwrite, adopt, duplicate or delete it. | Pending |
-| Connection failure | Interrupt connectivity during a disposable transfer and restore it. Observe bounded recovery or a clear stopped/review state. A fresh preview must reconcile ambiguity rather than duplicate objects. | Pending |
+| Connection failure | Interrupt connectivity during a disposable transfer and restore it. Observe bounded recovery or a clear stopped/review state. A fresh preview must reconcile ambiguity rather than duplicate objects. | CLI passed live (`a8c7a5d`, 2026-10-02); desktop pending |
 | Local disconnect | During an active fixture transfer, disconnect locally. Work stops before credential cleanup; completed Drive files remain. Reconnection requires the normal explicit flow. | Pending |
 
 Remote token revocation is intentionally not part of routine acceptance. In this

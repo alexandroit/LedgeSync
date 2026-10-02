@@ -17,8 +17,12 @@ import (
 const binaryMIME = "application/octet-stream"
 
 // validSession is deliberately narrower than a general URL allowlist. The
-// session URI carries a secret and remains in this stack frame only.
-func validSession(raw string) bool {
+// session URI carries a secret and remains in this stack frame only. Its
+// origin and path are pinned. Google appends its own opaque session parameters
+// (upload_id and, as observed live, session_crd) and may echo the initiation
+// query, so an echoed parameter must equal the sent value, other parameters
+// must be single plain keys, and credential parameters are refused.
+func validSession(raw string, sent url.Values) bool {
 	if len(raw) > 8192 {
 		return false
 	}
@@ -31,7 +35,26 @@ func validSession(raw string) bool {
 		return false
 	}
 	for key, values := range q {
-		if len(values) != 1 || (key != "uploadType" && key != "upload_id") || strings.ContainsAny(values[0], "\x00\r\n") {
+		if len(values) != 1 || values[0] == "" || strings.ContainsAny(values[0], "\x00\r\n") || !sessionKey(key) {
+			return false
+		}
+		if sentValues, ok := sent[key]; ok && (len(sentValues) != 1 || sentValues[0] != values[0]) {
+			return false
+		}
+	}
+	return true
+}
+
+func sessionKey(key string) bool {
+	switch strings.ToLower(key) {
+	case "access_token", "oauth_token", "refresh_token", "key":
+		return false
+	}
+	if key == "" || len(key) > 64 {
+		return false
+	}
+	for _, c := range key {
+		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_') {
 			return false
 		}
 	}
@@ -134,8 +157,9 @@ func (c *Client) Upload(ctx context.Context, account, id, parent, name, operatio
 }
 
 func (c *Client) startUpload(ctx context.Context, account, id, parent, name, operation string, size int64) (string, error) {
-	endpoint := uploadURL + "?" + url.Values{"uploadType": {"resumable"}, "fields": {objectFields}}.Encode()
-	r, err := c.request(ctx, account, http.MethodPost, endpoint, metadata(id, parent, name, operation, binaryMIME), http.Header{
+	// The acknowledgement body is never used, so no fields are requested.
+	params := url.Values{"uploadType": {"resumable"}}
+	r, err := c.request(ctx, account, http.MethodPost, uploadURL+"?"+params.Encode(), metadata(id, parent, name, operation, binaryMIME), http.Header{
 		"Content-Type": {"application/json; charset=UTF-8"}, "X-Upload-Content-Type": {binaryMIME}, "X-Upload-Content-Length": {strconv.FormatInt(size, 10)},
 	})
 	if err != nil {
@@ -152,7 +176,7 @@ func (c *Client) startUpload(ctx context.Context, account, id, parent, name, ope
 		return "", err
 	}
 	locations := r.header.Values("Location")
-	if len(locations) != 1 || !validSession(locations[0]) {
+	if len(locations) != 1 || !validSession(locations[0], params) {
 		return "", unknown()
 	}
 	return locations[0], nil

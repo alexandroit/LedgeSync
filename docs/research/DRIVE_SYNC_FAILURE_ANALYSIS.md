@@ -1,10 +1,13 @@
 # Drive synchronization failure — reproduction, root causes and fixes
 
 **Date:** 2026-10-02. **Scope:** the owner's report that LedgeSync "is not
-synchronizing files" after alpha.4. **Result:** four independent defects
-reproduced with the production HTTP provider, fixed, and covered by regression
-tests. Live Google acceptance is a separate step; see
-[live acceptance](DRIVE_UPLOAD_ACCEPTANCE.md).
+synchronizing files" after alpha.4. **Result:** six independent defects. Four
+were reproduced with the production HTTP provider against an emulator and fixed
+in alpha.5. The first live Google acceptance then showed that no file upload had
+ever succeeded against real Google Drive and found two more defects, fixed in
+alpha.6 ([live findings](#live-acceptance-findings-alpha6)). Each defect has a
+regression test; the live acceptance now passes
+([live acceptance](DRIVE_UPLOAD_ACCEPTANCE.md)).
 
 ## Evidence boundary
 
@@ -95,6 +98,35 @@ repeat copies, automatic copies and typed errors. Restore is verified by
 downloading the copy and comparing SHA-256 values
 ([restore test](../../internal/restore/restore_test.go)).
 
+## Live acceptance findings (alpha.6)
+
+With the owner's consent (account connected with `drive.file` only), the
+official alpha.5 CLI ran the [live acceptance](DRIVE_UPLOAD_ACCEPTANCE.md)
+against real Google Drive. It created the managed folder in My Drive and then
+stopped at the first file with `UNKNOWN_REMOTE_RESULT`, before sending any data.
+A temporary diagnostic build, never committed, logged only methods, paths,
+parameter names, status codes, response shapes and Google's error reasons; it
+logged no headers, tokens, query values or session IDs. The log showed two
+behaviors that the emulator did not model:
+
+| Live symptom | Root cause | Fix |
+|---|---|---|
+| Every file upload stopped with `UNKNOWN_REMOTE_RESULT`. Folders were created; files never arrived. | Google's resumable session URI carries an opaque `session_crd` parameter besides `upload_id` (observed shape: `https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=…&session_crd=…`). The client accepted only `uploadType` and `upload_id`, discarded the session and reported the outcome as uncertain. The check dates from the first upload implementation (alpha.4). While Google issues this parameter, no alpha.4 or alpha.5 build can upload a file, which matches the owner's report. | The check still pins scheme, host and path and requires `uploadType=resumable` and one `upload_id`. It accepts single plain session parameters, requires echoed initiation parameters to equal the sent values, and refuses credential parameters ([ADR-033](../12_ADR_DECISIONS.md)). The initiation no longer requests unused response fields. |
+| With the first fix, `README.md` uploaded completely, then stopped with `DRIVE_IDENTITY_MISMATCH`. | Files are uploaded as `application/octet-stream`, but Drive stores the type it detects (`README.md` became `text/markdown`). Verification required the exact uploaded type. | A file matches any regular stored type. A folder or Google-native item (`application/vnd.google-apps.*`) never does, and size and MD5 still prove the content. |
+
+The [emulator](../../internal/providers/drive/drivetest/server.go) now issues
+and requires `session_crd` and stores detected types for common extensions.
+Against the alpha.5 client it reproduces both live failures, and with the fixes
+all end-to-end tests pass. The regression tests are:
+- `TestUploadAcceptsGoogleSessionParameters`;
+- `TestUploadRejectsSessionURLWithoutSendingCredentials` (credential, duplicate, empty and malformed parameters);
+- `TestUploadEmptyFileAndVerificationFailures` (cases `detected type`, `native document` and `folder`);
+- the twelve `TestE2E…` tests.
+
+The failed runs left one pair with an upload of uncertain outcome. The next copy
+of that pair, with the fixed client, reconciled the reserved identities without
+duplicates and completed with 7 files.
+
 ## Commands and results (2026-10-02, macOS 27 arm64, Go 1.27.1)
 
 Run from the repository root with isolated caches under `build/cache/`:
@@ -112,3 +144,7 @@ Desktop OAuth client (generated source removed afterwards). The desktop app
 started, created its private state (`catalog.sqlite`, mode 0600) and exited
 cleanly; it also ran with the hardened runtime and no entitlement exceptions.
 These are build and startup checks, not live Google acceptance.
+
+After the alpha.6 fixes (`a8c7a5d`), the same `go test`, `go test -race` and
+`go vet` commands pass for all 17 packages, and the live acceptance passes all
+14 steps.

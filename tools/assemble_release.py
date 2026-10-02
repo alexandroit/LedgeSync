@@ -6,7 +6,7 @@ verifies every sidecar checksum, rejects mixed versions, and writes a combined
 SHA256SUMS plus RELEASE.json evidence (source commit, run, per-target signing
 state and asset hashes). It never uploads or publishes anything.
 
-    python3 tools/assemble_release.py --run-id RUN_ID --version 0.1.0-alpha.5 --output build/release
+    python3 tools/assemble_release.py --run-id RUN_ID --version 0.1.0-alpha.6 --output build/release
 """
 from __future__ import annotations
 

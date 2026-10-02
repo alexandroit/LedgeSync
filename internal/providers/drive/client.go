@@ -497,8 +497,19 @@ func validateIntent(account, id, parent, name, operation string) error {
 	return nil
 }
 
+// sameKind compares the stored media type with the uploaded one. Drive detects
+// a binary upload's type from its name and content (live: README.md is stored
+// as text/markdown), so any regular file type is accepted; size and MD5 prove
+// the content. A folder or Google-native item never matches a file.
+func sameKind(stored, uploaded string) bool {
+	if uploaded == folderMIME {
+		return stored == folderMIME
+	}
+	return stored != "" && stored != folderMIME && !strings.HasPrefix(stored, "application/vnd.google-apps.")
+}
+
 func verify(o Object, id, parent, name, operation, mime string, size int64, md5 string) error {
-	if o.ID != id || !hasParent(o, parent) || o.Name != name || o.Trashed || o.MimeType != mime || o.AppProperties[operationProperty] != operation {
+	if o.ID != id || !hasParent(o, parent) || o.Name != name || o.Trashed || !sameKind(o.MimeType, mime) || o.AppProperties[operationProperty] != operation {
 		return domain.Fail("DRIVE_IDENTITY_MISMATCH", "The Drive object does not match the approved upload identity. No existing object was overwritten.")
 	}
 	if mime != folderMIME && (o.Size != size || o.MD5 != md5) {

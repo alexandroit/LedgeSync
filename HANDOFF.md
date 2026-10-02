@@ -2,11 +2,14 @@
 
 **Updated:** 2026-10-02, America/Toronto. **Product:** LedgeSync.
 **Priority:** the owner reports that the application is not synchronizing files.
-**Status (end of this session):** the failure was reproduced and fixed in source
-on branch `fix/drive-sync-recovery` (alpha.5 candidate); live Google acceptance
-and publisher signing await owner steps. Current dispositions, commands and
-blockers are in [current status](docs/17_AGENT_HANDOFF_AND_STATUS.md); the
-original brief below is retained for context.
+**Status:** the failure was reproduced and fixed. Alpha.5 fixed four defects
+found with an emulator. The live Google acceptance then found two upload
+defects that alpha.5 still had (Google's `session_crd` session parameter, and
+Drive-detected media types). With those fixes, alpha.6 passes all 14 live
+steps. Publisher signing and the desktop Picker pass await owner steps. Current
+dispositions, commands and blockers are in
+[current status](docs/17_AGENT_HANDOFF_AND_STATUS.md); the original brief below
+is retained for context.
 
 This is the single continuation entrypoint. Read [project identity](PROJECT_IDENTITY.md)
 and [shared engineering rules](AGENTS.md), then follow this document. Work in the

@@ -59,6 +59,9 @@ def interactive(cli: Path, args: list[str], answer_digest: bool = True, env: dic
                 except OSError:
                     chunk = b''
                 if not chunk:
+                    # The terminal closed because the CLI exited; keep its status.
+                    _, wait = os.waitpid(pid, 0)
+                    status = os.waitstatus_to_exitcode(wait)
                     break
                 output += chunk
             text = output.decode('utf-8', 'replace')
@@ -99,23 +102,6 @@ def interactive(cli: Path, args: list[str], answer_digest: bool = True, env: dic
     return status, output.decode('utf-8', 'replace')
 
 
-def last_json(text: str) -> dict:
-    """Return the last top-level JSON object printed by the CLI."""
-    depth, start, found = 0, None, None
-    for i, c in enumerate(text):
-        if c == '{':
-            if depth == 0:
-                start = i
-            depth += 1
-        elif c == '}':
-            depth -= 1
-            if depth == 0 and start is not None:
-                found = text[start:i + 1]
-    if not found:
-        raise Failure('no JSON output')
-    return json.loads(found)
-
-
 def all_json(text: str) -> list[dict]:
     out, depth, start = [], 0, None
     for i, c in enumerate(text):
@@ -131,6 +117,18 @@ def all_json(text: str) -> list[dict]:
                 except json.JSONDecodeError:
                     pass
     return out
+
+
+def final_status(text: str) -> dict:
+    """Return the last transfer status, skipping a trailing error report."""
+    statuses = [o for o in all_json(text) if 'state' in o]
+    return statuses[-1] if statuses else {}
+
+
+def error_code(text: str) -> str | None:
+    """Return the code of the CLI's error report, which never contains secrets."""
+    reports = [o for o in all_json(text) if set(o) == {'code', 'message'}]
+    return reports[-1]['code'] if reports else None
 
 
 def tree_digest(root: Path, ignored=lambda rel: False) -> dict[str, str]:
@@ -261,30 +259,31 @@ def main() -> int:
         fixture = work / f'LedgeSync acceptance {stamp}'
         make_fixture(fixture)
         expected = tree_digest(fixture, ignored)
+        original_guide = expected['docs/guide.txt']
         code, out, err = run(cli, ['pairs', 'add', '--root', str(fixture), '--destination', 'root'])
         pair = json.loads(out)['id'] if code == 0 else ''
         step('pair saved for My Drive', code == 0 and bool(pair), destination='My Drive')
 
         code, out = interactive(cli, ['copy', '--pair', pair])
-        final = last_json(out)
+        final = final_status(out)
         plan = all_json(out)[0]
-        step('first copy verified', code == 0 and final.get('state') == 'succeeded', files=final.get('completedFiles'), bytes=final.get('uploadedBytes'), excluded=plan.get('excludedCount'), links=plan.get('unsupportedCount'))
+        step('first copy verified', code == 0 and final.get('state') == 'succeeded', state=final.get('state'), error=error_code(out), files=final.get('completedFiles'), bytes=final.get('uploadedBytes'), excluded=plan.get('excludedCount'), links=plan.get('unsupportedCount'))
 
         restored = work / f'restore-1-{stamp}'
         code, out, err = run(cli, ['restore', '--pair', pair, '--to', str(restored)])
         got = tree_digest(restored)
-        step('independent download matches source hashes', code == 0 and got == expected, files=sum(1 for v in got.values() if v != 'dir'), folders=sum(1 for v in got.values() if v == 'dir'))
+        step('independent download matches source hashes', code == 0 and got == expected, error=error_code(err), files=sum(1 for v in got.values() if v != 'dir'), folders=sum(1 for v in got.values() if v == 'dir'))
 
         code, out = interactive(cli, ['copy', '--pair', pair])
-        plan, final = all_json(out)[0], last_json(out)
+        plan, final = all_json(out)[0], final_status(out)
         actions = {e['action'] for e in plan.get('entries', [])}
-        step('unchanged repeat makes no copies', code == 0 and actions <= {'skip', 'unsupported'} and final.get('sentBytes', 0) == 0, actions=sorted(actions))
+        step('unchanged repeat makes no copies', code == 0 and actions <= {'skip', 'unsupported'} and final.get('sentBytes', 0) == 0, actions=sorted(actions), state=final.get('state'), error=error_code(out))
 
         (fixture / 'docs/guide.txt').write_text('changed content\n')
         code, out = interactive(cli, ['copy', '--pair', pair])
-        plan, final = all_json(out)[0], last_json(out)
+        plan, final = all_json(out)[0], final_status(out)
         changed = [e for e in plan.get('entries', []) if e['relativePath'] == 'docs/guide.txt']
-        step('changed file keeps both versions', code == 0 and changed and changed[0]['action'] == 'keep-both' and final.get('state') == 'succeeded')
+        step('changed file keeps both versions', code == 0 and bool(changed) and changed[0]['action'] == 'keep-both' and final.get('state') == 'succeeded', action=changed[0]['action'] if changed else None, state=final.get('state'), error=error_code(out))
 
         big = fixture / 'media/interrupted.bin'
         big.write_bytes(os.urandom(64 * 1024 * 1024))
@@ -292,9 +291,9 @@ def main() -> int:
         code, out = interactive(cli, ['copy', '--pair', pair], kill_when=lambda text: any(int(m) > 9 * 1024 * 1024 for m in sizes.findall(text)))
         step('process killed during a multi-chunk upload', code is None)
         code, out = interactive(cli, ['copy', '--pair', pair])
-        plan, final = all_json(out)[0], last_json(out)
+        plan, final = all_json(out)[0], final_status(out)
         resumed = [e for e in plan.get('entries', []) if e['relativePath'] == 'media/interrupted.bin']
-        step('restart resumes the reserved identity', code == 0 and resumed and resumed[0]['action'] == 'resume' and final.get('state') == 'succeeded')
+        step('restart resumes the reserved identity', code == 0 and bool(resumed) and resumed[0]['action'] == 'resume' and final.get('state') == 'succeeded', action=resumed[0]['action'] if resumed else None, state=final.get('state'), error=error_code(out))
 
         net = fixture / 'media/network-loss.bin'
         net.write_bytes(os.urandom(24 * 1024 * 1024))
@@ -303,30 +302,32 @@ def main() -> int:
         env['HTTPS_PROXY'] = f'http://127.0.0.1:{proxy.port}'
         threading.Thread(target=lambda: (time.sleep(0.5), [time.sleep(0.2) for _ in iter(lambda: proxy.sent < 10 * 1024 * 1024, False)], proxy.cut()), daemon=True).start()
         code, out = interactive(cli, ['copy', '--pair', pair], env=env)
-        final = last_json(out)
-        step('network loss stops without claiming success', code != 0 and final.get('state') != 'succeeded', state=final.get('state'), code=final.get('errorCode'))
+        final = final_status(out)
+        step('network loss stops without claiming success', code != 0 and final.get('state') != 'succeeded', state=final.get('state'), code=final.get('errorCode'), error=error_code(out))
         code, out = interactive(cli, ['copy', '--pair', pair])
-        final = last_json(out)
-        step('copy continues after the network returns', code == 0 and final.get('state') == 'succeeded')
+        final = final_status(out)
+        step('copy continues after the network returns', code == 0 and final.get('state') == 'succeeded', state=final.get('state'), error=error_code(out))
 
         restored = work / f'restore-2-{stamp}'
         code, out, err = run(cli, ['restore', '--pair', pair, '--to', str(restored)])
         got = tree_digest(restored)
         expected = tree_digest(fixture, ignored)
-        versions = [k for k in got if k.startswith('docs/guide.txt.ledgesync-')]
-        for k in versions:
-            got.pop(k)
-        step('final copy matches after interruptions and changes', code == 0 and got == expected and len(versions) == 1, keptVersions=len(versions))
+        # Drive files are never overwritten: the first copy keeps its original
+        # content and the changed file is restored as its separate version.
+        kept = [got.pop(k) for k in [k for k in got if k.startswith('docs/guide.txt.ledgesync-')]]
+        first = got.pop('docs/guide.txt', None)
+        current = expected.pop('docs/guide.txt')
+        step('final copy matches after interruptions and changes', code == 0 and got == expected and first == original_guide and kept == [current], error=error_code(err), keptVersions=len(kept), originalKept=first == original_guide)
 
         code, out = interactive(cli, ['automatic', 'enable', '--pair', pair, '--every', '5'])
-        step('automatic copies authorized from a reviewed preview', code == 0)
+        step('automatic copies authorized from a reviewed preview', code == 0, error=error_code(out))
         (fixture / 'docs/added-by-automation.txt').write_text('automatic\n')
         code, out, err = run(cli, ['automatic', 'run', '--pair', pair])
-        step('authorized automatic run copies new files', code == 0 and '"state": "succeeded"' in out)
+        step('authorized automatic run copies new files', code == 0 and '"state": "succeeded"' in out, error=error_code(err))
         with open(fixture / '.gitignore', 'a') as f:
             f.write('*.txt\n')
         code, out, err = run(cli, ['automatic', 'run', '--pair', pair])
-        step('changed ignore rules pause automatic copies', code != 0 and 'AUTOMATION_REVIEW_REQUIRED' in out)
+        step('changed ignore rules pause automatic copies', code != 0 and 'AUTOMATION_REVIEW_REQUIRED' in out, error=error_code(err))
         report['result'] = 'passed'
     except (Failure, subprocess.TimeoutExpired, json.JSONDecodeError, KeyError, IndexError) as error:
         report['result'] = 'failed'

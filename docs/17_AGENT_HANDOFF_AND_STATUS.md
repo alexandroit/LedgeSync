@@ -2,7 +2,32 @@
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
 
-## Alpha.5 published — reported synchronization failure fixed
+## Alpha.6 — live Google acceptance found and fixed two upload defects
+
+**Alpha.5 cannot upload files to real Google Drive.** With the owner's consent,
+the live acceptance ran against real Google Drive on 2026-10-02. The official
+alpha.5 CLI created the managed folder and then failed every file upload.
+
+A redacted diagnostic build found two defects that the emulator did not model:
+- **Google's session parameter.** Google's resumable session URI carries a
+  `session_crd` parameter, and the client's session check rejected it, so no
+  file was ever sent.
+- **Detected media types.** Drive stores the media type it detects
+  (`README.md` → `text/markdown`), and verification required the uploaded type.
+
+Both are fixed (`1eb3e71`, `a8c7a5d`; [ADR-033](12_ADR_DECISIONS.md)), and the
+emulator now models them. With the fixes, the live acceptance passed all 14
+steps: first copy, independent SHA-256 restore, unchanged repeat, keep-both,
+`kill -9` and resume, network loss and continuation, and automatic copy with a
+pause on rule change. Details are in the
+[failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md#live-acceptance-findings-alpha6)
+and the [live acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md).
+
+Alpha.5 assets stay immutable, and alpha.6 replaces them. Publication identities
+are recorded below once complete. Still pending from the owner: the desktop
+Picker pass and publisher signing material.
+
+## Alpha.5 published — superseded by alpha.6 (uploads fail against real Drive)
 
 **Owner report:** the application was not synchronizing files. **Outcome:** four
 independent defects were reproduced with the production HTTP provider against a

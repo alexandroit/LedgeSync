@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
 
-## Alpha.6 — live Google acceptance found and fixed two upload defects
+## Alpha.6 published — file uploads to Google Drive work
 
 **Alpha.5 cannot upload files to real Google Drive.** With the owner's consent,
 the live acceptance ran against real Google Drive on 2026-10-02. The official
@@ -17,17 +17,45 @@ A redacted diagnostic build found two defects that the emulator did not model:
 
 Both are fixed in `c1e00b1` ([pull request 3](https://github.com/alexandroit/LedgeSync/pull/3);
 [ADR-033](12_ADR_DECISIONS.md)), and the emulator now models them. With the
-fixes, LedgeSync 0.1.0-alpha.6 built from `c1e00b1` passed all 14 live steps: first copy, independent SHA-256 restore, unchanged repeat, keep-both,
-`kill -9` and resume, network loss and continuation, and automatic copy with a
-pause on rule change. Details are in the
+fixes, LedgeSync 0.1.0-alpha.6 built from `c1e00b1` passed all 14 live steps:
+first copy, independent SHA-256 restore, unchanged repeat, keep-both, `kill -9`
+and resume, network loss and continuation, and automatic copy with a pause on
+rule change. Details are in the
 [failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md#live-acceptance-findings-alpha6)
 and the [live acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md).
 
-Alpha.5 assets stay immutable, and alpha.6 replaces them. Publication identities
-are recorded below once complete. The repository history was rewritten on
-2026-10-02; earlier evidence cites previous commit IDs, mapped in the
-[commit ID map](COMMIT_ID_MAP.md). Still pending from the owner: the desktop
-Picker pass and publisher signing material.
+**Published 2026-10-02** as pre-release
+[v0.1.0-alpha.6](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.6)
+from `c1e00b1` (37 assets). Alpha.5 assets stay immutable; alpha.6 replaces them.
+
+| Gate | Result |
+|---|---|
+| Official build | [run 37066175885](https://github.com/alexandroit/LedgeSync/actions/runs/37066175885): 16/16, publisher OAuth client on all six targets |
+| Clean-machine installers | [run 37066914046](https://github.com/alexandroit/LedgeSync/actions/runs/37066914046): Windows Server 2022 x64 and Windows 11 ARM64; Ubuntu amd64/arm64; local signed APT |
+| Signed APT | Snapshot `20261002-alpha6-c1e00b1` active; 60 previous files unchanged; public [run 37067329919](https://github.com/alexandroit/LedgeSync/actions/runs/37067329919) passed on amd64/arm64 |
+| Website | Release `0716392` at the origin and on Pages; shared Nginx/Supervisor configuration and HiperMusicas unchanged |
+
+Exact identities: [alpha.6 evidence](research/DRIVE_SYNC_ALPHA6_RELEASE.json).
+The repository history was rewritten on 2026-10-02. Earlier evidence cites the
+previous commit IDs, which are mapped in the [commit ID map](COMMIT_ID_MAP.md).
+
+### Next safe steps (alpha.6)
+
+1. Owner: one manual desktop pass with the native Picker:
+   - choose an existing folder;
+   - preview and upload;
+   - trash the managed folder in Drive;
+   - confirm **Copy again**.
+2. Owner: remove the `LedgeSync acceptance …` test folders from My Drive.
+   LedgeSync never deletes Drive files.
+3. Owner: provide signing material ([Publisher signing](PLATFORMS.md#publisher-signing)).
+   A signed build needs a new version number.
+4. Owner: disable the Cloudflare Web Analytics injection for ledgesync.com, or
+   disclose it in the privacy policy.
+5. Owner decisions still open:
+   - iPhone/iPad scope;
+   - managed overwrite/mirror (ADR-031);
+   - VCS adapters beyond Git/rclone.
 
 ## Alpha.5 published — superseded by alpha.6 (uploads fail against real Drive)
 
@@ -68,7 +96,7 @@ existing server key.
 
 | Item | Disposition | Evidence |
 |---|---|---|
-| A — first/incremental copy failure, safe diagnostics | **Implemented**; live acceptance pending owner consent | `internal/transfer/e2e_test.go` (12 end-to-end tests), `internal/transport/desktop/journey_test.go`, `internal/connections/errors_test.go`, Playwright `pairs.spec.ts` |
+| A — first/incremental copy failure, safe diagnostics | **Implemented**; live Google acceptance passed 14/14 with alpha.6 (alpha.5 failed live) | `internal/transfer/e2e_test.go` (12 end-to-end tests), `internal/transport/desktop/journey_test.go`, `internal/connections/errors_test.go`, Playwright `pairs.spec.ts` |
 | B — configuration semantics | **Implemented:** `conflictPolicy: pause` pauses changed files (no upload, listed in the review); `maxRetries` bounds retries (`drive.Client.WithRetries`, default 6); `maxTransfers` is an upper bound honored by serial execution. **Deferred:** parallel transfers (the credential service serializes requests by design; concurrency needs a reviewed redesign) | `internal/transfer/service.go` (`ActionPaused`), `internal/providers/drive/client.go` |
 | C — durable projects and primary GUI | **Implemented:** saved pairs (private catalog), reopen without stored approval, policy editor (rule groups, dialects, composition, conflict policy, retries), Activity, History & Recovery and Settings on saved data | `internal/projects`, `internal/transferstate/catalog.go`, `internal/transport/desktop/projects.go`, Playwright `pairs.spec.ts` |
 | D — repeat, recovery, diagnostics | **Implemented:** unchanged repeats skip; changed files keep both; cancellation, process loss, lost acknowledgements, expired sessions and network loss reconcile reserved IDs; per-file issues and bounded run history | e2e tests above; `TestE2ECancelledMultiChunkUploadResumesWithoutDuplicates`, `TestE2ETransientFailures…`, `TestE2EExpiredSession…` |

@@ -124,7 +124,26 @@ CLI installation and removal preserving synthetic user data. The downloaded
 reports were checked against GitHub's artifact ZIP digests. See
 [alpha.3 deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
 
-## Current alpha.5 publication
+## Current alpha.6 publication
+
+Current snapshot: `20261002-alpha6-c1e00b1`, Debian version `0.1.0~alpha.6-1`,
+built from the published alpha.6 archives (application `c1e00b1`, packaging
+`f930634`) with the existing server key. Before activation, the new snapshot
+was checked:
+- all 60 previous pool and by-hash files are unchanged;
+- the alpha.6 packages are listed for amd64 and arm64;
+- the `InRelease` signature verifies.
+
+The `public` symlink was replaced atomically, and the alpha.5 snapshot is
+retained for rollback. [Installer run 37066914046](https://github.com/alexandroit/LedgeSync/actions/runs/37066914046)
+passed native packaging and the local signed lifecycle.
+[Public run 37067329919](https://github.com/alexandroit/LedgeSync/actions/runs/37067329919)
+passed on amd64 and arm64 against `https://ledgesync.com/apt`: pinned key,
+signature, tamper rejection, by-hash, desktop and CLI installation, and removal
+that preserves user data. No package was installed on the production server and
+Nginx was not reloaded. See [alpha.6 evidence](research/DRIVE_SYNC_ALPHA6_RELEASE.json).
+
+## Previous alpha.5 publication (superseded: cannot upload files)
 
 Current snapshot: `20261002-alpha5-64cf420`, Debian version `0.1.0~alpha.5-1`,
 built from the published alpha.5 archives (application `64cf420`, packaging

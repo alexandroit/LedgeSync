@@ -1,0 +1,277 @@
+{
+  "product": "LedgeSync",
+  "version": "0.1.0-alpha.6",
+  "tag": "v0.1.0-alpha.6",
+  "prerelease": true,
+  "releaseUrl": "https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.6",
+  "applicationSourceCommit": "c1e00b14e97f27bed21e8aa00e213c8e87040155",
+  "installerPackagingCommit": "f930634",
+  "websiteSourceCommit": "0716392bbe0803eb34126d81af2d4588c2280c7d",
+  "pullRequest": "https://github.com/alexandroit/LedgeSync/pull/3",
+  "supersedes": {
+    "version": "0.1.0-alpha.5",
+    "reason": "alpha.5 cannot upload files to real Google Drive (session_crd rejected; detected media types failed verification)"
+  },
+  "ci": {
+    "pullRequestChecks": {
+      "runId": 37063220200,
+      "result": "18/18 checks success"
+    },
+    "officialBuild": {
+      "runId": 37066175885,
+      "event": "push",
+      "result": "16/16 success",
+      "publisherOAuthClient": "injected on all six desktop/CLI targets"
+    },
+    "latestMainBuild": {
+      "runId": 37067542659,
+      "commit": "0716392",
+      "result": "success"
+    }
+  },
+  "signing": {
+    "macOS": "unsigned developer build (ad-hoc); Developer ID signing and notarization blocked on owner material",
+    "windows": "unsigned developer build; Authenticode blocked on owner material",
+    "ubuntu": "APT InRelease/Release.gpg signed with existing RSA4096 key 11B35F4E066806C33AA8653A51AD694F4729F5AB",
+    "pipeline": "implemented; skipped because no signing secrets are configured"
+  },
+  "releaseAssetCount": 37,
+  "applicationAssets": [
+    {
+      "name": "LedgeSync-0.1.0-alpha.6-macos-amd64.dmg",
+      "sha256": "16e4804dc8210804fa16ee8181dd6bf7fe6f784bb1e4cfb1fd76324785149f9b",
+      "size": 7692471
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.6-macos-amd64.dmg.sha256",
+      "sha256": "d91b49ea9a652042e65db8f05c31e03738c6bb9d455545e41cbba6b61cf2db5b",
+      "size": 106
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.6-macos-arm64.dmg",
+      "sha256": "24f48a7a1eb8088aa44c003b93a26cab095a59a1a1387aabe3ec977b8004ed8e",
+      "size": 7074096
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.6-macos-arm64.dmg.sha256",
+      "sha256": "1f91b11fdb19719247504de715cd3665c0b63ed3289a38516cca8b68338ddc56",
+      "size": 106
+    },
+    {
+      "name": "RELEASE.json",
+      "sha256": "89cff8d669eb4fb94968e53bc9e4289312de26263538c52ab63c8946ec2695ad",
+      "size": 3846
+    },
+    {
+      "name": "SHA256SUMS",
+      "sha256": "17100541a648ec6356f5bc0a807e51c8d3dac0a930ea8d6897f4d99456e636f6",
+      "size": 1568
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.6-darwin-amd64.tar.gz",
+      "sha256": "b523b31d3a11f4c71898a8d053ccaa60faf183aef532dae4434387bbb9560ffe",
+      "size": 11105307
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.6-darwin-arm64.tar.gz",
+      "sha256": "cc1d02ee95d9eda2534589820b893acb3fcb54551d54a21319172d7ea8d431b7",
+      "size": 10428178
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.6-linux-amd64.tar.gz",
+      "sha256": "e987e1d549944c1abe9c0521d2dda05c432c45419ca536122ba21fc6fba86001",
+      "size": 10896672
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.6-linux-arm64.tar.gz",
+      "sha256": "90140d6bca43ff2fca9962bfcc546840de263d2cfa9b4ca6cd0f10a4b3a32d6d",
+      "size": 10156346
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.6-windows-amd64.zip",
+      "sha256": "2fc5c0894fee9c3662e3489ca8319e9af299f4bfe8c00511c47cf7ed73482bba",
+      "size": 10751711
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.6-windows-arm64.zip",
+      "sha256": "54ad93127597094c4543602193f47ab1effba6b22963d1fb2d0e352b2cd6f0fa",
+      "size": 9969017
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-darwin-amd64.tar.gz",
+      "sha256": "380af401bbfd6bbd7a61ccbe22d970906194fdf66383806067277f0fb2401586",
+      "size": 6929289
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-darwin-amd64.tar.gz.sha256",
+      "sha256": "718c7696e219da7ccda724b248a773418256bb79efcef4209db784c24b2c2c4f",
+      "size": 118
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-darwin-arm64.tar.gz",
+      "sha256": "b43e5bbaa825344e9ae3390e861e2a470165ae7933ff3a6800cfc17afc6dfef4",
+      "size": 6417406
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-darwin-arm64.tar.gz.sha256",
+      "sha256": "34730305feb973cc4c7eac7464a9121bbd74e2e45c83f6f68f896375a825459d",
+      "size": 118
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-linux-amd64.tar.gz",
+      "sha256": "61d0989d2004cefc4929da3054516a342fa93bd42c93193259d88b81f09092f9",
+      "size": 6977850
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-linux-amd64.tar.gz.sha256",
+      "sha256": "6eb1384b749ffd69608c211e41c3ec4ce6c600adf2bcee9e220a8f9a16cdc154",
+      "size": 117
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-linux-arm64.tar.gz",
+      "sha256": "485b7f311e61d3586bb99ca448393af386204cb7cdd1e6e64d2ae89df7e3f0e9",
+      "size": 6441188
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-linux-arm64.tar.gz.sha256",
+      "sha256": "912d0b545e472136666742a6f72a1bffbb0ebee93c0e7974dcf9c59fa3523e22",
+      "size": 117
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-windows-amd64.zip",
+      "sha256": "45e26084f157cd94d0acf5537ed3758667758546f1cfbe7c497f753347550d5d",
+      "size": 7411123
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-windows-amd64.zip.sha256",
+      "sha256": "04b5ebc7ab7b9cb27bc5ee24d6eba79d2c81779bd10569ca1ece4b57609026dc",
+      "size": 117
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-windows-arm64.zip",
+      "sha256": "c963763d094e56cd7f88a065df1c6a032a66ed9afc5287be2581ba72c9905d4b",
+      "size": 6764870
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.6-windows-arm64.zip.sha256",
+      "sha256": "feec779cf56c96186dcc222cad65d1a5cec21d4ce6a116f00b9a61a3cb7a0590",
+      "size": 117
+    }
+  ],
+  "installerAssets": [
+    {
+      "name": "ledgesync-cli_0.1.0~alpha.6-1_amd64.deb",
+      "sha256": "0925e361187e9c6bc344c4bacd01808159c2a1793828307ad791ee8c3c2356ec",
+      "size": 9655848
+    },
+    {
+      "name": "ledgesync_0.1.0~alpha.6-1_amd64.deb",
+      "sha256": "bad2d6ee47ff97b63988139f12f703233330d77ba3ec59dbfbd0a9f7bf7d3e79",
+      "size": 5462748
+    },
+    {
+      "name": "ledgesync-cli_0.1.0~alpha.6-1_arm64.deb",
+      "sha256": "1df20047e8cff37b4b99ec7118c7eed10a8a310beda4abd04001b3903c19fab5",
+      "size": 8758444
+    },
+    {
+      "name": "ledgesync_0.1.0~alpha.6-1_arm64.deb",
+      "sha256": "fef4e0a11142e31ed3550ca948789d2e4da200f1c43278588174cf6badf5add3",
+      "size": 4752956
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.6-windows-amd64-setup.exe",
+      "sha256": "479b3bb8b9b7da12751f28a9ce8b5de5a247922948b67ec7eb9e1ca0ef6c7b9c",
+      "size": 8272112
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.6-windows-arm64-setup.exe",
+      "sha256": "5b1922c314b02d672a734a4583301dd92863b2f95dccac61aa976a4e0ffc5b9e",
+      "size": 7716457
+    }
+  ],
+  "installerRun": {
+    "runId": 37066914046,
+    "result": "success",
+    "windows": {
+      "amd64": "Windows Server 2022: wizard, install, reinstall, shortcuts, uninstall passed",
+      "arm64": "Windows 11 ARM64: wizard, install, reinstall, shortcuts, uninstall passed"
+    },
+    "ubuntu": {
+      "amd64": "package, payload, GUI startup, removal passed",
+      "arm64": "package, payload, GUI startup, removal passed"
+    },
+    "localSignedApt": "signature, tamper rejection, by-hash, desktop and CLI install, data-preserving removal passed"
+  },
+  "apt": {
+    "snapshot": "20261002-alpha6-c1e00b1",
+    "previousActiveSnapshot": "20261002-alpha5-64cf420",
+    "previousSnapshotsRetained": [
+      "20261002-alpha1-e796bc5",
+      "20261002-alpha2-ad2cddf",
+      "20261002-alpha3-0ec2f3f",
+      "20261002-alpha4-fcd5784",
+      "20261002-alpha5-64cf420"
+    ],
+    "previousPoolAndByHashFilesUnchanged": 60,
+    "signature": "Good signature from LedgeSync APT Archive",
+    "activation": "atomic symlink replacement",
+    "debianVersion": "0.1.0~alpha.6-1"
+  },
+  "publicAPT": {
+    "runId": 37067329919,
+    "baseURL": "https://ledgesync.com/apt",
+    "results": {
+      "amd64": {
+        "baseURL": "https://ledgesync.com/apt",
+        "architecture": "amd64",
+        "version": "0.1.0~alpha.6-1",
+        "signatureVerified": true,
+        "tamperedMetadataRejected": true,
+        "byHashForced": true,
+        "desktopInstalled": true,
+        "secretServiceInstalled": true,
+        "headlessCliInstalled": true,
+        "uninstallPreservedUserFixture": true
+      },
+      "arm64": {
+        "baseURL": "https://ledgesync.com/apt",
+        "architecture": "arm64",
+        "version": "0.1.0~alpha.6-1",
+        "signatureVerified": true,
+        "tamperedMetadataRejected": true,
+        "byHashForced": true,
+        "desktopInstalled": true,
+        "secretServiceInstalled": true,
+        "headlessCliInstalled": true,
+        "uninstallPreservedUserFixture": true
+      }
+    }
+  },
+  "website": {
+    "release": "/var/www/ledgesync/releases/0716392bbe0803eb34126d81af2d4588c2280c7d",
+    "previous": "/var/www/ledgesync/releases/3695675d4c299207d000b0cf55bddb119fb5dbff",
+    "serverFilesMatchSource": "all site files verified by SHA-256 on the server",
+    "originHomepageMatchesSource": true,
+    "publicHomepage": "matches source for non-browser requests; browser requests additionally receive a Cloudflare Web Analytics beacon injected at the edge (owner decision pending)",
+    "pagesRunId": 37067542662,
+    "pagesHomepageAlpha6Links": 4
+  },
+  "sharedServerPreservation": {
+    "configurationHashesUnchanged": 57,
+    "hipermusicasPIDUnchanged": true,
+    "nginxConfigurationValid": true,
+    "nginxReloaded": false,
+    "hipermusicasPublicStatus": 200,
+    "hipermusicasOriginStatus": 200
+  },
+  "liveGoogleAcceptance": {
+    "date": "2026-10-02",
+    "account": "owner's Google account, drive.file only",
+    "result": "14/14 passed",
+    "cli": "LedgeSync 0.1.0-alpha.6 built locally from c1e00b1 with the publisher Desktop client",
+    "report": "build/live-acceptance/acceptance-20261002-172209.json (local, not committed)",
+    "alpha5Result": "failed at the first file with UNKNOWN_REMOTE_RESULT"
+  },
+  "commitIdMap": "docs/COMMIT_ID_MAP.md"
+}

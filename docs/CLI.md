@@ -1,10 +1,12 @@
 # LedgeSync CLI and server copies
 
-**0.1.0-alpha.5 (current pre-release).** Adds saved sync pairs, approved pair
-copies, opt-in automatic copies for servers and restore to a new folder (see
+**0.1.0-alpha.6 (current pre-release).** Uploads to Google Drive now work;
+alpha.5 could not upload files. Since alpha.5 the CLI has saved sync pairs,
+approved pair copies, opt-in automatic copies for servers and restore to a new
+folder (see
 [Saved pairs, automatic copies and restore](#saved-pairs-automatic-copies-and-restore)).
 CLI archives for all six targets are in the
-[release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.5), and
+[release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.6), and
 `sudo apt-get install ledgesync-cli` installs it from the signed APT repository.
 The alpha.4 description below is historical.
 

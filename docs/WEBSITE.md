@@ -48,6 +48,26 @@ nameserver or mail records were changed. The existing `certbot.timer` handles
 renewal. The certificate-specific renewal hook tests Nginx configuration before
 reloading it: `/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx`.
 
+## Verified alpha.6 deployment
+
+Verified on **2026-10-02 UTC**. Website source `0716392bbe0803eb34126d81af2d4588c2280c7d`
+publishes the alpha.6 downloads. The release was installed under
+`/var/www/ledgesync/releases/<commit>/` with root ownership and 0755/0644
+modes. Every file was verified against the commit by SHA-256 on the server, and
+the release was activated by atomic `current` symlink replacement; the previous
+release `3695675…` is retained.
+
+Checks after activation:
+- The origin homepage is byte-identical to the source.
+- GitHub Pages ([run 37067542662](https://github.com/alexandroit/LedgeSync/actions/runs/37067542662)) serves the alpha.6 links.
+- All 57 shared Nginx/Supervisor configuration hashes were unchanged, and `nginx -t` passed without a reload.
+- HiperMusicas kept the same process and answered HTTP 200 publicly and at the origin.
+
+**Owner action, still open:** browser requests to the public homepage still
+receive the Cloudflare Web Analytics beacon injected at the edge. The source,
+the origin and non-browser requests do not contain it. See the alpha.5 note
+below.
+
 ## Verified alpha.5 deployment
 
 Verified on **2026-10-02 UTC**. Website source `3695675d4c299207d000b0cf55bddb119fb5dbff`

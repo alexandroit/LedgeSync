@@ -6,7 +6,8 @@
 found with an emulator. The live Google acceptance then found two upload
 defects that alpha.5 still had (Google's `session_crd` session parameter, and
 Drive-detected media types). With those fixes, alpha.6 passes all 14 live
-steps. Publisher signing and the desktop Picker pass await owner steps. Current
+steps and is published (release, installers, signed APT, website). Publisher
+signing and the desktop Picker pass await owner steps. Current
 dispositions, commands and blockers are in
 [current status](docs/17_AGENT_HANDOFF_AND_STATUS.md); the original brief below
 is retained for context.

@@ -1,6 +1,28 @@
 # Platform builds and installation
 
-**0.1.0-alpha.5 — current developer pre-release (2026-10-02).** It fixes the
+**0.1.0-alpha.6 — current developer pre-release (2026-10-02).** It makes file
+uploads to Google Drive work: alpha.5 created folders but rejected the session
+parameter (`session_crd`) that Google adds to resumable uploads, and it failed
+files whose media type Drive detects. Live acceptance against real Google Drive
+passed all 14 steps; see the
+[failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md#live-acceptance-findings-alpha6).
+
+| Gate | Result |
+|---|---|
+| Pull request checks | [pull request 3](https://github.com/alexandroit/LedgeSync/pull/3): 18/18 |
+| Official build (publisher OAuth client on all six targets) | [run 37066175885](https://github.com/alexandroit/LedgeSync/actions/runs/37066175885): 16/16 at `c1e00b1` |
+| Release | [v0.1.0-alpha.6](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.6): 37 assets, `SHA256SUMS`, `RELEASE.json`, `INSTALLERS_RELEASE.json` |
+| Clean-machine installers | [run 37066914046](https://github.com/alexandroit/LedgeSync/actions/runs/37066914046): Windows Server 2022 x64 and Windows 11 ARM64 wizard/install/reinstall/uninstall; Ubuntu amd64/arm64 package, GUI startup and removal; local signed APT lifecycle |
+| Public APT | Snapshot `20261002-alpha6-c1e00b1` active; [run 37067329919](https://github.com/alexandroit/LedgeSync/actions/runs/37067329919): `apt-get install ledgesync` and `ledgesync-cli` on clean amd64/arm64 |
+| Live Google Drive | 14/14 steps with 0.1.0-alpha.6 built from `c1e00b1` ([acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md)) |
+| Publisher signing | Not available: see [Publisher signing](#publisher-signing) |
+
+Exact hashes and results: [alpha.6 release evidence](research/DRIVE_SYNC_ALPHA6_RELEASE.json).
+Earlier evidence cites commit IDs from before the 2026-10-02 history rewrite; see
+the [commit ID map](COMMIT_ID_MAP.md). Windows 11 x64 has no GitHub-hosted runner;
+the x64 installer was exercised on Windows Server 2022.
+
+**0.1.0-alpha.5 — superseded (cannot upload files to real Google Drive).** It fixes the
 reported synchronization failure and adds saved sync pairs, opt-in automatic
 copies, restore to a new folder, typed errors and server CLI commands; see the
 [failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md).

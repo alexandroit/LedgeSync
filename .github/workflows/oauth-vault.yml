@@ -1,0 +1,92 @@
+name: OAuth native credential vault
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/oauth-vault.yml'
+      - 'internal/credentialvault/**'
+      - 'internal/driveauth/**'
+      - 'go.mod'
+      - 'go.sum'
+  pull_request:
+    paths:
+      - '.github/workflows/oauth-vault.yml'
+      - 'internal/credentialvault/**'
+      - 'internal/driveauth/**'
+      - 'go.mod'
+      - 'go.sum'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oauth-vault-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-vault:
+    name: Native vault / ${{ matrix.runner }}
+    # Hosted disposable users only: never point this test at a self-hosted user
+    # account or opt in on a developer's personal credential store.
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2022, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.1'
+      - name: Install Linux native vault service
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gnome-keyring dbus-daemon
+      - name: Native Keychain or Credential Manager lifecycle
+        if: runner.os != 'Linux'
+        env:
+          LEDGESYNC_TEST_NATIVE_VAULT: '1'
+          CGO_ENABLED: ${{ runner.os == 'macOS' && '1' || '0' }}
+        run: |
+          mkdir -p build/vault-test
+          # The test owns a random reference and removes only that reference.
+          # macOS uses the hosted user's unlocked default Keychain. No secret
+          # is passed to the security CLI or to command-line/environment args.
+          go test -count=1 -json -timeout=3m ./internal/credentialvault | tee build/vault-test/results.jsonl
+      - name: Isolated Linux Secret Service lifecycle
+        if: runner.os == 'Linux'
+        env:
+          LEDGESYNC_TEST_NATIVE_VAULT: '1'
+          CGO_ENABLED: '0'
+        run: |
+          mkdir -p build/vault-test
+          test_directory=$(mktemp -d "$RUNNER_TEMP/ledgesync-vault.XXXXXX")
+          export XDG_DATA_HOME="$test_directory/data"
+          export XDG_CONFIG_HOME="$test_directory/config"
+          export XDG_RUNTIME_DIR="$test_directory/runtime"
+          install -d -m 700 "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_RUNTIME_DIR"
+          # This whole tree was created by this step, contains synthetic test
+          # credentials only, and is never uploaded as a diagnostic artifact.
+          trap 'rm -rf -- "$test_directory"' EXIT
+          dbus-run-session -- bash -euo pipefail <<'BASH'
+          unset GNOME_KEYRING_CONTROL
+          # The disposable login keyring is protected by a randomly generated
+          # password sent only through a pipe. Never echo/store/export it.
+          python3 -c 'import secrets, sys; sys.stdout.write(secrets.token_hex(32))' |
+            gnome-keyring-daemon --daemonize --unlock --components=secrets --control-directory="$XDG_RUNTIME_DIR" >/dev/null
+          go test -count=1 -json -timeout=3m ./internal/credentialvault | tee build/vault-test/results.jsonl
+          BASH
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: oauth-vault-${{ matrix.runner }}
+          path: build/vault-test/results.jsonl
+          if-no-files-found: warn
+          retention-days: 14

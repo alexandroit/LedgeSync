@@ -17,6 +17,16 @@ on:
       - 'tools/test_apt_repository.py'
   workflow_dispatch:
     inputs:
+      version:
+        description: Immutable application release version
+        type: string
+        default: '0.1.0-alpha.2'
+        required: true
+      source_manifest:
+        description: Checked-in manifest pinning the source release archives
+        type: string
+        default: 'deploy/installers/source-release.json'
+        required: true
       target:
         description: Native packaging jobs to run
         type: choice
@@ -26,6 +36,9 @@ on:
         description: Verify the deployed signed Ubuntu repository on both native architectures
         type: boolean
         default: false
+env:
+  LEDGESYNC_RELEASE_VERSION: ${{ inputs.version || '0.1.0-alpha.2' }}
+  LEDGESYNC_SOURCE_MANIFEST: ${{ inputs.source_manifest || 'deploy/installers/source-release.json' }}
 permissions:
   contents: read
   actions: read
@@ -49,16 +62,18 @@ jobs:
         with:
           python-version: '3.13'
       - name: Fetch and verify immutable desktop payload
-        run: python tools/fetch_installer_inputs.py --platform windows --arch ${{ matrix.arch }}
+        shell: bash
+        run: python tools/fetch_installer_inputs.py --platform windows --arch ${{ matrix.arch }} --version "$LEDGESYNC_RELEASE_VERSION" --manifest "$LEDGESYNC_SOURCE_MANIFEST"
       - run: python tools/test_windows_package.py
       - name: Install pinned Inno Setup compiler privately
         shell: pwsh
         run: ./deploy/windows/install-inno.ps1 -Destination build/inno
       - name: Build graphical setup EXE
-        run: python tools/package_windows.py --desktop-root build/installer-inputs/windows-${{ matrix.arch }}/desktop --arch ${{ matrix.arch }} --version 0.1.0-alpha.1 --output build/installers --iscc build/inno/ISCC.exe
+        shell: pwsh
+        run: python tools/package_windows.py --desktop-root build/installer-inputs/windows-${{ matrix.arch }}/desktop --arch ${{ matrix.arch }} --version "$env:LEDGESYNC_RELEASE_VERSION" --output build/installers --iscc build/inno/ISCC.exe
       - name: Verify install, upgrade, shortcuts and uninstall
         shell: pwsh
-        run: ./tools/test_windows_installer.ps1 -Installer build/installers/LedgeSync-0.1.0-alpha.1-windows-${{ matrix.arch }}-setup.exe -PayloadRoot build/installer-inputs/windows-${{ matrix.arch }}/desktop -Arch ${{ matrix.arch }} -ReportPath build/installers/windows-${{ matrix.arch }}-install-test.json -WizardSmoke
+        run: ./tools/test_windows_installer.ps1 -Installer "build/installers/LedgeSync-${env:LEDGESYNC_RELEASE_VERSION}-windows-${{ matrix.arch }}-setup.exe" -Version "$env:LEDGESYNC_RELEASE_VERSION" -PayloadRoot build/installer-inputs/windows-${{ matrix.arch }}/desktop -Arch ${{ matrix.arch }} -ReportPath build/installers/windows-${{ matrix.arch }}-install-test.json -WizardSmoke
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -82,7 +97,7 @@ jobs:
           python-version: '3.13'
       - name: Native packaging and GUI test dependencies
         run: sudo apt-get update && sudo apt-get install -y dpkg-dev binutils desktop-file-utils libgtk-3-dev libwebkit2gtk-4.1-dev xvfb dbus-x11
-      - run: python3 tools/fetch_installer_inputs.py --platform linux --arch ${{ matrix.arch }}
+      - run: python3 tools/fetch_installer_inputs.py --platform linux --arch ${{ matrix.arch }} --version "$LEDGESYNC_RELEASE_VERSION" --manifest "$LEDGESYNC_SOURCE_MANIFEST"
       - run: python3 tools/test_package_deb.py
       - name: Package verified desktop and CLI archives
         env:
@@ -93,13 +108,13 @@ jobs:
           arch = os.environ['LEDGESYNC_DEB_ARCH']
           root = pathlib.Path('build/installer-inputs') / ('linux-' + arch)
           inputs = json.loads((root / 'inputs.json').read_text())
-          args = ['python3', 'tools/package_deb.py', '--arch', arch, '--output', 'build/deb']
+          args = ['python3', 'tools/package_deb.py', '--arch', arch, '--output', 'build/deb', '--version', os.environ['LEDGESYNC_RELEASE_VERSION'], '--manifest', os.environ['LEDGESYNC_SOURCE_MANIFEST']]
           for kind in ['desktop', 'cli']:
               args += ['--' + kind + '-archive', str(root / 'archives' / inputs[kind]['name']), '--' + kind + '-sha256', inputs[kind]['sha256']]
           subprocess.run(args, check=True)
           PY
       - name: Verify native package install and removal
-        run: python3 deploy/linux/smoke_test.py --packages build/deb --arch ${{ matrix.arch }} --install --gui-smoke
+        run: python3 deploy/linux/smoke_test.py --packages build/deb --arch ${{ matrix.arch }} --install --gui-smoke --version "$LEDGESYNC_RELEASE_VERSION" --manifest "$LEDGESYNC_SOURCE_MANIFEST"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ledgesync-debian-${{ matrix.arch }}
@@ -121,7 +136,7 @@ jobs:
           find build/apt-inputs -name '*.deb' -exec cp '{}' build/apt-packages/ \;
       - run: sudo apt-get update && sudo apt-get install -y apt-utils gnupg
       - name: Verify signed repository and APT lifecycle with an ephemeral CI key
-        run: python3 tools/test_apt_repository.py --packages build/apt-packages
+        run: python3 tools/test_apt_repository.py --packages build/apt-packages --version "$LEDGESYNC_RELEASE_VERSION"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ledgesync-apt-repository-test
@@ -138,7 +153,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Verify public HTTPS key, signed metadata and apt-get install
-        run: python3 tools/test_apt_repository.py --public
+        run: python3 tools/test_apt_repository.py --public --version "$LEDGESYNC_RELEASE_VERSION"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ledgesync-public-apt-${{ matrix.runner }}

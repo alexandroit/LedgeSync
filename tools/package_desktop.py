@@ -20,7 +20,7 @@ TARGETS = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runner", required=True, choices=TARGETS)
-    parser.add_argument("--version", default="0.1.0-alpha.1")
+    parser.add_argument("--version", default="0.1.0-alpha.2")
     args = parser.parse_args()
     for value in (args.runner, args.version):
         if not all(c.isalnum() or c in ".-" for c in value):
@@ -52,7 +52,7 @@ def main():
         for filename in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"):
             shutil.copy2(ROOT / filename, stage / filename)
         shutil.copytree(ROOT / "third_party", stage / "third_party")
-        (stage / "README.txt").write_text("LedgeSync offline alpha desktop\n\nLocal file browsing and fake-provider previews only. No live Google Drive transfers.\nDeveloper builds are unsigned and are not notarized.\nSee https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md\n", encoding="utf-8")
+        (stage / "README.txt").write_text("LedgeSync developer alpha desktop\n\nLocal file browsing, simulated previews and Google Drive OAuth authorization. No cloud file transfers.\nSet up your own Google Desktop OAuth client in Connections.\nGuide: https://github.com/alexandroit/LedgeSync/blob/main/docs/GOOGLE_DRIVE_AUTH.md\nDeveloper builds are unsigned and are not notarized.\nSee https://github.com/alexandroit/LedgeSync/blob/main/docs/PLATFORMS.md\n", encoding="utf-8")
         if args.runner.startswith("windows"):
             archive = output / (name + ".zip")
             with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:

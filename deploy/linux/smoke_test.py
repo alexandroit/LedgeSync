@@ -21,7 +21,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
-from package_deb import DEBIAN_VERSION, RELEASE_VERSION, require_native_ubuntu, sha256, verify_elf
+from package_deb import DEFAULT_MANIFEST, load_release, require_native_ubuntu, sha256, verify_elf
 from verify_licenses import verify_notices
 
 
@@ -36,8 +36,9 @@ def command(arguments: list[str], *, timeout: int = 120, check: bool = True) -> 
 def validate_package(archive: Path, record: dict, architecture: str, work: Path) -> None:
     if archive.is_symlink() or not archive.is_file() or sha256(archive) != record["sha256"]:
         raise ValueError("Debian package does not match its packaging report")
-    expected = {"Package": record["package"], "Version": DEBIAN_VERSION,
-                "Architecture": architecture, "Depends": record["depends"]}
+    expected = {"Package": record["package"], "Version": record["version"],
+                "Architecture": architecture, "Depends": record["depends"],
+                "Recommends": record["recommends"]}
     for field, value in expected.items():
         actual = command(["dpkg-deb", "--field", str(archive), field]).stdout.strip()
         if actual != value:
@@ -80,7 +81,7 @@ def validate_package(archive: Path, record: dict, architecture: str, work: Path)
             raise ValueError("A release notice changed in the package")
     if package == "ledgesync":
         command(["desktop-file-validate", str(extracted / "usr/share/applications/com.ledgesync.app.desktop")])
-    elif record["depends"] or record["neededLibraries"]:
+    elif record["depends"] or record["recommends"] or record["neededLibraries"]:
         raise ValueError("The headless CLI unexpectedly has runtime/graphical dependencies")
 
 
@@ -134,21 +135,34 @@ def gui_startup(work: Path) -> dict:
             "processStayedRunning": True, "scope": "Xvfb process startup only; no interactive GUI journey claimed"}
 
 
-def test(packages: Path, architecture: str, install: bool, gui: bool) -> dict:
+def test(packages: Path, architecture: str, install: bool, gui: bool,
+         manifest_path: Path = DEFAULT_MANIFEST, version: str | None = None) -> dict:
+    release = load_release(manifest_path, version)
     if gui and not install:
         raise ValueError("--gui-smoke requires --install")
     require_native_ubuntu(architecture)
     packages = packages.resolve(strict=True)
     manifest = json.loads((packages / f"packaging-{architecture}.json").read_text(encoding="utf-8"))
-    if manifest["releaseVersion"] != RELEASE_VERSION or manifest["debianVersion"] != DEBIAN_VERSION or manifest["architecture"] != architecture:
+    if (manifest["releaseVersion"] != release["version"]
+            or manifest["debianVersion"] != release["debianVersion"]
+            or manifest["sourceRevision"] != release["applicationSourceCommit"]
+            or manifest["sourceDateEpoch"] != release["sourceDateEpoch"]
+            or manifest["sourceManifestSha256"] != release["manifestSha256"]
+            or manifest["architecture"] != architecture):
         raise ValueError("Unexpected package report identity")
     records = {p["package"]: p for p in manifest["packages"]}
     if set(records) != {"ledgesync", "ledgesync-cli"} or len(manifest["packages"]) != 2:
         raise ValueError("Expected exactly desktop and CLI packages")
     for name, record in records.items():
-        if record["file"] != f"{name}_{DEBIAN_VERSION}_{architecture}.deb":
+        if (record["file"] != f"{name}_{release['debianVersion']}_{architecture}.deb"
+                or record["version"] != release["debianVersion"]):
             raise ValueError("Unexpected package filename")
-    report = {"architecture": architecture, "version": DEBIAN_VERSION,
+    if records["ledgesync"]["recommends"] != "gnome-keyring":
+        raise ValueError("Desktop package must recommend its native Secret Service implementation")
+    for kind, entry in release["targets"]["linux-" + architecture].items():
+        if manifest["inputArchives"][kind] != {"name": entry["name"], "sha256": entry["sha256"]}:
+            raise ValueError("Package report input archive differs from pinned source release")
+    report = {"architecture": architecture, "version": release["debianVersion"],
               "payloadVerified": False, "installed": False, "removed": False,
               "guiStartup": None, "packages": {name: record["sha256"] for name, record in records.items()}}
     report_path = packages / f"deb-install-test-{architecture}.json"
@@ -169,7 +183,7 @@ def test(packages: Path, architecture: str, install: bool, gui: bool) -> dict:
                     # then resolves the same-version CLI and native library Depends.
                     installed = True
                     command(["sudo", "-n", "apt-get", "install", "-y", "--no-install-recommends", str(packages / records["ledgesync-cli"]["file"])], timeout=300)
-                    if command(["/usr/bin/ledgesync", "--version"]).stdout.strip() != "LedgeSync " + RELEASE_VERSION:
+                    if command(["/usr/bin/ledgesync", "--version"]).stdout.strip() != "LedgeSync " + release["version"]:
                         raise ValueError("Installed CLI version mismatch")
                     command(["sudo", "-n", "apt-get", "install", "-y", "--no-install-recommends", str(packages / records["ledgesync"]["file"])], timeout=300)
                     report["installed"] = True
@@ -218,9 +232,11 @@ def main() -> int:
     parser.add_argument("--arch", choices=("amd64", "arm64"), required=True)
     parser.add_argument("--install", action="store_true")
     parser.add_argument("--gui-smoke", action="store_true")
+    parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument("--version", help="Require the pinned release version to match")
     args = parser.parse_args()
     try:
-        report = test(args.packages, args.arch, args.install, args.gui_smoke)
+        report = test(args.packages, args.arch, args.install, args.gui_smoke, args.manifest, args.version)
     except (ValueError, OSError, KeyError, subprocess.SubprocessError, tarfile.TarError) as exc:
         print(f"Debian smoke test failed: {exc}", file=sys.stderr)
         return 1

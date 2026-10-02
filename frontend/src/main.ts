@@ -1,11 +1,18 @@
 import './style.css';
-import type { DesktopBridge, Entry, Explanation, Operation, Preview } from './types';
+import type { DesktopBridge, DriveConnectionStatus, Entry, Explanation, Operation, Preview } from './types';
 
-type View = 'files' | 'preview' | 'policies';
+type View = 'files' | 'preview' | 'policies' | 'connections';
+type DriveAction = 'status' | 'import' | 'connect' | 'check' | 'disconnect';
 const state = {
   preview: null as Preview | null, view: 'files' as View, path: '', query: '',
   showExcluded: false, grid: false, selected: '', busy: false, error: '',
   filter: 'all', page: 0, history: [''], historyIndex: 0,
+  drive: null as DriveConnectionStatus | null,
+  driveBusy: '' as DriveAction | '', driveError: '', driveCancelling: false,
+  driveLoaded: false, driveOpeningSetup: false,
+  driveSetupExpanded: null as boolean | null,
+  driveRevision: 0,
+  driveCancelIntent: false,
 };
 const pageSize = 100;
 const root = document.querySelector<HTMLDivElement>('#app')!;
@@ -86,7 +93,76 @@ function historyMove(amount: number) {
   state.historyIndex += amount;
   navigate(state.history[state.historyIndex], false);
 }
-function changeView(view: View) { state.view = view; state.query = ''; state.page = 0; render(); }
+function changeView(view: View) {
+  state.view = view; state.query = ''; state.page = 0; render();
+  if (view === 'connections' && !state.driveLoaded && !state.driveBusy) void driveAction('status');
+}
+async function driveAction(action: DriveAction) {
+  if (state.driveBusy || state.driveCancelling || state.drive?.state === 'connecting' && action !== 'status') return;
+  if (action === 'connect') state.driveCancelIntent = false;
+  state.driveBusy = action; state.driveError = ''; render();
+  try {
+    const methods = { status: 'GoogleDriveStatus', import: 'ImportGoogleOAuthClient', connect: 'ConnectGoogleDrive', check: 'CheckGoogleDrive', disconnect: 'DisconnectGoogleDrive' } as const;
+    const result = await bridge()[methods[action]]();
+    // The native file picker returns null when dismissed; keep the previous state.
+    if (result) { setDriveStatus(result); state.driveError = ''; }
+  } catch {
+    // Transport exceptions are not a safe display surface for credentials or provider responses.
+    const messages: Record<DriveAction, string> = {
+      status: 'Could not read the Google Drive connection. Open the current LedgeSync desktop application and try again.',
+      import: 'Could not import the OAuth client. Choose the JSON downloaded for a Google Cloud Desktop app client and try again.',
+      connect: 'Google Drive authorization could not be completed. Try connecting again from the desktop application.',
+      check: 'Could not check the Google Drive connection. Check your network connection and try again.',
+      disconnect: 'Could not remove the local Google Drive credentials. Check that your system credential vault is available and try again.',
+    };
+    state.driveError = messages[action];
+    // Wails rejects a Go (status, error) result and drops its status value.
+    // Re-read once after this explicit action so a revoked account or vault failure
+    // cannot leave a stale Connected badge. Never infer state from error strings.
+    if (action === 'status') setDriveStatus(null);
+    else if (!await reconcileDriveStatus()) state.driveError += ' The saved connection status could not be read. Retry connection status.';
+    else if (action === 'connect' && state.driveCancelIntent) state.driveError = '';
+  } finally {
+    if (action === 'connect') state.driveCancelIntent = false;
+    state.driveLoaded = true; state.driveBusy = ''; render();
+  }
+}
+function setDriveStatus(status: DriveConnectionStatus | null) {
+  state.drive = status; state.driveRevision++;
+}
+async function reconcileDriveStatus(): Promise<boolean> {
+  const revision = state.driveRevision;
+  try {
+    const status = await bridge().GoogleDriveStatus();
+    // An authorization may finish while a cancellation's status read is in flight.
+    if (revision === state.driveRevision) setDriveStatus(status);
+    return true;
+  } catch {
+    if (revision === state.driveRevision) setDriveStatus(null);
+    return false;
+  }
+}
+async function cancelDrive() {
+  if (state.driveCancelling) return;
+  const pendingConnect = state.driveBusy === 'connect';
+  if (pendingConnect) state.driveCancelIntent = true;
+  state.driveCancelling = true; state.driveError = ''; render();
+  try {
+    await bridge().CancelGoogleDrive();
+    // An authorization started elsewhere can also be cancelled from this screen.
+    if (!pendingConnect && !await reconcileDriveStatus()) state.driveError = 'The saved connection status could not be read. Retry connection status.';
+  } catch {
+    state.driveCancelIntent = false;
+    state.driveError = 'Could not cancel authorization. You can close the Google authorization page; the pending request will time out.';
+  } finally { state.driveCancelling = false; render(); }
+}
+async function openGoogleSetup() {
+  if (state.driveOpeningSetup) return;
+  state.driveOpeningSetup = true; state.driveError = ''; render();
+  try { await bridge().OpenGoogleOAuthSetup(); }
+  catch { state.driveError = 'Could not open your browser. Open console.cloud.google.com in your browser to configure a Desktop app OAuth client.'; }
+  finally { state.driveOpeningSetup = false; render(); }
+}
 function bytes(size: number): string {
   if (size < 1024) return `${size} B`;
   const units = ['KiB', 'MiB', 'GiB', 'TiB'];
@@ -104,6 +180,7 @@ function badge(text: string, kind = '') { return el('span', `badge ${kind}`, tex
 function render() {
   const focused = document.activeElement as HTMLInputElement | null;
   const restoreSearch = focused?.id === 'search';
+  const restoreDrive = focused?.id.startsWith('drive-') ? focused.id : '';
   const cursor = focused?.selectionStart ?? 0;
   root.replaceChildren();
   const shell = el('div', 'shell');
@@ -113,27 +190,27 @@ function render() {
   const choose = button('Choose folder', () => void scan('OpenFolder'), 'button primary choose-folder', 'folder');
   choose.disabled = state.busy; sidebar.append(choose);
   const nav = el('nav', 'nav'); nav.setAttribute('aria-label', 'Main navigation');
-  for (const [view, title, symbol] of [['files', 'Files', 'folder'], ['preview', 'Sync pairs', 'arrow'], ['policies', 'Policies', 'shield']] as const) {
+  for (const [view, title, symbol] of [['files', 'Files', 'folder'], ['preview', 'Sync pairs', 'arrow'], ['policies', 'Policies', 'shield'], ['connections', 'Connections', 'cloud']] as const) {
     const item = button(title, () => changeView(view), `nav-item ${state.view === view ? 'active' : ''}`, symbol);
     if (state.view === view) item.setAttribute('aria-current', 'page');
     nav.append(item);
   }
-  for (const [title, symbol] of [['Activity', 'activity'], ['History & Recovery', 'history'], ['Connections', 'cloud'], ['Settings', 'settings']]) {
+  for (const [title, symbol] of [['Activity', 'activity'], ['History & Recovery', 'history'], ['Settings', 'settings']]) {
     const item = button(title, () => {}, 'nav-item planned', symbol);
     item.disabled = true; item.title = 'Planned for a later release'; item.append(el('small', '', 'Later')); nav.append(item);
   }
   sidebar.append(nav);
-  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Your files stay local'), el('p', '', 'Offline alpha · 0.1.0'), el('p', '', 'Google Drive is not connected.'));
+  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', 'Developer alpha · 0.1.0-alpha.2'), el('p', '', state.drive?.state === 'connected' ? 'Google Drive connected. Cloud transfers are not available yet.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : 'Connect Google Drive in Connections.'));
   sidebar.append(offline); shell.append(sidebar);
 
   const workspace = el('main', 'workspace');
   const top = el('header', 'topbar');
   const search = el('label', 'search'); search.append(icon('search'));
   const input = el('input'); input.id = 'search'; input.type = 'search'; input.placeholder = 'Search this project'; input.setAttribute('aria-label', 'Search this project'); input.value = state.query;
-  input.disabled = !state.preview || state.busy || state.view === 'policies';
+  input.disabled = !state.preview || state.busy || state.view === 'policies' || state.view === 'connections';
   input.addEventListener('input', () => { state.query = input.value; state.page = 0; render(); });
   search.append(input); top.append(search);
-  top.append(badge('Offline preview', 'offline'));
+  top.append(badge('Local file preview', 'offline'));
   const loadConfig = button('Open configuration', () => void scan('OpenConfiguration'), 'button subtle'); loadConfig.disabled = state.busy; top.append(loadConfig);
   workspace.append(top);
   if (state.error) { const error = el('div', 'error', state.error); error.setAttribute('role', 'alert'); workspace.append(error); }
@@ -144,8 +221,9 @@ function render() {
     workspace.append(progress);
   }
   const body = el('div', `body ${state.preview ? 'has-preview' : ''}`);
-  const content = el('section', 'content'); content.setAttribute('aria-label', 'File workspace');
-  if (!state.preview) renderEmpty(content);
+  const content = el('section', 'content'); content.setAttribute('aria-label', state.view === 'connections' ? 'Account connections' : 'File workspace');
+  if (state.view === 'connections') renderConnections(content);
+  else if (!state.preview) renderEmpty(content);
   else {
     const heading = el('div', 'heading');
     const title = el('div'); title.append(el('p', 'eyebrow', 'LOCAL WORKSPACE'), el('h1', '', state.view === 'files' ? 'Files' : state.view === 'preview' ? 'Preview your sync pair' : 'Policy capabilities'));
@@ -156,9 +234,90 @@ function render() {
     else renderPolicies(content);
   }
   body.append(content);
-  if (state.preview && state.view !== 'policies') { const inspector = el('aside', 'inspector'); inspector.id = 'inspector'; inspector.setAttribute('aria-label', 'Details and policy explanation'); renderInspector(inspector); body.append(inspector); }
+  if (state.preview && state.view !== 'policies' && state.view !== 'connections') { const inspector = el('aside', 'inspector'); inspector.id = 'inspector'; inspector.setAttribute('aria-label', 'Details and policy explanation'); renderInspector(inspector); body.append(inspector); }
   workspace.append(body); shell.append(workspace); root.append(shell);
   if (restoreSearch) { const input = document.querySelector<HTMLInputElement>('#search')!; input.focus(); input.setSelectionRange(cursor, cursor); }
+  else if (restoreDrive) {
+    const target = document.getElementById(restoreDrive) as HTMLButtonElement | null;
+    if (target && !target.disabled) target.focus();
+    else document.querySelector<HTMLElement>('#drive-heading')?.focus();
+  }
+}
+
+function driveButton(label: string, action: () => void, id: string, primary = false) {
+  const control = button(label, action, `button ${primary ? 'primary' : 'subtle'}`);
+  control.id = `drive-${id}`;
+  control.disabled = Boolean(state.driveBusy || state.driveCancelling);
+  return control;
+}
+function renderConnections(container: HTMLElement) {
+  container.classList.add('connections');
+  const heading = el('div', 'heading');
+  const title = el('div');
+  const h1 = el('h1', '', 'Connections'); h1.id = 'drive-heading'; h1.tabIndex = -1;
+  title.append(el('p', 'eyebrow', 'ACCOUNT ACCESS'), h1); heading.append(title); container.append(heading);
+  container.append(el('p', 'section-description', 'Authorize Google Drive in your system browser. LedgeSync keeps account tokens in your operating system credential vault.'));
+  const limits = el('div', 'notice');
+  limits.append(icon('info'), el('p', '', 'Google Drive authorization is available in this build. Cloud browsing and file transfers are not implemented yet. Files and Sync pairs still show local files and a simulated destination.'));
+  container.append(limits);
+  if (state.driveError) { const error = el('div', 'error', state.driveError); error.setAttribute('role', 'alert'); container.append(error); }
+
+  const card = el('article', 'connection-card'); card.setAttribute('aria-label', 'Google Drive connection');
+  const cardHeading = el('div', 'connection-heading');
+  const provider = el('div', 'connection-provider'); provider.append(icon('cloud'), el('h2', '', 'Google Drive'));
+  const labels: Record<DriveConnectionStatus['state'], string> = { setup_required: 'Setup required', disconnected: 'Not connected', connecting: 'Waiting for authorization', connected: 'Connected', reconnect_required: 'Reconnect required', storage_unavailable: 'Credential vault unavailable' };
+  cardHeading.append(provider, badge(state.driveBusy === 'connect' ? labels.connecting : state.drive ? labels[state.drive.state] : 'Not checked', state.drive?.state === 'connected' ? 'connected' : ''));
+  card.append(cardHeading);
+  const status = el('div', 'connection-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.setAttribute('aria-atomic', 'true');
+  const pending = state.driveBusy === 'connect' || state.drive?.state === 'connecting';
+  const pendingLabels: Record<DriveAction, string> = { status: 'Reading the saved connection…', import: 'Choose the Desktop app OAuth client JSON in the file picker…', connect: 'Complete authorization in your browser, then return to LedgeSync. You can cancel this request here.', check: 'Checking account authorization with Google…', disconnect: 'Removing local account credentials…' };
+  if (state.driveBusy || pending) status.append(el('span', 'spinner'), el('p', '', state.driveCancelling ? 'Cancelling authorization…' : pendingLabels[state.driveBusy || 'connect']));
+  else status.append(el('p', '', state.drive?.message || 'Read the saved connection to get started.'));
+  card.append(status);
+
+  if (state.drive?.account) {
+    const account = el('dl', 'details connection-account');
+    field(account, 'Account', displayPath(state.drive.account.displayName || 'Google account'));
+    field(account, 'Email', displayPath(state.drive.account.email));
+    field(account, 'Account reference', displayPath(state.drive.account.reference));
+    card.append(account);
+  }
+  const actions = el('div', 'connection-actions');
+  if (pending) {
+    const cancel = driveButton(state.driveCancelling ? 'Cancelling…' : 'Cancel authorization', () => void cancelDrive(), 'cancel');
+    cancel.disabled = state.driveCancelling; actions.append(cancel);
+  } else if (!state.drive || state.drive.state === 'storage_unavailable') {
+    actions.append(driveButton('Retry connection status', () => void driveAction('status'), 'status'));
+  } else if (state.drive.state === 'connected') {
+    actions.append(driveButton('Check connection', () => void driveAction('check'), 'check'), driveButton('Disconnect account', () => void driveAction('disconnect'), 'disconnect'));
+  } else {
+    if (state.drive.clientConfigured) actions.append(driveButton(state.drive.state === 'reconnect_required' ? 'Reconnect Google Drive' : 'Connect Google Drive', () => void driveAction('connect'), 'connect', true));
+    if (!state.drive.account) actions.append(driveButton(state.drive.clientConfigured ? 'Replace OAuth client JSON' : 'Import OAuth client JSON', () => void driveAction('import'), 'import', !state.drive.clientConfigured));
+    if (state.drive.account) actions.append(driveButton('Disconnect account', () => void driveAction('disconnect'), 'disconnect'));
+  }
+  card.append(actions);
+  const access = el('div', 'connection-access');
+  access.append(el('h3', '', 'Access you authorize'), el('p', '', 'The drive.file permission is limited to files created by, or explicitly opened with, LedgeSync. It does not grant access to every existing file or folder in your Drive. Selecting a folder does not automatically grant access to its existing contents.'));
+  access.append(el('code', 'connection-scope', state.drive?.scope || 'https://www.googleapis.com/auth/drive.file'));
+  access.append(el('p', '', 'One account is supported in this build. Disconnect before connecting another account.'));
+  if (state.drive?.account) access.append(el('p', 'disconnect-help', 'Disconnect removes this account’s tokens from this computer. It does not delete Drive files or revoke the Google permission grant. You can revoke the grant separately in your Google Account connections settings.'));
+  card.append(access); container.append(card);
+
+  const setup = el('details', 'connection-setup'); setup.open = state.driveSetupExpanded ?? !state.drive?.clientConfigured;
+  setup.addEventListener('toggle', () => { if (setup.isConnected) state.driveSetupExpanded = setup.open; });
+  setup.append(el('summary', '', 'Set up your Google Cloud OAuth client'));
+  setup.append(el('p', '', 'This build requires your own Desktop app OAuth client. You only need to import its configuration once on this computer.'));
+  const steps = el('ol');
+  for (const text of [
+    'Create or choose a project in Google Cloud Console, then enable the Google Drive API.',
+    'Open Google Auth platform. Configure Branding and Audience. For personal testing, choose External and add your Google account under Test users.',
+    'In Data Access, add https://www.googleapis.com/auth/drive.file. This is the permission LedgeSync requests.',
+    'Open Clients, choose Create client, select Desktop app, and download the client JSON. Import that file above, then choose Connect Google Drive.',
+  ]) steps.append(el('li', '', text));
+  setup.append(steps);
+  const open = driveButton(state.driveOpeningSetup ? 'Opening browser…' : 'Open Google Cloud setup', () => void openGoogleSetup(), 'setup'); open.disabled = state.driveOpeningSetup; setup.append(open);
+  setup.append(el('p', 'muted', 'Sign in and approve access only on Google’s page in your browser. Do not paste passwords, authorization codes, or tokens into LedgeSync. Keep the downloaded client JSON out of shared projects and source control.'));
+  container.append(setup);
 }
 
 function renderEmpty(container: HTMLElement) {
@@ -280,7 +439,7 @@ function operationLabel(operation: Operation) {
 }
 function renderPreview(container: HTMLElement) {
   const preview = state.preview!; const plan = preview.plan;
-  const banner = el('div', 'notice'); banner.append(icon('info'), el('p', '', 'Read-only simulation using an empty test destination. Google Drive is not connected and this plan cannot be applied.')); container.append(banner);
+  const banner = el('div', 'notice'); banner.append(icon('info'), el('p', '', 'Read-only simulation using an empty test destination. This preview uses a simulated destination and cannot be applied, regardless of your Google Drive connection.')); container.append(banner);
   const pair = el('div', 'pair'); const local = el('div'); local.append(icon('folder'), el('strong', '', preview.projectName), el('small', '', 'Local folder')); const remote = el('div'); remote.append(icon('cloud'), el('strong', '', 'Test destination'), el('small', '', 'Empty · offline')); pair.append(local, icon('arrow'), remote); container.append(pair);
   const stats = el('div', 'stats');
   for (const [value, label] of [[String(plan.summary.operationCount), 'planned operations'], [bytes(plan.summary.uploadBytes), 'planned copy size'], [String(preview.entries.filter(e => e.decision === 'exclude').length), 'excluded items'], [String(plan.summary.trashCount), 'deletions']]) { const stat = el('div'); stat.append(el('strong', '', value), el('span', '', label)); stats.append(stat); }

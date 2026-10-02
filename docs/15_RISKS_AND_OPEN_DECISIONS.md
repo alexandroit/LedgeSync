@@ -7,11 +7,18 @@
 | Final name | Owner selected LedgeSync, command ledgesync, domain ledgesync.com | Resolved; PROJECT_IDENTITY.md |
 | Repository license | Owner requested Apache-2.0; third-party licenses preserved | Resolved; LICENSE and THIRD_PARTY_NOTICES.md |
 | Hosting/repository destination | Public alexandroit/LedgeSync; ledgesync.com live on the owner's existing Ubuntu server; GitHub Pages secondary | Resolved; WEBSITE.md and ADR-025 |
-| Signing accounts and public OAuth project | Developer archives are unsigned; no cloud account connection | Production signing/OAuth identities remain pending |
+| Signing accounts and public OAuth project | Developer archives are unsigned; alpha.2 implements desktop authorization with the user's own Desktop app client and OS credential vault; no shared client is bundled | Production signing/shared OAuth identities and real Google acceptance remain pending; see [account setup](GOOGLE_DRIVE_AUTH.md) |
 | Desktop OS targets | macOS and Ubuntu ARM64/x64; Windows 11 ARM64/x64; CLI for servers | Owner requested; see PLATFORMS.md for actual validation |
 | Additional cloud providers | Interfaces now, implementations later | Separate scoped milestone |
 
 Do not repeatedly ask these questions to avoid building the safe offline foundation. Record unresolved decisions and continue tasks that do not require them.
+
+Alpha.2 authorization is a separate desktop capability; cloud browsing and
+transfers remain unimplemented, and the headless CLI remains offline. Native
+release verification and publication are pending. Ubuntu authorization needs
+an active graphical session and an unlocked Secret Service store such as GNOME
+Keyring; no plaintext credential fallback is permitted. The owner has not yet
+created the OAuth client needed for live Google consent acceptance.
 
 ## Engineering risks and required spikes
 

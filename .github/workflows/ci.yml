@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: test -z "$(gofmt -l cmd internal)"
       - name: Portable CLI packages
-        run: python tools/package_cli.py --version 0.1.0-alpha.1
+        run: python tools/package_cli.py --version 0.1.0-alpha.2
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ledgesync-portable-cli
@@ -144,12 +144,12 @@ jobs:
           CGO_LDFLAGS: ${{ runner.os == 'macOS' && '-mmacosx-version-min=13.0' || '' }}
         run: go run github.com/wailsapp/wails/v2/cmd/wails@v2.14.0 build -tags "$LEDGESYNC_TAGS" -nosyncgomod -m -trimpath -platform "$LEDGESYNC_PLATFORM"
       - name: Archive desktop bundle
-        run: python tools/package_desktop.py --runner "${{ matrix.runner }}" --version 0.1.0-alpha.1
+        run: python tools/package_desktop.py --runner "${{ matrix.runner }}" --version 0.1.0-alpha.2
       - name: Package and verify macOS disk image
         if: runner.os == 'macOS'
         env:
           LEDGESYNC_DMG_ARCH: ${{ matrix.runner == 'macos-15' && 'arm64' || 'amd64' }}
-        run: python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch "$LEDGESYNC_DMG_ARCH" --version 0.1.0-alpha.1 --output build/packages
+        run: python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch "$LEDGESYNC_DMG_ARCH" --version 0.1.0-alpha.2 --output build/packages
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ledgesync-desktop-${{ matrix.runner }}

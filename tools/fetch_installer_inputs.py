@@ -10,6 +10,8 @@ import tempfile
 import urllib.request
 import zipfile
 
+from package_deb import DEFAULT_MANIFEST, load_release
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -18,9 +20,11 @@ def main():
     parser.add_argument('--platform', choices=['linux', 'windows'], required=True)
     parser.add_argument('--arch', choices=['amd64', 'arm64'], required=True)
     parser.add_argument('--output', type=Path, default=ROOT / 'build/installer-inputs')
+    parser.add_argument('--manifest', type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument('--version', help='Require the pinned release version to match')
     args = parser.parse_args()
     target = f'{args.platform}-{args.arch}'
-    manifest = json.loads((ROOT / 'deploy/installers/source-release.json').read_text())
+    manifest = load_release(args.manifest, args.version)
     entries = manifest['targets'][target]
     args.output.mkdir(parents=True, exist_ok=True)
     destination = args.output / target
@@ -32,10 +36,6 @@ def main():
         archives.mkdir(parents=True)
         for kind, entry in entries.items():
             name = entry['name']
-            if Path(name).name != name or not entry['url'].startswith(
-                'https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.1/'
-            ):
-                raise ValueError('Unexpected release source')
             archive = archives / name
             with urllib.request.urlopen(entry['url'], timeout=60) as response, archive.open('xb') as output:
                 total = 0

@@ -17,7 +17,7 @@ TARGETS = [(system, arch) for system in ("darwin", "linux", "windows") for arch 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="0.1.0-alpha.1")
+    parser.add_argument("--version", default="0.1.0-alpha.2")
     args = parser.parse_args()
     if not all(c.isalnum() or c in ".-" for c in args.version):
         parser.error("version must contain only letters, digits, dots, and hyphens")

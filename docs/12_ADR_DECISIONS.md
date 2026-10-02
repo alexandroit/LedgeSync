@@ -200,3 +200,26 @@ a hardware-protected certificate. Ubuntu packages are distributed through the
 GPG-signed APT repository (ADR-022). Builds without signing material are labeled
 `unsigned-developer-build`; they are never presented as signed releases, and no
 self-signed certificate is used. See [platform signing](PLATFORMS.md#publisher-signing).
+
+## ADR-033 — Provider-issued upload session URIs and detected media types
+
+**Accepted, 2026-10-02.** The client uses a resumable session URI only when all
+of the following hold:
+- scheme, host and path are exactly `https://www.googleapis.com/upload/drive/v3/files`;
+- it has `uploadType=resumable` and exactly one `upload_id`;
+- every parameter is a single plain key with one value;
+- echoed initiation parameters equal the values that were sent;
+- no credential parameter is present (`access_token`, `oauth_token`, `refresh_token`, `key`).
+
+Other parameters that Google adds to this opaque URI, such as `session_crd`, are
+accepted. Pinning the origin and path is what keeps the bearer token on
+Google's upload endpoint.
+
+An uploaded file is verified by ID, parent, name, operation marker, size and
+MD5. Its stored media type may be any regular type that Drive detects, but never
+a folder or a Google-native type.
+
+**Why:** the first live acceptance showed that the stricter rules rejected every
+real upload ([live findings](research/DRIVE_SYNC_FAILURE_ANALYSIS.md#live-acceptance-findings-alpha6)).
+**Consequence:** the Drive emulator models both behaviors so CI covers them.
+Provider-facing checks need live evidence, not only the emulator.

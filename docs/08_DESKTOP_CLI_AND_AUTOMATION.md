@@ -2,11 +2,12 @@
 
 **Product direction:** the desktop application is the primary experience. The CLI is a secondary interface over the same Go application services; its currently implemented commands are listed below. The visual model should feel immediately familiar to users of the **current Google Drive web app / desktop experience** or desktop file managers without copying Google trademarks, artwork, proprietary assets, or pixel-for-pixel layout. Familiar patterns include: left navigation, top breadcrumb/path bar, search entry, list/grid toggle, file rows/cards with status, details pane, and activity/history views.
 
-## Current implementation (0.1.0-alpha.5 candidate)
+## Current implementation (0.1.0-alpha.6)
 
-The reported synchronization failure is fixed in source and regression-tested;
-see the [failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md). Live Google
-acceptance is pending the owner's consent step
+The reported synchronization failure is fixed and regression-tested; see the
+[failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md). The live Google
+acceptance found two more upload defects that alpha.5 still had, and it passes
+with their fixes. The desktop Picker pass is still pending the owner
 ([acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md)).
 
 In the desktop: choose a local folder, connect, choose **My Drive** or an

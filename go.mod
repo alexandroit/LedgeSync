@@ -7,7 +7,7 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/keybase/go-keychain v0.0.1
 	github.com/mattn/go-isatty v0.0.24
-	github.com/wailsapp/wails/v2 v2.14.0
+	github.com/wailsapp/wails/v2 v2.16.0
 	golang.org/x/sys v0.48.0
 	modernc.org/sqlite v1.60.1
 )

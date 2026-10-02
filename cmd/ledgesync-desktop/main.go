@@ -11,6 +11,7 @@ import (
 	"github.com/alexandroit/LedgeSync/frontend"
 	"github.com/alexandroit/LedgeSync/internal/app"
 	"github.com/alexandroit/LedgeSync/internal/connections"
+	"github.com/alexandroit/LedgeSync/internal/projects"
 	"github.com/alexandroit/LedgeSync/internal/providers/drive"
 	"github.com/alexandroit/LedgeSync/internal/systembrowser"
 	"github.com/alexandroit/LedgeSync/internal/transfer"
@@ -33,37 +34,50 @@ func main() {
 	getContext := func() context.Context { mu.RLock(); defer mu.RUnlock(); return windowContext }
 	local := app.NewService()
 	var google desktop.GoogleDriveService
-	var transfers *transfer.Service
+	var transfers, automatic *transfer.Service
+	var saved *projects.Store
 	if configured, err := connections.NewGoogleDrive(systembrowser.OpenURL); err == nil {
 		google = configured
 		if stateDir, err := transferstate.DefaultDirectory(); err == nil {
-			transfers = transfer.New(local, drive.New(configured), configured, stateDir)
+			provider := drive.New(configured)
+			transfers = transfer.New(local, provider, configured, stateDir)
+			// Automatic runs use their own service instance so they never replace
+			// the destination or approval the user is reviewing.
+			automatic = transfer.New(local, provider, configured, stateDir)
+			saved = projects.NewStore(stateDir)
 		}
 	}
-	bridge := desktop.NewWithGoogleDriveAndTransfers(local,
-		func() (string, error) {
+	notify := func() {
+		if ctx := getContext(); ctx != nil && ctx.Err() == nil {
+			runtime.EventsEmit(ctx, "ledgesync:automation")
+		}
+	}
+	bridge := desktop.NewDesktop(desktop.Options{Preview: local,
+		FolderPicker: func() (string, error) {
 			selected, err := runtime.OpenDirectoryDialog(getContext(), runtime.OpenDialogOptions{Title: "Choose a local source folder"})
 			if err == nil && selected != "" {
 				err = connections.ValidateSourceSelection(selected, false)
 			}
 			return selected, err
 		},
-		func() (string, error) {
+		ConfigPicker: func() (string, error) {
 			selected, err := runtime.OpenFileDialog(getContext(), runtime.OpenDialogOptions{Title: "Open LedgeSync configuration", Filters: []runtime.FileFilter{{DisplayName: "LedgeSync JSON configuration", Pattern: "*.json"}}})
 			if err == nil && selected != "" {
 				err = connections.ValidateSourceSelection(selected, true)
 			}
 			return selected, err
 		},
-		google,
-		func() {
+		Google: google,
+		ShowAfterConnect: func() {
 			if ctx := getContext(); ctx != nil && ctx.Err() == nil {
 				runtime.WindowUnminimise(ctx)
 				runtime.Show(ctx)
 			}
 		},
-		transfers,
-		func(destination string) error {
+		Transfers: transfers,
+		Automatic: automatic,
+		Projects:  saved,
+		OpenDriveFolder: func(destination string) error {
 			ctx := getContext()
 			if ctx == nil || ctx.Err() != nil {
 				return context.Canceled
@@ -71,14 +85,22 @@ func main() {
 			runtime.BrowserOpenURL(ctx, destination)
 			return nil
 		},
-	)
+		OnChange: notify,
+	})
 	err = wails.Run(&options.App{
 		Title: "LedgeSync", Width: 1280, Height: 820, MinWidth: 900, MinHeight: 620,
 		BackgroundColour: &options.RGBA{R: 242, G: 245, B: 250, A: 255},
 		AssetServer:      &assetserver.Options{Assets: assets},
-		OnStartup:        func(ctx context.Context) { mu.Lock(); windowContext = ctx; mu.Unlock() },
+		OnStartup: func(ctx context.Context) {
+			mu.Lock()
+			windowContext = ctx
+			mu.Unlock()
+			// Only sync pairs the user explicitly authorized are checked, and only
+			// while LedgeSync is open. Installation never enables automation.
+			bridge.StartAutomation()
+		},
 		OnBeforeClose: func(ctx context.Context) bool {
-			return preventClose(transfers != nil && transfers.Busy(), func() (string, error) {
+			return preventClose(transfers != nil && transfers.Busy() || automatic != nil && automatic.Busy(), func() (string, error) {
 				return runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 					Type: runtime.QuestionDialog, Title: "Upload in progress",
 					Message: "A Drive operation is still running. Stop it and close LedgeSync? Completed files stay in Drive; you can preview again to continue.",

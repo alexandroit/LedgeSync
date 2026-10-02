@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/alexandroit/LedgeSync/internal/credentialvault"
 	"github.com/alexandroit/LedgeSync/internal/driveauth"
@@ -18,7 +19,14 @@ var bundledClientJSON string
 
 // NewGoogleDrive never opens a vault or reads credentials until an explicit call.
 func NewGoogleDrive(openURL func(string) error) (*driveauth.Service, error) {
-	return driveauth.NewWithClientAndLock(vaultAdapter{credentialvault.New()}, openURL, []byte(bundledClientJSON), googleDriveProcessLock)
+	s, err := driveauth.NewWithClientAndLock(vaultAdapter{credentialvault.New()}, openURL, []byte(bundledClientJSON), googleDriveProcessLock)
+	if err != nil {
+		return nil, err
+	}
+	// A transfer's Drive requests wait briefly for a concurrent status read or
+	// another process's short credential operation instead of failing the run.
+	s.SetRequestWait(20 * time.Second)
+	return s, nil
 }
 
 func googleDriveProcessLock() (func(), error) {

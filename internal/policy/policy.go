@@ -67,6 +67,7 @@ func CapabilityFor(dialect string) (Capability, error) {
 	}
 	return Capability{}, domain.Fail("CAPABILITY_UNSUPPORTED", "unknown policy dialect")
 }
+
 // ReadMaterial snapshots one rule file for a group. Links, special nodes,
 // unreadable files and invalid text fail closed.
 func ReadMaterial(ctx context.Context, g config.Group, cap Capability, index int, p string, tree *discovery.Tree) (Material, error) {

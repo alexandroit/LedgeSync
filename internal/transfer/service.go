@@ -42,6 +42,15 @@ type Accounts interface {
 type Previewer interface {
 	PreviewRoot(context.Context, string) (app.Preview, error)
 	Preview(context.Context, string) (app.Preview, error)
+	Scan(context.Context, config.Config) (app.Preview, error)
+}
+
+// Source selects what a preview scans: a folder with the default policy, an
+// explicit configuration file, or a saved project's inline configuration.
+type Source struct {
+	Root       string
+	ConfigPath string
+	Config     *config.Config
 }
 
 // MyDriveID is Drive's alias for the user's My Drive root folder. With the
@@ -93,6 +102,10 @@ type Plan struct {
 	ExcludedCount    int      `json:"excludedCount"`
 	UnsupportedCount int      `json:"unsupportedCount"`
 	ConflictPolicy   string   `json:"conflictPolicy"`
+	SourceIdentity   string   `json:"sourceIdentity"`
+	ConfigDigest     string   `json:"configDigest"`
+	RulesDigest      string   `json:"rulesDigest"`
+	SourceDigest     string   `json:"sourceDigest"`
 	Entries          []Entry  `json:"entries"`
 	ExpiresAt        string   `json:"expiresAt"`
 	Warnings         []string `json:"warnings"`
@@ -136,6 +149,7 @@ type approved struct {
 	Plan                     Plan
 	Source                   string
 	IsConfig                 bool
+	Inline                   bool
 	Config                   config.Config
 	Preview                  app.Preview
 	Fingerprint, StateDigest string
@@ -297,12 +311,20 @@ func (s *Service) RestoreDestination(ctx context.Context, d Destination) (*Desti
 	return s.SetDestination(ctx, id, d.AccountReference)
 }
 
-func (s *Service) scan(ctx context.Context, source string, isConfig bool) (app.Preview, error) {
-	if isConfig {
-		return s.local.Preview(ctx, source)
+func (s *Service) scan(ctx context.Context, src Source) (app.Preview, error) {
+	switch {
+	case src.Config != nil:
+		return s.local.Scan(ctx, *src.Config)
+	case src.ConfigPath != "":
+		return s.local.Preview(ctx, src.ConfigPath)
+	default:
+		return s.local.PreviewRoot(ctx, src.Root)
 	}
-	return s.local.PreviewRoot(ctx, source)
 }
+
+// Fingerprint returns the approval binding of a local preview. Automatic jobs
+// compare it to detect local changes without contacting Drive.
+func Fingerprint(p app.Preview) (string, error) { return fingerprint(p) }
 
 // fingerprint binds approval to the selected content, rules and configuration.
 // Excluded entries and directory timestamps are deliberately not part of it.
@@ -351,14 +373,36 @@ func parentOf(p string) string {
 	return parent
 }
 
-func (s *Service) loadConfig(p app.Preview, source string, isConfig bool) (config.Config, error) {
-	if isConfig {
-		return config.Load(source)
+// configFor returns the exact configuration a preview was computed with.
+func configFor(p app.Preview, src Source) (config.Config, error) {
+	var c config.Config
+	switch {
+	case src.Config != nil:
+		c = *src.Config
+	case src.ConfigPath != "":
+		loaded, err := config.Load(src.ConfigPath)
+		if err != nil {
+			return config.Config{}, err
+		}
+		c = loaded
+	default:
+		c = config.Default(p.SourceRoot)
 	}
-	return config.Default(p.SourceRoot), nil
+	c.Source.Root = p.SourceRoot
+	if d, err := domain.Digest(c); err != nil || d != p.Plan.ConfigDigest {
+		return config.Config{}, domain.Fail("CONFIG_CHANGED", "The project configuration changed while it was being read. Preview again.")
+	}
+	return c, nil
 }
 
 func (s *Service) Preview(ctx context.Context, source string, isConfig bool) (Plan, error) {
+	if isConfig {
+		return s.PreviewSource(ctx, Source{ConfigPath: source})
+	}
+	return s.PreviewSource(ctx, Source{Root: source})
+}
+
+func (s *Service) PreviewSource(ctx context.Context, src Source) (Plan, error) {
 	ctx, finish, err := s.reserve(ctx)
 	if err != nil {
 		return Plan{}, err
@@ -379,12 +423,12 @@ func (s *Service) Preview(ctx context.Context, source string, isConfig bool) (Pl
 			}
 		}
 	}()
-	result, err := s.preview(ctx, source, isConfig)
+	result, err := s.preview(ctx, src)
 	planErr = err
 	return result, err
 }
 
-func (s *Service) preview(ctx context.Context, source string, isConfig bool) (Plan, error) {
+func (s *Service) preview(ctx context.Context, src Source) (Plan, error) {
 	var result Plan
 	d := s.CurrentDestination()
 	if d == nil {
@@ -396,11 +440,11 @@ func (s *Service) preview(ctx context.Context, source string, isConfig bool) (Pl
 	if err := s.checkDestination(ctx, *d); err != nil {
 		return result, err
 	}
-	p, err := s.scan(ctx, source, isConfig)
+	p, err := s.scan(ctx, src)
 	if err != nil {
 		return result, err
 	}
-	cfg, err := s.loadConfig(p, source, isConfig)
+	cfg, err := configFor(p, src)
 	if err != nil {
 		return result, err
 	}
@@ -428,7 +472,7 @@ func (s *Service) preview(ctx context.Context, source string, isConfig bool) (Pl
 	if err != nil {
 		return result, err
 	}
-	result = Plan{SourceName: filepath.Base(p.SourceRoot), DestinationName: d.Name, DestinationID: d.ID, AccountReference: d.AccountReference, ConflictPolicy: cfg.Sync.ConflictPolicy, Entries: []Entry{}}
+	result = Plan{SourceName: filepath.Base(p.SourceRoot), DestinationName: d.Name, DestinationID: d.ID, AccountReference: d.AccountReference, ConflictPolicy: cfg.Sync.ConflictPolicy, SourceIdentity: p.Plan.SourceIdentity, ConfigDigest: p.Plan.ConfigDigest, RulesDigest: p.Plan.RulesDigest, SourceDigest: fp, Entries: []Entry{}}
 	if result.SourceName == "." || result.SourceName == string(filepath.Separator) || result.SourceName == "" || filepath.VolumeName(p.SourceRoot)+string(filepath.Separator) == p.SourceRoot {
 		return Plan{}, domain.Fail("SOURCE_UNAVAILABLE", "Select a named folder rather than a filesystem root.")
 	}
@@ -442,7 +486,10 @@ func (s *Service) preview(ctx context.Context, source string, isConfig bool) (Pl
 		return Plan{}, err
 	}
 	result.ExpiresAt = s.now().Add(15 * time.Minute).UTC().Format(time.RFC3339Nano)
-	a := &approved{Plan: result, Source: source, IsConfig: isConfig, Config: cfg, Preview: p, Fingerprint: fp, StateDigest: stateDigest, RemoteDigest: remoteDigest, Key: key, Destination: *d, Nodes: nodes, Actions: actions}
+	a := &approved{Plan: result, Source: src.Root, IsConfig: src.ConfigPath != "", Inline: src.Config != nil, Config: cfg, Preview: p, Fingerprint: fp, StateDigest: stateDigest, RemoteDigest: remoteDigest, Key: key, Destination: *d, Nodes: nodes, Actions: actions}
+	if a.IsConfig {
+		a.Source = src.ConfigPath
+	}
 	result.PlanDigest, err = domain.Digest(a)
 	if err != nil {
 		return Plan{}, err

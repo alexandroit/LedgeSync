@@ -18,10 +18,21 @@ import (
 type Error struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	// cause supports errors.Is/As in Go; it is never part of Error() or JSON.
+	cause error
 }
 
-func (e *Error) Error() string                    { return e.Code + ": " + e.Message }
-func Fail(code, format string, args ...any) error { return &Error{code, fmt.Sprintf(format, args...)} }
+func (e *Error) Error() string { return e.Code + ": " + e.Message }
+func (e *Error) Unwrap() error { return e.cause }
+func Fail(code, format string, args ...any) error {
+	return &Error{Code: code, Message: fmt.Sprintf(format, args...)}
+}
+
+// Wrap returns a typed error with a safe message that still matches cause
+// through errors.Is. Only Code and Message are ever displayed or serialized.
+func Wrap(code, message string, cause error) error {
+	return &Error{Code: code, Message: message, cause: cause}
+}
 func ErrorCode(err error) string {
 	var e *Error
 	if errors.As(err, &e) {

@@ -4,14 +4,19 @@ import (
 	"context"
 	"errors"
 
+	"github.com/alexandroit/LedgeSync/internal/connections"
+	"github.com/alexandroit/LedgeSync/internal/domain"
 	"github.com/alexandroit/LedgeSync/internal/driveauth"
+	"github.com/alexandroit/LedgeSync/internal/projects"
 	"github.com/alexandroit/LedgeSync/internal/transfer"
 )
 
 type transferService interface {
 	SetDestination(context.Context, string, string) (*transfer.Destination, error)
+	RestoreDestination(context.Context, transfer.Destination) (*transfer.Destination, error)
 	CurrentDestination() *transfer.Destination
 	Preview(context.Context, string, bool) (transfer.Plan, error)
+	PreviewSource(context.Context, transfer.Source) (transfer.Plan, error)
 	Start(context.Context, string) (transfer.Status, error)
 	Status() transfer.Status
 	Busy() bool
@@ -24,8 +29,39 @@ type googleFolderPicker interface {
 	ChooseFolder(context.Context, string) (driveauth.SelectedFolder, error)
 }
 
-var errTransferUnavailable = errors.New("TRANSFER_UNAVAILABLE: Google Drive uploads are unavailable in this build")
-var errTransferBusy = errors.New("TRANSFER_BUSY: wait for the current Drive operation or cancel it")
+var errTransferUnavailable = domain.Fail("TRANSFER_UNAVAILABLE", "Google Drive uploads are unavailable in this build.")
+var errTransferBusy = domain.Fail("TRANSFER_BUSY", "Wait for the current Drive operation, or cancel it, before starting another.")
+
+// Options wires the desktop bridge to shared services. Transfers and Automatic
+// are separate service instances over the same provider, accounts and journal,
+// so automatic runs never replace the destination or approval shown in the UI.
+type Options struct {
+	Preview          previewService
+	FolderPicker     Picker
+	ConfigPicker     Picker
+	Google           GoogleDriveService
+	ShowAfterConnect func()
+	Transfers        *transfer.Service
+	Automatic        *transfer.Service
+	Projects         *projects.Store
+	OpenDriveFolder  func(string) error
+	OnChange         func()
+}
+
+// NewDesktop connects all bridges. Missing optional services leave the
+// corresponding features unavailable rather than partially enabled.
+func NewDesktop(o Options) *App {
+	a := NewWithGoogleDriveAndTransfers(o.Preview, o.FolderPicker, o.ConfigPicker, o.Google, o.ShowAfterConnect, o.Transfers, o.OpenDriveFolder)
+	a.projects = o.Projects
+	if o.Transfers != nil && o.Projects != nil {
+		o.Transfers.OnFinish(a.recordManualRun)
+	}
+	if o.Automatic != nil && o.Projects != nil && a.transfer != nil {
+		a.automation = o.Automatic
+		a.scheduler = projects.NewScheduler(o.Projects, automationRunner{a}, o.OnChange)
+	}
+	return a
+}
 
 // NewWithGoogleDriveAndTransfers connects both transports to the same services.
 // Existing constructors remain usable for offline and authorization-only builds.
@@ -37,6 +73,13 @@ func NewWithGoogleDriveAndTransfers(service previewService, folderPicker, config
 	}
 	a.openDriveFolder = openDriveFolder
 	return a
+}
+
+// StartAutomation begins the in-app scheduler for authorized sync pairs.
+func (a *App) StartAutomation() {
+	if a.scheduler != nil {
+		a.scheduler.Start()
+	}
 }
 
 func (a *App) connectedAccount(ctx context.Context) (string, error) {
@@ -63,28 +106,31 @@ func (a *App) ChooseDriveDestination() (*transfer.Destination, error) {
 	}
 	ctx, err := a.begin()
 	if err != nil {
-		return nil, err
+		return nil, connections.PublicError(err)
 	}
 	defer a.finish()
 	account, err := a.connectedAccount(ctx)
 	if err != nil {
-		return nil, err
+		return nil, connections.PublicError(err)
 	}
 	selected, err := chooser.ChooseFolder(ctx, account)
 	if errors.Is(err, driveauth.ErrCanceled) || errors.Is(err, driveauth.ErrDenied) || errors.Is(err, context.Canceled) {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, connections.PublicError(err)
 	}
 	if selected.AccountReference != account {
-		return nil, driveauth.ErrIdentity
+		return nil, connections.PublicError(driveauth.ErrIdentity)
 	}
 	destination, err := a.transfer.SetDestination(ctx, selected.ID, account)
-	if err == nil && a.showAfterConnect != nil && a.connectionContext.Err() == nil {
-		a.showAfterConnect()
+	if err == nil {
+		a.destinationChanged()
+		if a.showAfterConnect != nil && a.connectionContext.Err() == nil {
+			a.showAfterConnect()
+		}
 	}
-	return destination, err
+	return destination, connections.PublicError(err)
 }
 
 func (a *App) UseMyDrive() (*transfer.Destination, error) {
@@ -93,14 +139,27 @@ func (a *App) UseMyDrive() (*transfer.Destination, error) {
 	}
 	ctx, err := a.begin()
 	if err != nil {
-		return nil, err
+		return nil, connections.PublicError(err)
 	}
 	defer a.finish()
 	account, err := a.connectedAccount(ctx)
 	if err != nil {
-		return nil, err
+		return nil, connections.PublicError(err)
 	}
-	return a.transfer.SetDestination(ctx, "root", account)
+	destination, err := a.transfer.SetDestination(ctx, transfer.MyDriveID, account)
+	if err == nil {
+		a.destinationChanged()
+	}
+	return destination, connections.PublicError(err)
+}
+
+// destinationChanged detaches a previously opened sync pair whose destination
+// differs; the next approved run saves the new pair.
+func (a *App) destinationChanged() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.lastPlan = nil
+	a.projectID = ""
 }
 
 func (a *App) CurrentDriveDestination() (*transfer.Destination, error) {
@@ -124,31 +183,52 @@ func (a *App) PreviewDriveUpload() (transfer.Plan, error) {
 	}
 	ctx, err := a.begin()
 	if err != nil {
-		return transfer.Plan{}, err
+		return transfer.Plan{}, connections.PublicError(err)
 	}
 	defer a.finish()
 	a.mu.Lock()
-	source, isConfig := a.path, a.isConfig
+	s := a.selected
 	a.mu.Unlock()
-	if source == "" {
-		return transfer.Plan{}, errors.New("ROOT_REQUIRED: choose a local folder first")
+	if s.path == "" {
+		return transfer.Plan{}, errRootRequired
 	}
-	return a.transfer.Preview(ctx, source, isConfig)
+	var plan transfer.Plan
+	if s.inline == nil {
+		plan, err = a.transfer.Preview(ctx, s.path, s.isConfig)
+	} else {
+		plan, err = a.transfer.PreviewSource(ctx, s.source())
+	}
+	if err != nil {
+		return transfer.Plan{}, connections.PublicError(err)
+	}
+	a.mu.Lock()
+	p := plan
+	a.lastPlan = &p
+	a.mu.Unlock()
+	return plan, nil
 }
 
 func (a *App) StartDriveUpload(planDigest string) (transfer.Status, error) {
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	if a.transfer == nil {
+		a.mu.Unlock()
 		return transfer.Status{}, errTransferUnavailable
 	}
-	if a.lifecycle || a.cancel != nil || a.transfer.Busy() {
+	if a.lifecycle || a.cancel != nil || a.automationBusy || a.transfer.Busy() {
+		a.mu.Unlock()
 		return transfer.Status{}, errTransferBusy
 	}
 	if a.connectionContext.Err() != nil {
-		return transfer.Status{}, context.Canceled
+		a.mu.Unlock()
+		return transfer.Status{}, connections.PublicError(context.Canceled)
 	}
-	return a.transfer.Start(a.connectionContext, planDigest)
+	plan := a.lastPlan
+	status, err := a.transfer.Start(a.connectionContext, planDigest)
+	if err == nil && plan != nil && plan.PlanDigest == planDigest {
+		a.runProjectID = a.ensureProjectLocked(*plan)
+	}
+	a.mu.Unlock()
+	return status, connections.PublicError(err)
 }
 
 func (a *App) DriveTransferStatus() (transfer.Status, error) {
@@ -171,11 +251,18 @@ func (a *App) OpenUploadedDriveFolder() error {
 		return errTransferUnavailable
 	}
 	status := a.transfer.Status()
-	if status.State != "succeeded" || !validResultID(status.RemoteFolderID) {
-		return errors.New("UPLOAD_RESULT_REQUIRED: a verified uploaded folder is not available")
+	if (status.State != "succeeded" && status.State != "partial") || !validResultID(status.RemoteFolderID) {
+		return domain.Fail("UPLOAD_RESULT_REQUIRED", "A verified uploaded folder is not available.")
 	}
-	if err := a.openDriveFolder("https://drive.google.com/drive/folders/" + status.RemoteFolderID); err != nil {
-		return errors.New("BROWSER_UNAVAILABLE: the uploaded folder could not be opened in your browser")
+	return a.openFolder(status.RemoteFolderID)
+}
+
+func (a *App) openFolder(id string) error {
+	if a.openDriveFolder == nil || !validResultID(id) {
+		return domain.Fail("UPLOAD_RESULT_REQUIRED", "A verified uploaded folder is not available.")
+	}
+	if err := a.openDriveFolder("https://drive.google.com/drive/folders/" + id); err != nil {
+		return domain.Fail("BROWSER_UNAVAILABLE", "The uploaded folder could not be opened in your browser.")
 	}
 	return nil
 }
@@ -196,10 +283,14 @@ func (a *App) invalidateTransfer() {
 	if a.transfer != nil {
 		a.transfer.Invalidate()
 	}
+	a.mu.Lock()
+	a.lastPlan = nil
+	a.mu.Unlock()
 }
 
 // Reserve the desktop lifecycle boundary before draining. New previews, Picker
-// actions and starts cannot race between cancellation and credential cleanup.
+// actions, starts and automatic runs cannot race between cancellation and
+// credential cleanup.
 func (a *App) beginLifecycle() (func(), error) {
 	a.mu.Lock()
 	if a.lifecycle {
@@ -215,6 +306,10 @@ func (a *App) beginLifecycle() (func(), error) {
 	if a.google != nil {
 		a.google.Cancel()
 	}
+	if a.automation != nil {
+		a.automation.CancelAndWait()
+		a.automation.Invalidate()
+	}
 	if a.transfer != nil {
 		a.transfer.CancelAndWait()
 		a.transfer.Invalidate()
@@ -222,5 +317,6 @@ func (a *App) beginLifecycle() (func(), error) {
 	if pending != nil {
 		<-pending
 	}
+	a.waitAutomationIdle()
 	return func() { a.mu.Lock(); a.lifecycle = false; a.mu.Unlock() }, nil
 }

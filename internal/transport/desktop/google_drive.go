@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/alexandroit/LedgeSync/internal/connections"
+	"github.com/alexandroit/LedgeSync/internal/domain"
 	"github.com/alexandroit/LedgeSync/internal/driveauth"
 )
 
@@ -27,7 +29,7 @@ func NewWithGoogleDrive(service previewService, folderPicker, configPicker Picke
 	return a
 }
 
-var errGoogleUnavailable = errors.New("OAUTH_UNAVAILABLE: Google Drive authorization is unavailable in this build")
+var errGoogleUnavailable = domain.Fail("OAUTH_UNAVAILABLE", "Google Drive authorization is unavailable in this build.")
 
 func (a *App) GoogleDriveStatus() (driveauth.Status, error) {
 	if a.google == nil {
@@ -40,14 +42,14 @@ func (a *App) GoogleDriveStatus() (driveauth.Status, error) {
 	if errors.Is(err, driveauth.ErrStorage) && status.State == "storage_unavailable" || errors.Is(err, driveauth.ErrBusy) && status.State == "busy" {
 		return status, nil
 	}
-	return status, err
+	return status, connections.PublicError(err)
 }
 func (a *App) ConnectGoogleDrive() (driveauth.Status, error) {
 	if a.google == nil {
 		return driveauth.Status{}, errGoogleUnavailable
 	}
 	if _, err := a.begin(); err != nil {
-		return driveauth.Status{}, err
+		return driveauth.Status{}, connections.PublicError(err)
 	}
 	defer a.finish()
 	status, err := a.google.Connect(a.connectionContext)
@@ -57,21 +59,21 @@ func (a *App) ConnectGoogleDrive() (driveauth.Status, error) {
 	if err == nil && status.State == "connected" && a.connectionContext.Err() == nil && a.showAfterConnect != nil {
 		a.showAfterConnect()
 	}
-	return status, err
+	return status, connections.PublicError(err)
 }
 func (a *App) CheckGoogleDrive() (driveauth.Status, error) {
 	if a.google == nil {
 		return driveauth.Status{}, errGoogleUnavailable
 	}
 	if _, err := a.begin(); err != nil {
-		return driveauth.Status{}, err
+		return driveauth.Status{}, connections.PublicError(err)
 	}
 	defer a.finish()
 	status, err := a.google.Check(a.connectionContext)
 	if status.State != "connected" {
 		a.invalidateTransfer()
 	}
-	return status, err
+	return status, connections.PublicError(err)
 }
 func (a *App) DisconnectGoogleDrive() (driveauth.Status, error) {
 	if a.google == nil {
@@ -82,7 +84,8 @@ func (a *App) DisconnectGoogleDrive() (driveauth.Status, error) {
 		return driveauth.Status{}, err
 	}
 	defer done()
-	return a.google.Disconnect(a.connectionContext)
+	status, err := a.google.Disconnect(a.connectionContext)
+	return status, connections.PublicError(err)
 }
 func (a *App) RevokeGoogleDrive(expectedAccountReference string, confirmed bool) (driveauth.Status, error) {
 	// Requiring confirmation at both boundaries prevents an accidental binding
@@ -98,7 +101,8 @@ func (a *App) RevokeGoogleDrive(expectedAccountReference string, confirmed bool)
 		return driveauth.Status{}, err
 	}
 	defer done()
-	return a.google.Revoke(a.connectionContext, expectedAccountReference, true)
+	status, err := a.google.Revoke(a.connectionContext, expectedAccountReference, true)
+	return status, connections.PublicError(err)
 }
 func (a *App) CancelGoogleDrive() {
 	a.Cancel()
@@ -107,6 +111,9 @@ func (a *App) CancelGoogleDrive() {
 	}
 }
 func (a *App) Shutdown() {
+	if a.scheduler != nil {
+		a.scheduler.Stop()
+	}
 	a.mu.Lock()
 	a.lifecycle = true
 	if a.cancel != nil {
@@ -118,6 +125,10 @@ func (a *App) Shutdown() {
 		a.closeConnections()
 	}
 	a.CancelGoogleDrive()
+	if a.automation != nil {
+		a.automation.CancelAndWait()
+		a.automation.Invalidate()
+	}
 	if a.transfer != nil {
 		a.transfer.CancelAndWait()
 		a.transfer.Invalidate()
@@ -125,4 +136,5 @@ func (a *App) Shutdown() {
 	if pending != nil {
 		<-pending
 	}
+	a.waitAutomationIdle()
 }

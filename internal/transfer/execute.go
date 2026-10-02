@@ -207,7 +207,10 @@ func (s *Service) execute(ctx context.Context, a *approved, run string) (result 
 	cfg := config.Default(a.Preview.SourceRoot)
 	configPath := ""
 	var configInfo os.FileInfo
-	if a.IsConfig {
+	switch {
+	case a.Inline:
+		cfg = a.Config
+	case a.IsConfig:
 		configPath = a.Source
 		if configInfo, err = os.Lstat(configPath); err != nil {
 			return domain.Fail("CONFIG_CHANGED", "The project configuration is no longer available; approve a new preview.")
@@ -215,8 +218,8 @@ func (s *Service) execute(ctx context.Context, a *approved, run string) (result 
 		if cfg, err = config.Load(configPath); err != nil {
 			return err
 		}
-		cfg.Source.Root = a.Preview.SourceRoot
 	}
+	cfg.Source.Root = a.Preview.SourceRoot
 	if d, e := domain.Digest(cfg); e != nil || d != a.Preview.Plan.ConfigDigest {
 		return domain.Fail("CONFIG_CHANGED", "The project configuration changed; approve a new preview.")
 	}

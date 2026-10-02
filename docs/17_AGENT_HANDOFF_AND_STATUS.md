@@ -285,3 +285,8 @@ Remaining product work and signing limitations are unchanged: offline preview
 only, no Drive account/transfer, no cross-version installer migration claim,
 no trusted Windows publisher signature, no macOS notarization, and no full
 Windows/Linux graphical application acceptance.
+
+The secondary GitHub Pages copy also matches the new HTML and CSS after
+[Pages run 36947337099](https://github.com/alexandroit/LedgeSync/actions/runs/36947337099)
+passed. Production remains the owner's Ubuntu origin. Temporary server upload
+directories were removed; live/rollback releases and signed APT snapshots remain.

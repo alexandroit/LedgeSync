@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How LedgeSync handles local files, Google Drive authorization, credentials, website data, and privacy requests.">
+  <meta name="theme-color" content="#101f31">
+  <title>Privacy Policy — LedgeSync</title>
+  <link rel="canonical" href="https://ledgesync.com/privacy-policy">
+  <link rel="icon" href="../assets/ledgesync-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../style.css?v=1c913bddba4f">
+  <link rel="stylesheet" href="../assets/legal.css?v=1">
+</head>
+<body class="legal-site">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav wrap">
+    <a class="brand" href="../" aria-label="LedgeSync home"><img src="../assets/ledgesync-logo.svg" alt="" width="32" height="32"> LedgeSync</a>
+    <nav aria-label="Main navigation"><a href="../">Home</a><a href="../public-term">Terms of Service</a><a href="https://github.com/alexandroit/LedgeSync">GitHub</a></nav>
+  </header>
+  <main id="main" class="legal-page wrap">
+    <p class="eyebrow">YOUR DATA</p>
+    <h1>Privacy Policy</h1>
+    <p class="effective">Effective October 2, 2026</p>
+    <div class="legal-summary"><p>LedgeSync runs on your computer. Google authorization happens in your browser, and your saved Google credentials stay in your operating system’s credential vault. LedgeSync’s website does not receive or store those credentials or your Drive files.</p></div>
+    <nav class="legal-nav" aria-label="On this page"><a href="#google-data">Google data</a><a href="#storage">Storage and retention</a><a href="#control">Your choices</a><a href="#website">Website data</a><a href="#contact">Contact</a></nav>
+
+    <section aria-labelledby="about-title"><h2 id="about-title">1. About LedgeSync and this policy</h2>
+      <p>LedgeSync is an independent, open-source desktop project maintained through the <a href="https://github.com/alexandroit/LedgeSync">official LedgeSync repository</a>. This policy describes the official application and ledgesync.com. Independently modified versions and third-party services may have different practices.</p>
+      <p>The current developer alpha supports local file browsing, policy explanations, simulated copy previews, and Google Drive authorization. Cloud file browsing, uploads, synchronization, and scheduling are still in development. Connecting an account does not start a transfer.</p>
+    </section>
+    <section aria-labelledby="local-title"><h2 id="local-title">2. Local files and settings</h2>
+      <p>When you choose a local folder or configuration, the application processes file names, paths, file metadata, and selected policy/configuration contents on your computer to display files and explain preview decisions. The current preview does not send that information or file contents to LedgeSync servers or to Google Drive.</p>
+      <p>Settings and preview files you choose to save remain where you save them. Their locations may be included in your own backups or synchronization tools. Do not put confidential data in a public support report.</p>
+    </section>
+    <section id="google-data" aria-labelledby="google-title"><h2 id="google-title">3. Google account information and permissions</h2>
+      <p>Connecting Google Drive is optional. LedgeSync opens Google’s authorization page in your system browser and receives the result through a temporary callback on your computer. Your Google password is entered on Google’s page; LedgeSync does not receive it.</p>
+      <p>The application requests <code>https://www.googleapis.com/auth/drive.file</code>. This is per-file access for files created by the app or explicitly made available to it, not permission to browse every file in your Drive. The current alpha uses its connection to retrieve your account display name, email address, and an account identifier so you can recognize the account and the app can detect an account change. It also receives the authorization tokens and granted scope needed to maintain and check that connection.</p>
+      <p>We use Google data only for the visible connection and file-management features you authorize. We do not sell it, use it for advertising, transfer it to data brokers, or use it to train generalized AI or machine-learning models. The app does not automatically send Google data to maintainers or support systems.</p>
+      <p>LedgeSync’s use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including its Limited Use requirements. New uses of Google data will require updated disclosures and consent where required before that use begins.</p>
+    </section>
+    <section id="storage" aria-labelledby="storage-title"><h2 id="storage-title">4. Storage, security, and retention</h2>
+      <p>Refresh tokens and the saved account connection are stored in macOS Keychain, Windows Credential Manager, or Linux Secret Service. Access tokens are kept in backend memory. Tokens are not included in the application’s frontend, project exports, or ordinary diagnostics. If the supported credential vault cannot be used, the application reports a failure instead of saving tokens in an unprotected file.</p>
+      <p>The saved connection remains on your computer until you disconnect it or remove its vault entry. Uninstalling the app may leave operating-system vault entries behind; disconnect first if you want to remove the local grant. Local files and exports remain under your control. We cannot remotely erase credentials or files stored only on your device.</p>
+      <p>Connections to Google use HTTPS. These protections reduce risk but do not make a compromised computer or altered installer safe. No security method provides an absolute guarantee.</p>
+    </section>
+    <section id="control" aria-labelledby="control-title"><h2 id="control-title">5. Disconnect, revoke, and delete</h2>
+      <p>Use the disconnect action in the app’s Connections screen to remove the locally saved authorization. Disconnecting does not delete files in your Google Drive and is different from revoking the grant at Google.</p>
+      <p>You can revoke access through your <a href="https://myaccount.google.com/connections">Google Account connections</a>. If your version offers “Revoke access on Google,” that action requires a separate confirmation. Google revocation can affect the account’s authorizations for other OAuth clients in the same Google Cloud project. Review the confirmation and the connection shown by Google before proceeding.</p>
+      <p>If the app reports that local credential removal failed, unlock the credential vault and retry. Do not assume that an uninstall or an unsuccessful disconnect erased the entry. A revoked or expired grant requires reconnection before further authorized use.</p>
+    </section>
+    <section id="website" aria-labelledby="website-title"><h2 id="website-title">6. Website, downloads, and support</h2>
+      <p>The website and download infrastructure process ordinary request data such as IP address, requested URL, time, browser information, and referrer to deliver content, investigate errors, and protect the service. Origin web logs use daily rotation with seven retained rotations; security investigations or legally required preservation may require longer retention. Infrastructure providers maintain their own records under their policies.</p>
+      <p>Cloudflare handles website delivery and security, and may use security cookies. The website uses Google Fonts, so your browser may request font resources from Google. GitHub hosts source code, release downloads, and project support. These services may process request data under their respective <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a>, <a href="https://policies.google.com/privacy">Google</a>, and <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a> privacy policies, including processing outside your country.</p>
+      <p>The official app has no advertising, usage analytics, or automatic crash-report uploads. The website does not add advertising trackers or an analytics product. If you choose to submit a support report, maintainers receive what you submit. Public GitHub issues are public and may remain in project history. Never include tokens, credentials, or private file contents; contact <a href="mailto:alex@alexandro.net">alex@alexandro.net</a> before sharing sensitive details.</p>
+    </section>
+    <section aria-labelledby="rights-title"><h2 id="rights-title">7. Privacy requests and updates</h2>
+      <p>Depending on the law that applies to you, you may have rights to access, correct, delete, restrict, or object to processing of your personal data, or to contact a privacy regulator. You can manage local data and Google grants using the controls described above. Contact the maintainers about data you provided to the project or website records; we may need enough information to locate the records and verify the request, and some records may need to be retained as required by law.</p>
+      <p>LedgeSync is not directed at children under 13. We do not knowingly solicit children’s personal information. Contact us if you believe such information has been submitted to the project.</p>
+      <p>Updates to this policy will appear on this page with a revised effective date. Material changes to how Google data is used will be disclosed before the new use begins.</p>
+    </section>
+    <section id="contact" aria-labelledby="contact-title"><h2 id="contact-title">8. Contact</h2>
+      <p>For privacy questions or requests, email the LedgeSync maintainer at <a href="mailto:alex@alexandro.net">alex@alexandro.net</a>. General support is also available through <a href="https://github.com/alexandroit/LedgeSync/issues">project support</a>; do not post personal data in public issues. For a suspected security vulnerability, follow the <a href="https://github.com/alexandroit/LedgeSync/blob/main/SECURITY.md">security reporting instructions</a>.</p>
+    </section>
+  </main>
+  <footer class="wrap"><a class="brand" href="../"><img src="../assets/ledgesync-logo.svg" alt="" width="28" height="28"> LedgeSync</a><div><a href="../privacy-policy" aria-current="page">Privacy Policy</a><a href="../public-term">Terms of Service</a><a href="https://github.com/alexandroit/LedgeSync">Source code</a></div></footer>
+</body>
+</html>

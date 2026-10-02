@@ -44,3 +44,6 @@
 .apt-packages h4{font-size:16px;margin:0 0 14px}
 .apt-packages p{font-size:13px;margin-bottom:0}
 @media(max-width:760px){.apt-install{padding:23px}.apt-heading h3{font-size:23px}.apt-packages{grid-template-columns:1fr;gap:25px}.apt-setup summary span{display:block;margin:6px 0 0 19px}.apt-install pre{padding:16px;font-size:11px}}
+
+/* Keep legal links readable when the footer wraps on narrow screens. */
+footer>div{flex-wrap:wrap;row-gap:14px;font-size:14px}

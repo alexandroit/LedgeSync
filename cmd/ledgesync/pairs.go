@@ -370,7 +370,15 @@ func runPairCopy(ctx context.Context, id string, in io.Reader, out, errOut io.Wr
 	}
 	p.SourceIdentity = plan.SourceIdentity
 	_, _ = services.store.Save(p)
+	var previous transfer.Status
 	for services.transfer.Busy() {
+		if current := services.transfer.Status(); current.SentBytes != previous.SentBytes || current.CompletedFiles != previous.CompletedFiles || current.State != previous.State {
+			if err = output(out, current); err != nil {
+				services.transfer.CancelAndWait()
+				return report(errOut, domain.Fail("OUTPUT_UNAVAILABLE", "Progress output failed; upload was stopped. Preview again before continuing."))
+			}
+			previous = current
+		}
 		select {
 		case <-ctx.Done():
 			services.transfer.CancelAndWait()

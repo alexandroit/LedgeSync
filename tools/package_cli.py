@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import zipfile
@@ -49,6 +50,14 @@ def readme(version, native, configured):
     )
 
 
+def sign_native(system, binary):
+    """Sign the CLI with the publisher identity when release signing is configured."""
+    if system == "darwin" and os.environ.get("LEDGESYNC_MACOS_IDENTITY"):
+        subprocess.run([sys.executable, str(ROOT / "tools/sign_macos.py"), "--cli-only", "--cli", str(binary)], check=True)
+    elif system == "windows" and os.environ.get("LEDGESYNC_WINDOWS_SIGNING"):
+        subprocess.run(["pwsh", "-NoProfile", "-File", str(ROOT / "tools/sign_windows.ps1"), "-Path", str(binary)], check=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", default="0.1.0-alpha.5")
@@ -85,6 +94,7 @@ def main():
             if args.native:
                 command += ["-tags", "oauth"]
             subprocess.run(command + ["-o", str(stage / exe), "./cmd/ledgesync"], cwd=ROOT, env=env, check=True)
+            sign_native(system, stage / exe)
             for filename in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"):
                 shutil.copy2(ROOT / filename, stage / filename)
             shutil.copytree(ROOT / "third_party", stage / "third_party")

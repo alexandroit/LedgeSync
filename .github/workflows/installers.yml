@@ -49,6 +49,9 @@ concurrency:
 jobs:
   windows:
     if: inputs.verify_public_apt != true && inputs.target != 'ubuntu'
+    env:
+      LEDGESYNC_OFFICIAL_BUILD: ${{ github.repository == 'alexandroit/LedgeSync' && github.ref == 'refs/heads/main' }}
+      HAS_WINDOWS_SIGNING: ${{ secrets.ARTIFACT_SIGNING_CLIENT_SECRET != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -69,8 +72,16 @@ jobs:
       - name: Install pinned Inno Setup compiler privately
         shell: pwsh
         run: ./deploy/windows/install-inno.ps1 -Destination build/inno
+      - name: Install the pinned Artifact Signing client
+        if: env.LEDGESYNC_OFFICIAL_BUILD == 'true' && env.HAS_WINDOWS_SIGNING == 'true'
+        shell: pwsh
+        run: ./tools/install_signing_client.ps1 -Endpoint '${{ vars.ARTIFACT_SIGNING_ENDPOINT }}' -Account '${{ vars.ARTIFACT_SIGNING_ACCOUNT }}' -Profile '${{ vars.ARTIFACT_SIGNING_PROFILE }}'
       - name: Build graphical setup EXE
         shell: pwsh
+        env:
+          AZURE_TENANT_ID: ${{ secrets.ARTIFACT_SIGNING_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.ARTIFACT_SIGNING_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.ARTIFACT_SIGNING_CLIENT_SECRET }}
         run: python tools/package_windows.py --desktop-root build/installer-inputs/windows-${{ matrix.arch }}/desktop --arch ${{ matrix.arch }} --version "$env:LEDGESYNC_RELEASE_VERSION" --output build/installers --iscc build/inno/ISCC.exe
       - name: Verify install, upgrade, shortcuts and uninstall
         shell: pwsh

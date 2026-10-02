@@ -34,9 +34,12 @@ backend/drive/drive_test.go 09f60844f11d4fe0abe48717b02ea393d078b740064839e8f72f
 ## Executor source-selection addendum
 
 The same pinned checkout was reviewed again for the approved planner/executor
-boundary. Its local reference path during this review was
-`/Users/alexandro/dev/reference-sources/rclone-ledgesync`, outside the LedgeSync
-checkout and selected upload roots. No upstream file was changed or executed.
+boundary. The original reference checkout was outside the LedgeSync checkout
+and selected upload roots. For a new review, arrange the pinned checkout at
+`../reference-sources/rclone`, relative to the LedgeSync repository root, or
+explicitly select another separate reference location. This portable convention
+does not assert that a checkout exists there. No upstream file was changed or
+executed during the recorded review.
 
 | Inspected seam at the pinned SHA | Observed behavior | LedgeSync decision |
 |---|---|---|
@@ -117,12 +120,16 @@ same mapping applies while reading the authentication-owned response body.
 
 The first test run could not write Go's temporary `testlog.txt` because the Mac's
 internal volume was full. It failed for that environmental reason. Retesting used
-task-owned temporary/cache directories on the SSD without deleting user files:
+task-owned temporary/cache directories on the SSD without deleting user files.
+The block below is a portable transcription for use from the repository root;
+it preserves the recorded results and does not represent a new execution. Go
+requires absolute cache paths, so they are derived from the current directory:
 
 ```sh
-export GOMODCACHE=/Volumes/SSD/storage/data/go/pkg/mod
-export GOCACHE=/Volumes/SSD/storage/drive/Projects/LedgeSync/build/drive-provider-test/cache
-export GOTMPDIR=/Volumes/SSD/storage/drive/Projects/LedgeSync/build/drive-provider-test/tmp
+mkdir -p build/go-modcache build/drive-provider-test/cache build/drive-provider-test/tmp
+export GOMODCACHE="$(pwd)/build/go-modcache"
+export GOCACHE="$(pwd)/build/drive-provider-test/cache"
+export GOTMPDIR="$(pwd)/build/drive-provider-test/tmp"
 export TMPDIR="$GOTMPDIR"
 go test ./internal/providers/drive
 go test -race -count=1 ./internal/providers/drive

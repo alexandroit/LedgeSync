@@ -10,6 +10,14 @@ GitHub Pages remains a secondary public copy at
 `dist/` there. The Sites project in `.openai/hosting.json` is a separate private
 preview, not the production origin.
 
+## Path conventions
+
+Repository paths in this document are relative to the checkout root; Markdown
+link targets are relative to this document. The absolute server paths below
+are installed production locations, not paths to a developer's checkout. They
+remain unchanged when the checkout moves. Do not create these directories
+beneath the checkout or relocate server data as part of a workspace move.
+
 ## Production layout
 
 The website consists of tracked HTML/CSS in `dist/`, including the

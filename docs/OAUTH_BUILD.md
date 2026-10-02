@@ -20,10 +20,13 @@ References: [native OAuth](https://developers.google.com/identity/protocols/oaut
 
 ## Local native build
 
-Before the normal desktop build, run:
+Before the normal desktop build, run from the repository root. Replace the
+relative example below with the location of the existing private Desktop client
+file outside the checkout; this example directory is not asserted to exist.
+Do not copy the credential file into the repository.
 
 ```sh
-python3 tools/configure_oauth_client.py --client-file /absolute/path/to/desktop-client.json
+python3 tools/configure_oauth_client.py --client-file ../private-build-input/desktop-client.json
 ```
 
 The helper validates the downloaded Desktop client and creates the ignored

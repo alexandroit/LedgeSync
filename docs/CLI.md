@@ -27,12 +27,14 @@ public APT and site evidence is linked from the
 
 Run as the operating-system user who owns the credential vault. These commands
 require an interactive terminal for input, output and errors; piping confirmation
-or redirecting online output is refused.
+or redirecting online output is refused. Source examples below use folders relative
+to the terminal's current directory; replace them with the folder you intend to
+copy. On SSH, that directory is on the server.
 
 ```sh
 ledgesync auth connect
 ledgesync auth status
-ledgesync copy --root "/path/to/local-folder" --destination root
+ledgesync copy --root "./local-folder" --destination root
 ```
 
 `auth connect` opens Google's authorization page in your default system browser.
@@ -43,7 +45,7 @@ stay in the local native vault. `auth status` reads local metadata only and repo
 To select an existing My Drive parent in Google's browser Picker:
 
 ```sh
-ledgesync copy --root "/path/to/local-folder" --destination picker
+ledgesync copy --root "./local-folder" --destination picker
 ```
 
 `--pick-destination` is an equivalent option. `--destination FOLDER_ID` works only
@@ -105,12 +107,12 @@ For an existing destination, repeat the browser/tunnel procedure when the Picker
 opens; each attempt uses a new ephemeral port:
 
 ```sh
-ledgesync copy --root "/srv/source-folder" --destination picker --no-browser
+ledgesync copy --root "./source-folder" --destination picker --no-browser
 ```
 
 With an already authorized folder ID or My Drive, `copy` itself does not open a
 browser. Windows uses the same commands with a Windows source path, such as
-`--root "C:\Data\Project"`.
+`--root ".\local-folder"`.
 
 ## Native credentials and session requirements
 

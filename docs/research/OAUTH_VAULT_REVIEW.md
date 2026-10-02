@@ -24,7 +24,7 @@ Inspected upstream sources:
 
 All backends use namespace `com.ledgesync.oauth` and opaque lowercase references. They never enumerate a user's credential store. The public adapter returns constant errors instead of OS/provider error strings. `New` has no credential side effects. Unsupported platforms and Darwin builds without cgo fail with `ErrUnavailable` when used. There is no disk, environment, process-command, or pretend-persistent memory fallback.
 
-macOS uses in-process `SecItemAdd`, `SecItemCopyMatching`, `SecItemUpdate`, and `SecItemDelete`. It disables synchronizable items and requests unlocked, device-only accessibility. Updates preserve the existing item instead of deleting before writing. It does not spawn `/usr/bin/security`. The native OS controls interaction/access prompts; local Go tests do not automatically exercise the user's Keychain. A compromised user/OS is outside this guarantee.
+macOS uses in-process `SecItemAdd`, `SecItemCopyMatching`, `SecItemUpdate`, and `SecItemDelete`. It disables synchronizable items and requests unlocked, device-only accessibility. Updates preserve the existing item instead of deleting before writing. It does not spawn the macOS system `security` utility. The native OS controls interaction/access prompts; local Go tests do not automatically exercise the user's Keychain. A compromised user/OS is outside this guarantee.
 
 Windows loads `advapi32.dll` through `NewLazySystemDLL`, then calls the generic credential APIs. Persistence is `CRED_PERSIST_LOCAL_MACHINE`: the same user's subsequent logins on this computer, with no roaming setting. The adapter never uses credential enumeration or domain-password APIs. [Microsoft's credential structure reference](https://learn.microsoft.com/en-us/windows/win32/api/wincred/ns-wincred-credentialw) documents the maximum blob as 2,560 bytes. This becomes the adapter's portable limit; oversized data fails explicitly without truncation. References are lowercase to avoid Windows' case-insensitive target-name collisions.
 
@@ -34,7 +34,7 @@ Default application tests use fake stores and nonexistent temporary socket paths
 
 ## Alternatives inspected
 
-`99designs/keyring@v1.2.2` was inspected but not imported: its multi-backend package includes file and external-program providers unnecessary for this limited native-only requirement. `zalando/go-keyring@v0.2.8` was inspected but not imported: its macOS provider invokes `/usr/bin/security` (this version passes the write command through stdin rather than secret arguments), and its Linux prompt wait is unbounded. Direct native adapters avoid those process/access-control and fallback surfaces. These observations concern the downloaded pinned source, not a claim about future upstream versions.
+`99designs/keyring@v1.2.2` was inspected but not imported: its multi-backend package includes file and external-program providers unnecessary for this limited native-only requirement. `zalando/go-keyring@v0.2.8` was inspected but not imported: its macOS provider invokes the macOS system `security` utility (this version passes the write command through stdin rather than secret arguments), and its Linux prompt wait is unbounded. Direct native adapters avoid those process/access-control and fallback surfaces. These observations concern the downloaded pinned source, not a claim about future upstream versions.
 
 ## Validation boundary
 

@@ -18,6 +18,12 @@ account connection. Independent live acceptance of the new Picker, copy/recovery
 and SSH return paths remains unverified. Earlier alpha.3 installers connected an
 account and provided offline previews; they did not contain this copy executor.
 
+**Current owner report:** files are not synchronizing in the application. The
+root cause and installed artifact have not been established. Account connection
+alone does not start a copy. Follow the [continuation handoff](../CLAUDE_CODE_HANDOFF.md)
+to reproduce and fix the actual workflow; do not treat the published packages or
+instructions below as completed live acceptance.
+
 ## Connect your account
 
 1. Open **Connections → Google Drive** and choose **Connect Google Drive**.
@@ -80,7 +86,7 @@ for disposable-fixture verification and unimplemented capabilities.
 ## CLI connection and server copies in alpha.4
 
 In an interactive terminal, use `ledgesync auth connect`, followed by
-`ledgesync copy --root "/path/to/folder" --destination picker`. Review the complete
+`ledgesync copy --root "./local-folder" --destination picker`. Review the complete
 preview and type its exact digest before uploading. `--destination root` selects
 My Drive; a folder ID works only when already authorized to this application.
 The same account binding, filtering, journal and verification rules apply as in

@@ -2,13 +2,16 @@
 
 **Product direction:** the desktop application is the primary experience. The CLI is a secondary interface over the same Go application services; its currently implemented commands are listed below. The visual model should feel immediately familiar to users of the **current Google Drive web app / desktop experience** or desktop file managers without copying Google trademarks, artwork, proprietary assets, or pixel-for-pixel layout. Familiar patterns include: left navigation, top breadcrumb/path bar, search entry, list/grid toggle, file rows/cards with status, details pane, and activity/history views.
 
-## Current implementation: alpha.4 source candidate
+## Current implementation and unresolved file-transfer report
 
-Public alpha.3 packages connect a Google account and provide local/offline
-previews. The unreleased alpha.4 source adds explicit desktop and interactive
-CLI folder-copy workflows. In the desktop: choose a local source, connect, choose My Drive or an existing folder
+Alpha.4 source and recorded public packages contain explicit desktop and
+interactive CLI folder-copy workflows. The owner nevertheless reports that files
+are not synchronizing; real acceptance is unresolved. Start with the
+[continuation handoff](../CLAUDE_CODE_HANDOFF.md), distinguish manual copy from
+unimplemented automatic watching, and reproduce the actual failing journey.
+Historical alpha.3 packages provided authorization and offline previews only. In the desktop: choose a local source, connect, choose My Drive or an existing folder
 through Google's system-browser Picker, preview, then approve **Upload folder**.
-Account and immutable destination ID are visible before approval. The candidate
+Account and immutable destination ID are visible before approval. The implementation
 preserves `drive.file`; it does not gain visibility over all existing Drive files.
 
 The local root becomes a managed child folder inside the destination, with

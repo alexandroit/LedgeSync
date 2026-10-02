@@ -1,6 +1,13 @@
 # 17 — Agent Handoff and Current Status
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
+
+**Current blocking owner report:** the application is not synchronizing files.
+The installed artifact, exact failing step and root cause are not established.
+The release/CI records below describe historical distribution and synthetic/native
+checks; they do not resolve this report. Use
+[CLAUDE_CODE_HANDOFF.md](../CLAUDE_CODE_HANDOFF.md) as the single continuation entrypoint.
+
 **Implementation:** 0.1.0-alpha.4 implements explicitly approved Drive folder
 uploads. All 37 release assets are published and publicly verified. The alpha.4
 APT snapshot is activated and public installation passed on both architectures.
@@ -771,6 +778,17 @@ directories were removed; live/rollback releases and signed APT snapshots remain
 
 ## Current handoff
 
+**Immediate next work:** reproduce and fix the owner's non-working file transfer
+in the installed native GUI, following [the Claude Code handoff](../CLAUDE_CODE_HANDOFF.md).
+Distinguish manual upload, the separate offline simulation and unimplemented
+watch/schedule behavior without assuming which explains the report. Add typed,
+redacted diagnostics and a regression for the actual failure before expanding
+features. Finish with independent real Drive acceptance, not another build claim.
+
+The previous publication checkpoint follows for provenance, not as a resolution
+of this newly reported failure.
+
+
 The alpha.4 application/tag source is `fcd578488d07f627372e7f5dd2221e162634bf05`:
 all 16 jobs in build `36963525743` and all six native vault jobs in `36963524884`
 passed. Desktop and interactive native CLI now implement explicitly approved
@@ -796,3 +814,46 @@ because it can affect other clients in the same Google Cloud project. Trusted
 Apple publisher signing/notarization and Windows Authenticode remain unavailable;
 no iOS package or acceptance is claimed. No watcher, schedule, unattended apply,
 remote overwrite/deletion or source modification is enabled.
+
+## Documentation continuation after repository relocation — 2026-10-02
+
+Task DOC-CONTINUE-01 records the owner's request for a Claude Code completion
+handoff. This documentation task does not implement or claim an application fix.
+The repository root is now resolved as `.` in the active LedgeSync checkout;
+no workstation-specific path is required. The inspected baseline was
+`6f0200dd68af24c915b75e9b3b55ca035a12af91`, with all 320 tracked files present.
+Generated local dependencies, builds and private OAuth build input were absent;
+they must be prepared through the existing workflow, not copied into source.
+
+[The single handoff](../CLAUDE_CODE_HANDOFF.md) now carries the failure report,
+current implementation/evidence, portable workspace rules, reproduction order,
+shared service map, known configuration/GUI/automation/adapter gaps, native
+security constraints, permission/release boundaries and explicit completion gates.
+`CLAUDE.md`, `START_HERE.md`, `CODEX_CLAUDE_BOOTSTRAP.md` and `AGENTS.md` route
+agents to that current work. Current README/auth/workflow/decision text no longer
+presents obsolete offline-only status as the active implementation.
+
+Markdown workstation/cache/example paths were normalized to relative references
+or runtime-derived roots. Historical command spellings are marked as portable
+transcriptions; recorded outcomes, source identities and immutable JSON evidence
+are retained. Real OS/server installation destinations remain explicit technical
+locations, not misplaced references to this checkout.
+
+Only Markdown was changed. No runtime source, credentials, private journals,
+release assets, server state or Google data were changed. No application build,
+live authorization/copy, watcher, commit, push or deployment was performed.
+Validation for this documentation task:
+
+- `python3 -B tools/validate_docs.py`: 53 Markdown files, 279 local links,
+  40 JSON files, 50 filter fixtures and 32 safety scenarios checked; zero failures.
+  JSON Schema validation was skipped because `jsonschema` is not installed
+  (one skip). This is not proof that schemas passed.
+- `python3 -B tools/verify_licenses.py`: all 63 recorded notice hashes passed.
+- `git diff --check`: passed.
+- Markdown scans for old workstation roots and absolute checkout/example paths:
+  no remaining matches. Actual OS/server installation destinations are retained
+  under the path convention above.
+
+Runtime tests, application builds and live provider checks were not run for this
+documentation-only change. The next coding agent must establish its own test
+and real provider evidence for the fix and subsequent completion work.

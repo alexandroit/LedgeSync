@@ -1,24 +1,27 @@
 # 15 — Risks and Open Decisions
 
-## Decisions that do not block offline implementation
+## Current decisions and unresolved acceptance
 
 | Decision | Current safe baseline | Resolution point |
 |---|---|---|
 | Final name | Owner selected LedgeSync, command ledgesync, domain ledgesync.com | Resolved; PROJECT_IDENTITY.md |
 | Repository license | Owner requested Apache-2.0; third-party licenses preserved | Resolved; LICENSE and THIRD_PARTY_NOTICES.md |
 | Hosting/repository destination | Public alexandroit/LedgeSync; ledgesync.com live on the owner's existing Ubuntu server; GitHub Pages secondary | Resolved; WEBSITE.md and ADR-025 |
-| Signing accounts and public OAuth project | Developer archives are unsigned; alpha.2 implements desktop authorization with the user's own Desktop app client and OS credential vault; no shared client is bundled | Production signing/shared OAuth identities and real Google acceptance remain pending; see [account setup](GOOGLE_DRIVE_AUTH.md) |
+| Signing accounts and public OAuth project | Alpha.4 official desktop/native CLI builds include the publisher Desktop client; the owner reported Production OAuth and enabled Picker. Native credential vaults are implemented. | Apple Developer ID/notarization and Windows Authenticode remain unavailable; live upload/SSH acceptance and the reported non-working sync remain unresolved. See [account setup](GOOGLE_DRIVE_AUTH.md). |
 | Desktop OS targets | macOS and Ubuntu ARM64/x64; Windows 11 ARM64/x64; CLI for servers | Owner requested; see PLATFORMS.md for actual validation |
 | Additional cloud providers | Interfaces now, implementations later | Separate scoped milestone |
 
-Do not repeatedly ask these questions to avoid building the safe offline foundation. Record unresolved decisions and continue tasks that do not require them.
+Do not repeatedly ask resolved questions. Continue local work while genuinely
+external inputs are pending, and keep observed results separate from assumptions.
 
-Alpha.2 authorization is a separate desktop capability; cloud browsing and
-transfers remain unimplemented, and the headless CLI remains offline. Native
-release verification and publication are pending. Ubuntu authorization needs
-an active graphical session and an unlocked Secret Service store such as GNOME
-Keyring; no plaintext credential fallback is permitted. The owner has not yet
-created the OAuth client needed for live Google consent acceptance.
+The owner now reports that files do not synchronize. Manual-copy code and recorded
+alpha.4 native distribution exist; neither proves the failing installed journey.
+Use the [Claude Code handoff](../CLAUDE_CODE_HANDOFF.md) for reproduction, safe
+error diagnosis and ordered completion. Automatic watch/schedule remains absent.
+Ubuntu online use requires the user's D-Bus session and an unlocked Secret Service
+collection; installing a keyring alone does not establish those prerequisites.
+No plaintext credential fallback is permitted. Existing OAuth client configuration
+must be reused through the maintainer build path; end users must not import JSON.
 
 ## Engineering risks and required spikes
 

@@ -8,6 +8,12 @@ See [user installation instructions](PLATFORMS.md#ubuntu-apt).
 
 ## Trust and server layout
 
+Repository paths in this document are relative to the checkout root; Markdown
+link targets are relative to this document. The absolute server paths below
+describe the installed APT repository, not a developer's checkout. They remain
+unchanged when the checkout moves. Do not relocate repository data or signing
+keys as part of a workspace move. URL routes such as `/apt/` are also unchanged.
+
 The public key is [tracked in the repository](../deploy/apt/ledgesync-archive-keyring.gpg)
 and served at `/apt/ledgesync-archive-keyring.gpg`. The fingerprint is
 `11B35F4E066806C33AA8653A51AD694F4729F5AB`. The source definition uses this key

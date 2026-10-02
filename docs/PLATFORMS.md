@@ -332,7 +332,10 @@ contains the native ARM64 app and accepts only ARM64 Windows.
 ### Ubuntu APT
 
 The signed project repository supports **Ubuntu 24.04, amd64 and arm64**. APT
-does not discover third-party repositories automatically; add this source once:
+does not discover third-party repositories automatically; add this source once.
+The system paths in this installation block are Ubuntu APT destinations, not
+checkout locations. They intentionally remain absolute; making them relative to
+the repository would prevent APT from finding the signing key and source:
 
 ```sh
 sudo apt-get update &&

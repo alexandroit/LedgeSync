@@ -62,10 +62,10 @@ Every upstream link below pins the same full baseline commit. **Observed** descr
 
 `fstest.Initialise` installs config and accounting, honoring `RCLONE_CONFIG`; `fstest.newRun` creates both local and selected remote fixtures ([`fstest/fstest.go:54–85`](https://github.com/rclone/rclone/blob/687d264b689b8c49a67e2e52a8a5e0caa01c04ce/fstest/fstest.go#L54-L85), [`fstest/run.go:91–118`](https://github.com/rclone/rclone/blob/687d264b689b8c49a67e2e52a8a5e0caa01c04ce/fstest/run.go#L91-L118)). Build docs distinguish unit from integration tests ([`CONTRIBUTING.md:249–312`](https://github.com/rclone/rclone/blob/687d264b689b8c49a67e2e52a8a5e0caa01c04ce/CONTRIBUTING.md#L249-L312)); `Makefile:90–107` includes full integration commands and quick tests. They were inspected, not blindly executed. The workflow declares Go versions and build/test jobs; no upstream CI result is claimed for this checkout.
 
-Executed after setup review, with a fresh temporary HOME, config/cache/TMPDIR, module/build caches, empty `RCLONE_CONFIG`, cleared inherited environment, `CGO_ENABLED=0`, `GOTOOLCHAIN=local`:
+Executed after setup review, with a fresh temporary HOME, config/cache/TMPDIR, module/build caches, empty `RCLONE_CONFIG`, cleared inherited environment, `CGO_ENABLED=0`, `GOTOOLCHAIN=local`. The command below is a portable transcription using `go` from the explicitly selected toolchain instead of a workstation-specific executable path. Run it from the pinned upstream reference checkout (the operator-arranged convention is `../reference-sources/rclone`, relative to the LedgeSync repository root). Its output remains historical evidence, not a new run:
 
 ```text
-/opt/homebrew/bin/go test -count=1 -timeout=90s ./fs/filter ./lib/pacer
+go test -count=1 -timeout=90s ./fs/filter ./lib/pacer
 ok github.com/rclone/rclone/fs/filter 0.347s
 ok github.com/rclone/rclone/lib/pacer 1.263s
 exit 0; wall time 6.891 seconds (includes dependency download/build)

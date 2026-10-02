@@ -86,7 +86,8 @@ LedgeSync therefore uses `internal/systembrowser`, with no copied upstream code:
 - Only the exact HTTPS Google authorization endpoint and one fixed Google Cloud
   Drive API setup page are accepted. Userinfo, explicit ports, fragments, encoded
   path alternatives, arbitrary files and other schemes/origins are rejected.
-- macOS uses `/usr/bin/open`; Linux discovers only `xdg-open`. Both pass a single
+- macOS uses the OS-provided `open` utility at its fixed system location; Linux
+  discovers only `xdg-open`. Both pass a single
   typed URL argument, discard output, have a five-second context deadline and a
   bounded process wait. There is no shell-command assembly or browser fallback.
 - Windows uses the already pinned `golang.org/x/sys/windows.ShellExecute`, whose

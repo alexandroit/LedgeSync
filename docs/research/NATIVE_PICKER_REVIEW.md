@@ -120,15 +120,18 @@ folder ID from a verified successful transfer at the fixed Google Drive origin.
 The Wails v2.14.0 `OnBeforeClose`, `MessageDialogOptions` and `BrowserOpenURL` APIs
 were inspected in their locally installed source before wiring them.
 
-Further checks passed using the shared SSD cache paths below. An intermediate
-desktop test failed extracting the new SQLite dependency to the internal disk;
-the SSD module cache avoids that environment failure without deleting user files.
+Further checks passed using SSD cache paths. An intermediate desktop test
+failed extracting the new SQLite dependency to the internal disk; the SSD module
+cache avoided that environment failure without deleting user files. The block
+below is a portable transcription for use from the repository root, not a new
+execution. Go requires absolute cache paths, derived here from that directory.
 
 ```sh
-export GOMODCACHE=/Volumes/SSD/storage/data/go/pkg/mod
-export GOCACHE="$PWD/build/security-review/go-cache"
-export GOTMPDIR="$PWD/build/security-review/go-tmp"
-export TMPDIR="$PWD/build/security-review/go-tmp"
+mkdir -p build/go-modcache build/security-review/go-cache build/security-review/go-tmp
+export GOMODCACHE="$(pwd)/build/go-modcache"
+export GOCACHE="$(pwd)/build/security-review/go-cache"
+export GOTMPDIR="$(pwd)/build/security-review/go-tmp"
+export TMPDIR="$GOTMPDIR"
 go test -race ./internal/transport/desktop ./internal/driveauth
 go vet ./internal/transport/desktop ./internal/driveauth
 go test -tags bindings ./cmd/ledgesync-desktop

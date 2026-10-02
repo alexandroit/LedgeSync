@@ -124,7 +124,22 @@ CLI installation and removal preserving synthetic user data. The downloaded
 reports were checked against GitHub's artifact ZIP digests. See
 [alpha.3 deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
 
-## Current alpha.4 publication
+## Current alpha.5 publication
+
+Current snapshot: `20261002-alpha5-64cf420`, Debian version `0.1.0~alpha.5-1`,
+built from the published alpha.5 archives (application `64cf420`, packaging
+`063f766`) with the existing server key. Before activation, all 48 previous
+pool and by-hash files were verified unchanged in the new snapshot and the
+`InRelease` signature was verified. The `public` symlink was replaced atomically;
+the alpha.4 snapshot is retained for rollback. [Installer run 37054397393](https://github.com/alexandroit/LedgeSync/actions/runs/37054397393)
+passed native packaging and the local signed lifecycle;
+[public run 37054874133](https://github.com/alexandroit/LedgeSync/actions/runs/37054874133)
+passed on amd64 and arm64 against `https://ledgesync.com/apt` (pinned key,
+signature, tamper rejection, by-hash, desktop and CLI installation, removal
+preserving user data). No package was installed on the production server and
+Nginx was not reloaded. See [alpha.5 evidence](research/DRIVE_SYNC_ALPHA5_RELEASE.json).
+
+## Historical alpha.4 publication
 
 Current snapshot: `20261002-alpha4-fcd5784`, Debian version `0.1.0~alpha.4-1`.
 Both desktop and native CLI packages include the configured publisher Desktop

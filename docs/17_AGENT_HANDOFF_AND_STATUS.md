@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
 
-## Alpha.5 candidate — reported synchronization failure fixed
+## Alpha.5 published — reported synchronization failure fixed
 
 **Owner report:** the application was not synchronizing files. **Outcome:** four
 independent defects were reproduced with the production HTTP provider against a
@@ -13,9 +13,16 @@ into `needs_review`; and earlier copies missing or moved in Drive blocked every
 later run. The owner's own failing machine/build was not available (no installed
 app, logs or crash reports on the inspected Mac); see the
 [failure analysis](research/DRIVE_SYNC_FAILURE_ANALYSIS.md) for evidence, fixes
-and test names. Work is on branch `fix/drive-sync-recovery`; version
-`0.1.0-alpha.5` is used for changed binaries. Alpha.4 tags, assets and APT pool
-bytes are unchanged.
+and test names. The work was merged to `main` through
+[pull request 2](https://github.com/alexandroit/LedgeSync/pull/2) and published as
+pre-release [v0.1.0-alpha.5](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.5)
+from `64cf420` (37 assets). Installers passed on clean Windows and Ubuntu runners,
+the signed APT snapshot `20261002-alpha5-64cf420` is active with public
+installation verified on amd64/arm64, and ledgesync.com and Pages serve the
+alpha.5 downloads. Exact identities and results:
+[alpha.5 evidence](research/DRIVE_SYNC_ALPHA5_RELEASE.json) and
+[platform gates](PLATFORMS.md). Alpha.4 tags, assets and APT pool bytes are
+unchanged.
 
 **Live Google acceptance is pending the owner.** The configured CLI opened
 Google's consent page; nobody completed it (`AUTH_TIMEOUT`), so no account was
@@ -56,21 +63,29 @@ From the repository root, with Go caches under `build/cache/`:
 - `go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7` on the edited workflows — only false positives for runner labels the linter predates (`macos-15-intel`, `windows-11-arm`), which earlier CI runs used successfully.
 - Native macOS arm64 desktop (Wails v2.14.0) and CLI built with the publisher client; generated client source removed. The app started and exited cleanly, created private state, and ran with the hardened runtime and no entitlement exceptions (`flags=0x10002(adhoc,runtime)`).
 
-**Not run here:** live Google consent/upload (owner step), Picker and desktop
-window clicks, Windows/Ubuntu native runs and clean-machine installer tests (CI
-runners), publisher signing and notarization (no material), APT snapshot
-publication (needs the release assets), SSH return.
+Native runs on clean machines (all through GitHub-hosted runners): core tests on
+Ubuntu 24.04 x64/ARM, macOS 15 ARM/Intel, Windows Server 2022/2025 and
+Windows 11 ARM; desktop builds on six targets; native vault lifecycle on six
+targets; Windows installers on Server 2022 x64 and Windows 11 ARM64; Ubuntu
+packages and public APT on amd64/arm64.
+
+**Not run:** live Google consent/upload (owner step; the attempt timed out
+unattended), Picker and desktop window clicks against real Drive, publisher
+signing and notarization (no material), Windows 11 x64 installer (no hosted
+runner), SSH return.
 
 ### Next safe steps
 
-1. Owner: `ledgesync auth connect`, then `tools/live_acceptance.py`; one manual
-   Picker/desktop pass (see the acceptance checklist).
+1. Owner: `ledgesync auth connect` with the test account, then
+   `tools/live_acceptance.py` (see the acceptance checklist), plus one manual
+   Picker/desktop pass with the alpha.5 app.
 2. Owner: provide signing material as listed in
-   [Publisher signing](PLATFORMS.md#publisher-signing).
-3. Merge the branch to `main`, let native CI build all six targets, publish
-   `v0.1.0-alpha.5` assets, update `deploy/installers/source-release.json`, run
-   the installer workflow (clean Windows/Ubuntu runners), publish the APT
-   snapshot and verify public `apt-get install ledgesync` on amd64/arm64.
+   [Publisher signing](PLATFORMS.md#publisher-signing); then rebuild from `main`
+   and publish a signed version (a new version number; alpha.5 stays immutable).
+3. Owner: disable Cloudflare Web Analytics injection for ledgesync.com or
+   disclose it in the privacy policy ([website note](WEBSITE.md#verified-alpha5-deployment)).
+4. Owner decisions still open: iPhone/iPad scope, managed overwrite/mirror
+   (ADR-031), and VCS adapters beyond Git/rclone (item F).
 
 ---
 

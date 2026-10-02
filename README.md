@@ -6,42 +6,38 @@ The desktop is the primary interface; the native CLI uses the same authorization
 filtering, approval, transfer and recovery services.
 
 [Website](https://ledgesync.com/) ·
-[Download 0.1.0-alpha.4](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4) ·
+[Download 0.1.0-alpha.5](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.5) ·
 [Connection guide](docs/GOOGLE_DRIVE_AUTH.md) ·
 [CLI/server guide](docs/CLI.md) ·
 [Apache-2.0 license](LICENSE)
 
-**Current developer alpha: 0.1.0-alpha.4.** Native application archives, macOS
-DMGs, Windows setup EXEs and Ubuntu DEBs are published from application source
-`fcd578488d07f627372e7f5dd2221e162634bf05`.
-This is a manual copy release: watching, scheduling, bidirectional sync,
-shared-drive transfers, download/restore, overwrite and deletion are unavailable.
+**Current developer alpha: 0.1.0-alpha.5** (pre-release, application source
+`64cf420fa29447181f1dc4edd245926d53b9fb7e`). It fixes the reported synchronization
+failure (My Drive under `drive.file`, links in ignored folders, ignored-file
+churn, earlier copies missing in Drive) and adds saved sync pairs, opt-in
+automatic copies, restore to a new folder and typed error guidance. All 37
+release assets are published; Windows and Ubuntu installers passed on clean
+native runners, and the signed APT repository serves alpha.5 with public
+installation verified on amd64 and arm64. See the
+[failure analysis](docs/research/DRIVE_SYNC_FAILURE_ANALYSIS.md),
+[release evidence](docs/research/DRIVE_SYNC_ALPHA5_RELEASE.json) and
+[status](docs/17_AGENT_HANDOFF_AND_STATUS.md).
 
-All 37 GitHub release assets are publicly verified. The signed APT repository
-serves alpha.4, and public installation checks passed on both Ubuntu architectures.
-The [website](https://ledgesync.com/) and secondary GitHub Pages copy serve the
-updated release. Exact delivery evidence is in the
-[publication status](docs/PLATFORMS.md#alpha4-native-validation-and-publication-gates).
-
-> **0.1.0-alpha.5 candidate (2026-10-02):** the reported synchronization failure
-> (My Drive under `drive.file`, links in ignored folders, ignored-file churn,
-> earlier copies missing in Drive) is fixed in source with regression tests, and
-> the release adds saved sync pairs, opt-in automatic copies, restore to a new
-> folder and typed error guidance. Live Google acceptance and publisher signing
-> are pending owner steps. See the [failure analysis](docs/research/DRIVE_SYNC_FAILURE_ANALYSIS.md),
-> [status](docs/17_AGENT_HANDOFF_AND_STATUS.md) and
-> [publisher signing](docs/PLATFORMS.md#publisher-signing).
+> macOS and Windows downloads are **unsigned developer builds**: publisher
+> signing is implemented but awaits the owner's Developer ID and Authenticode
+> material ([what to provide](docs/PLATFORMS.md#publisher-signing)). Live Google
+> Drive acceptance with the owner's account is pending its consent step.
 
 ## Downloads
 
-| System | Alpha.4 download |
+| System | Alpha.5 download |
 |---|---|
-| macOS 13+, Apple Silicon | [ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-macos-arm64.dmg) |
-| macOS 13+, Intel | [x64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-macos-amd64.dmg) |
-| Windows 11, x64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-windows-amd64-setup.exe) |
-| Windows 11, ARM64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.4/LedgeSync-0.1.0-alpha.4-windows-arm64-setup.exe) |
+| macOS 13+, Apple Silicon | [ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.5/LedgeSync-0.1.0-alpha.5-macos-arm64.dmg) |
+| macOS 13+, Intel | [x64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.5/LedgeSync-0.1.0-alpha.5-macos-amd64.dmg) |
+| Windows 11, x64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.5/LedgeSync-0.1.0-alpha.5-windows-amd64-setup.exe) |
+| Windows 11, ARM64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.5/LedgeSync-0.1.0-alpha.5-windows-arm64-setup.exe) |
 | Ubuntu 24.04, amd64/arm64 | [Signed APT repository](docs/PLATFORMS.md#ubuntu-apt): `apt-get install ledgesync` after setup |
-| Native CLI, all six targets | [CLI archives and checksums](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4) |
+| Native CLI, all six targets | [CLI archives and checksums](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.5) |
 
 On macOS, open the DMG and drag `LedgeSync.app` to Applications. Windows setup
 opens a graphical installation wizard and installs for the current user. Ubuntu

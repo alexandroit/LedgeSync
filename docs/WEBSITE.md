@@ -48,7 +48,29 @@ nameserver or mail records were changed. The existing `certbot.timer` handles
 renewal. The certificate-specific renewal hook tests Nginx configuration before
 reloading it: `/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx`.
 
-## Verified alpha.4 deployment
+## Verified alpha.5 deployment
+
+Verified on **2026-10-02 UTC**. Website source `3695675d4c299207d000b0cf55bddb119fb5dbff`
+publishes the alpha.5 downloads and updated privacy and terms text (local catalog
+of saved pairs and history, opt-in automatic copies, restore). The release was
+installed under `/var/www/ledgesync/releases/<commit>/` with root ownership and
+0755/0644 modes, verified against the commit, and activated by atomic `current`
+symlink replacement; the previous release `6c8f1d1…` is retained. All seven files
+match the source at the origin with verified TLS, and GitHub Pages
+([run 37055091677](https://github.com/alexandroit/LedgeSync/actions/runs/37055091677))
+matches as well. All 57 shared Nginx/Supervisor configuration hashes were
+unchanged, `nginx -t` passed without a reload, and HiperMusicas kept the same
+process and answered HTTP 200 publicly and at the origin.
+
+**Owner action:** through Cloudflare, the public homepage now also contains a
+Cloudflare Web Analytics beacon (`static.cloudflareinsights.com/beacon.min.js`)
+injected at the edge; it is not in the source or at the origin and was absent at
+the alpha.4 verification. The privacy policy states that the website adds no
+analytics product. Either disable Cloudflare Web Analytics automatic injection
+for ledgesync.com or disclose it in the privacy policy. Zone settings were not
+changed by this deployment.
+
+## Historical alpha.4 deployment
 
 Verified on **2026-10-02 UTC**. Current website source is
 `6c8f1d19f8c2aa398d98d0a5b39ba5a1999772d1`. It publishes alpha.4 downloads,

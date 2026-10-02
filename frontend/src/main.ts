@@ -1,7 +1,9 @@
 import './style.css';
-import type { DesktopBridge, DriveConnectionStatus, DriveDestination, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, Preview } from './types';
+import { describe, guidanceFor, parseError } from './errors';
+import type { AutomationView, DesktopBridge, DriveConnectionStatus, DriveDestination, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, PolicyGroup, Preview, Project, ProjectPolicy, RunSummary, Settings, TransferState } from './types';
 
-type View = 'files' | 'preview' | 'policies' | 'connections';
+type View = 'files' | 'preview' | 'policies' | 'connections' | 'activity' | 'history' | 'settings';
+const version = '0.1.0-alpha.5';
 type DriveAction = 'status' | 'connect' | 'check' | 'disconnect' | 'revoke';
 const state = {
   preview: null as Preview | null, view: 'files' as View, path: '', query: '',
@@ -24,7 +26,30 @@ const state = {
   destinationCancelIntent: false,
   unconfirmedUploadDigest: '',
   transferRevision: 0,
+  projects: [] as Project[],
+  projectsLoaded: false,
+  currentProject: null as Project | null,
+  projectError: '',
+  projectBusy: false,
+  runs: [] as RunSummary[],
+  historyProject: '',
+  historyError: '',
+  settings: null as Settings | null,
+  settingsError: '',
+  settingsNotice: '',
+  automation: null as AutomationView | null,
+  automationPoll: 0,
+  policyDraft: null as ProjectPolicy | null,
+  policyError: '',
+  automationTrigger: 'interval' as 'interval' | 'watch',
+  automationInterval: 900,
 };
+// Optional bridge methods are absent from older builds and browser previews.
+function optional<K extends keyof DesktopBridge>(name: K): NonNullable<DesktopBridge[K]> | null {
+  const api = window.go?.desktop?.App;
+  const method = api?.[name] as unknown;
+  return typeof method === 'function' ? ((...args: unknown[]) => (method as (...a: unknown[]) => unknown).apply(api, args)) as NonNullable<DesktopBridge[K]> : null;
+}
 const pageSize = 100;
 const root = document.querySelector<HTMLDivElement>('#app')!;
 let renderedLocation = '';
@@ -90,9 +115,10 @@ async function scan(method: 'OpenFolder' | 'OpenConfiguration' | 'Refresh') {
       if (!preview.entries.some(e => e.path === state.selected)) state.selected = '';
     }
   } catch (error) {
-    state.error = error instanceof Error ? error.message : String(error);
+    const parsed = parseError(error);
+    state.error = parsed ? `${parsed.code}: ${describe(error, parsed.message)}` : error instanceof Error ? error.message : String(error);
     state.preview = null; state.selected = ''; state.path = '';
-  } finally { state.busy = false; render(); }
+  } finally { state.busy = false; render(); void loadCurrentProject(); }
 }
 function navigate(path: string, addHistory = true) {
   state.path = path; state.query = ''; state.selected = ''; state.page = 0;
@@ -109,6 +135,10 @@ function historyMove(amount: number) {
 function changeView(view: View) {
   state.view = view; state.query = ''; state.page = 0; render();
   if (view === 'connections' && !state.driveLoaded && !state.driveBusy) void driveAction('status');
+  if (view === 'preview' || view === 'activity' || view === 'history') void loadProjects();
+  if (view === 'activity' || view === 'history') void loadHistory(view === 'history' ? state.historyProject : '');
+  if (view === 'settings') void loadSettings();
+  if (view === 'policies') void loadCurrentProject();
 }
 async function driveAction(action: DriveAction, confirmed = false, expectedAccountReference = '') {
   if (action === 'revoke' && (!confirmed || !expectedAccountReference)) return;
@@ -260,10 +290,10 @@ async function chooseDestination(method: 'ChooseDriveDestination' | 'UseMyDrive'
     if (revision !== state.uploadRevision) return;
     if (destination && !matchingDestination(destination)) throw new Error('Account changed');
     if (destination) { state.destination = destination; state.transfer = null; }
-  } catch {
-    state.uploadError = state.destinationCancelIntent ? '' : 'Could not select this Drive destination. Check your connection and authorize the folder in the browser, then try again.';
+  } catch (error) {
+    state.uploadError = state.destinationCancelIntent ? '' : describe(error, 'Could not select this Drive destination. Check your connection and authorize the folder in the browser, then try again.');
     if (!await reconcileDriveStatus()) state.uploadError = 'The saved connection status could not be read. Open Connections before choosing a destination again.';
-  } finally { state.uploadBusy = ''; state.destinationCancelIntent = false; render(); }
+  } finally { state.uploadBusy = ''; state.destinationCancelIntent = false; render(); void loadCurrentProject(); }
 }
 async function cancelDestination() {
   if (state.uploadBusy !== 'destination' || state.destinationCancelling) return;
@@ -286,9 +316,9 @@ async function previewDriveUpload() {
     if (revision !== state.uploadRevision) return;
     if (!validUploadPlan(plan)) throw new Error('Stale plan');
     state.uploadPlan = plan; state.view = 'preview'; state.query = ''; state.page = 0;
-  } catch {
+  } catch (error) {
     state.uploadPlan = null;
-    state.uploadError = 'Could not prepare a current upload plan. Check the selected folder, Drive destination and connection, then preview again. Nothing has been approved.';
+    state.uploadError = `${describe(error, 'Could not prepare a current upload plan. Check the selected folder, Drive destination and connection, then preview again.')} Nothing has been approved.`;
     await reconcileDriveStatus();
   } finally { state.uploadBusy = ''; render(); }
 }
@@ -298,7 +328,7 @@ function applyTransferStatus(status: DriveTransferStatus, expectedDigest?: strin
   state.transferRevision++;
   state.unconfirmedUploadDigest = '';
   state.transfer = status;
-  if (['succeeded', 'failed', 'cancelled', 'needs_review'].includes(status.state)) state.uploadPlan = null;
+  if (['succeeded', 'partial', 'failed', 'cancelled', 'needs_review'].includes(status.state)) { state.uploadPlan = null; void loadProjects(); }
   return true;
 }
 function scheduleTransferPoll() {
@@ -326,15 +356,16 @@ async function startDriveUpload() {
   try {
     const status = await bridge().StartDriveUpload(plan.planDigest);
     if (!applyTransferStatus(status, plan.planDigest)) throw new Error('Transfer changed');
-  } catch {
+  } catch (error) {
     state.uploadPlan = null;
+    const startProblem = parseError(error);
     // A rejected Wails call can discard a status DTO. Only this exact digest
     // may reconcile the attempt; an older successful run is not evidence.
     let reconciled = false;
     try { reconciled = applyTransferStatus(await bridge().DriveTransferStatus(), plan.planDigest); }
     catch { state.unconfirmedUploadDigest = plan.planDigest; }
     if (!reconciled) state.transfer = null;
-    state.uploadError = 'The approved upload could not be confirmed. Review the transfer status and preview again before retrying; existing Drive files are never overwritten.';
+    state.uploadError = 'The approved upload could not be confirmed. Review the transfer status and preview again before retrying; existing Drive files are never overwritten.' + (startProblem ? ` ${describe(error, '')}` : '');
     await reconcileDriveStatus();
   } finally { state.uploadBusy = ''; render(); scheduleTransferPoll(); }
 }
@@ -352,7 +383,7 @@ async function cancelDriveUpload() {
   } finally { state.uploadBusy = ''; render(); scheduleTransferPoll(); }
 }
 async function openUploadedDriveFolder() {
-  if (state.transfer?.state !== 'succeeded') return;
+  if (state.transfer?.state !== 'succeeded' && state.transfer?.state !== 'partial') return;
   try { await bridge().OpenUploadedDriveFolder(); }
   catch { state.uploadError = 'Could not open the verified destination in your browser. Your completed upload is unchanged.'; render(); }
 }
@@ -372,7 +403,8 @@ function renderDriveDestination(container: HTMLElement) {
     const target = el('p', 'destination-name');
     target.append(el('span', '', 'Destination: '), el('strong', '', destination ? displayPath(destination.name) : 'Not selected'));
     section.append(target);
-    section.append(el('p', 'muted', destination ? `Your folder structure is preserved inside a LedgeSync-managed folder in ${displayPath(destination.name)}. Later uploads verify existing copies and keep both versions of changed files.` : 'Choose My Drive or select an existing folder in your browser. Choosing a folder does not upload anything.'));
+    section.append(el('p', 'muted', destination ? `Your folder structure is preserved inside a LedgeSync-managed folder in ${displayPath(destination.name)}. Later uploads copy new files, verify existing copies and keep both versions of changed files.` : 'Choose My Drive or select an existing folder in your browser. Choosing a folder does not upload anything.'));
+    if (state.currentProject) section.append(el('p', 'pair-note', `Saved sync pair: ${displayPath(state.currentProject.name)}`));
     const actions = el('div', 'upload-actions');
     actions.append(uploadButton('Choose existing Drive folder', () => void chooseDestination('ChooseDriveDestination'), 'destination'), uploadButton('Use My Drive', () => void chooseDestination('UseMyDrive'), 'root'));
     const preview = uploadButton('Preview folder upload', () => void previewDriveUpload(), 'preview', true);
@@ -398,22 +430,37 @@ function renderDriveTransfer(container: HTMLElement) {
     const cancel = button(state.uploadBusy === 'cancel' ? 'Cancelling upload…' : 'Cancel upload', () => void cancelDriveUpload(), 'button subtle'); cancel.id = 'upload-cancel'; cancel.disabled = Boolean(state.uploadBusy); pending.append(cancel); container.append(pending); return;
   }
   if (!transfer || transfer.state === 'idle' || transfer.state === 'awaiting_approval') return;
-  const card = el('section', `transfer-card transfer-${transfer.state}`); card.setAttribute('aria-label', 'Folder transfer');
-  const labels: Record<DriveTransferStatus['state'], string> = { idle: 'No transfer', planning: 'Preparing upload', awaiting_approval: 'Waiting for approval', uploading: 'Uploading folder', verifying: 'Verifying uploaded files', succeeded: 'Folder upload verified', failed: 'Upload failed', cancelled: 'Upload cancelled', needs_review: 'Upload needs review' };
+  renderTransferCard(container, transfer, activeTransfer(), {
+    cancel: () => void cancelDriveUpload(), cancelLabel: state.uploadBusy === 'cancel' ? 'Cancelling upload…' : 'Cancel upload', cancelDisabled: Boolean(state.uploadBusy),
+    open: () => void openUploadedDriveFolder(),
+  });
+}
+const transferLabels: Record<TransferState, string> = { idle: 'No transfer', planning: 'Preparing upload', awaiting_approval: 'Waiting for approval', uploading: 'Uploading folder', verifying: 'Verifying uploaded files', succeeded: 'Folder upload verified', partial: 'Upload verified with skipped files', failed: 'Upload failed', cancelled: 'Upload cancelled', needs_review: 'Upload needs review' };
+function renderTransferCard(container: HTMLElement, transfer: DriveTransferStatus, active: boolean, actions: { cancel?: () => void; cancelLabel?: string; cancelDisabled?: boolean; open?: () => void; label?: string }) {
+  const card = el('section', `transfer-card transfer-${transfer.state}`); card.setAttribute('aria-label', actions.label ?? 'Folder transfer');
   const status = el('div', 'transfer-announcement'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
-  status.append(el('h2', '', labels[transfer.state]), el('p', '', displayPath(transfer.message))); card.append(status);
+  status.append(el('h2', '', transferLabels[transfer.state] ?? transfer.state), el('p', '', displayPath(transfer.message))); card.append(status);
+  if (transfer.errorCode && ['failed', 'needs_review'].includes(transfer.state)) { const hint = guidanceFor(transfer.errorCode); if (hint) card.append(el('p', 'transfer-hint', hint)); }
   const progress = el('progress'); progress.max = Math.max(transfer.totalBytes, 1); progress.value = Math.min(Math.max(transfer.uploadedBytes, 0), progress.max); progress.setAttribute('aria-label', 'Verified content bytes'); card.append(progress);
   card.append(el('p', 'transfer-counts', `${transfer.completedFiles} of ${transfer.totalFiles} files verified · ${bytes(transfer.uploadedBytes)} of ${bytes(transfer.totalBytes)} verified`));
+  if (active && (transfer.transferBytes ?? 0) > 0) card.append(el('p', 'transfer-sent', `Sending ${bytes(Math.min(transfer.sentBytes ?? 0, transfer.transferBytes ?? 0))} of ${bytes(transfer.transferBytes ?? 0)} to Google Drive`));
   card.append(el('p', 'muted', 'Verified totals include unchanged files already on Drive. They are not uploaded again.'));
   if (transfer.currentPath) card.append(el('p', 'transfer-path', displayPath(transfer.currentPath)));
-  if (activeTransfer()) {
-    const cancel = button(state.uploadBusy === 'cancel' ? 'Cancelling upload…' : 'Cancel upload', () => void cancelDriveUpload(), 'button subtle'); cancel.id = 'upload-cancel'; cancel.disabled = Boolean(state.uploadBusy); card.append(cancel);
+  const issues = transfer.issues ?? [];
+  if (issues.length) {
+    const list = el('details', 'transfer-issues'); list.open = transfer.state === 'partial';
+    list.append(el('summary', '', `${transfer.skippedFiles ?? issues.length} item${(transfer.skippedFiles ?? issues.length) === 1 ? '' : 's'} not copied in this run`));
+    const ul = el('ul'); for (const issue of issues.slice(0, 100)) { const li = el('li'); li.append(el('code', '', displayPath(issue.path)), el('span', '', ` — ${issue.message}`)); ul.append(li); } list.append(ul); card.append(list);
+  }
+  if ((transfer.pausedFiles ?? 0) > 0) card.append(el('p', 'muted', `${transfer.pausedFiles} changed file(s) were paused by the conflict policy and not copied.`));
+  if (active) {
+    if (actions.cancel) { const cancel = button(actions.cancelLabel ?? 'Cancel upload', actions.cancel, 'button subtle'); cancel.id = 'upload-cancel'; cancel.disabled = Boolean(actions.cancelDisabled); card.append(cancel); }
     card.append(el('p', 'muted', 'Keep LedgeSync open until the transfer finishes. Cancellation leaves any files already created on Drive; it does not delete them.'));
   } else if (transfer.state !== 'succeeded') {
     card.append(el('p', 'muted', 'Files already created on Drive are preserved. Create a fresh preview to reconcile existing copies and continue safely.'));
   }
-  if (transfer.state === 'succeeded' && transfer.remoteFolderId && /^[A-Za-z0-9_-]{1,200}$/.test(transfer.remoteFolderId)) {
-    const open = button('Open destination folder on Google Drive', () => void openUploadedDriveFolder(), 'button subtle'); open.id = 'upload-open'; card.append(open);
+  if ((transfer.state === 'succeeded' || transfer.state === 'partial') && transfer.remoteFolderId && /^[A-Za-z0-9_-]{1,200}$/.test(transfer.remoteFolderId) && actions.open) {
+    const open = button('Open destination folder on Google Drive', actions.open, 'button subtle'); open.id = 'upload-open'; card.append(open);
   }
   container.append(card);
 }
@@ -423,10 +470,14 @@ function renderDriveUploadPlan(container: HTMLElement) {
   const rootAction = plan.entries.find(entry => entry.relativePath === '' || entry.relativePath === plan.sourceName)?.action;
   approval.append(el('h2', '', 'Review and upload'), el('p', '', rootAction === 'skip' ? `Update the approved copy of ${displayPath(plan.sourceName)} in ${displayPath(plan.destinationName)}. Verified copies are reused; changed files keep both versions.` : `Copy ${displayPath(plan.sourceName)} into a LedgeSync-managed folder in ${displayPath(plan.destinationName)}.`));
   const stats = el('div', 'stats');
-  for (const [value, label] of [[String(plan.fileCount), 'files in plan'], [String(plan.folderCount), 'folders in plan'], [bytes(plan.totalBytes), 'content to verify'], [String(plan.excludedCount), 'excluded items']]) {
+  const counters: [string, string][] = [[String(plan.fileCount), 'files in plan'], [String(plan.folderCount), 'folders in plan'], [bytes(plan.totalBytes), 'content to verify'], [String(plan.excludedCount), 'excluded items']];
+  if (plan.transferBytes !== undefined) counters.push([bytes(plan.transferBytes), 'to upload now']);
+  for (const [value, label] of counters) {
     const stat = el('div'); stat.append(el('strong', '', value), el('span', '', label)); stats.append(stat);
   }
   approval.append(stats, el('p', 'upload-policy', 'Folder structure and included empty folders are preserved. Active ignore rules still apply; excluded items are skipped. Verified copies are reused. Changed files get a .ledgesync- suffix with a stable identifier; both versions remain. No existing file is overwritten or deleted.'));
+  const summary = [[plan.newFiles, 'new'], [plan.changedFiles, 'changed'], [plan.unchangedFiles, 'unchanged'], [plan.recreatedItems, 'copied again'], [plan.pausedFiles, 'paused'], [plan.unsupportedCount, 'links not copied']].filter(([count]) => typeof count === 'number' && count > 0).map(([count, label]) => `${count} ${label}`);
+  if (summary.length) approval.append(el('p', 'plan-summary', `Files: ${summary.join(' · ')}`));
   for (const warning of plan.warnings ?? []) approval.append(el('p', 'preserved-note', displayPath(warning)));
   const identity = el('dl', 'details upload-identity');
   field(identity, 'Google account', displayPath(state.drive?.account?.email || plan.accountReference)); field(identity, 'Destination ID', displayPath(plan.destinationId)); field(identity, 'Plan expires', new Date(plan.expiresAt).toLocaleString()); approval.append(identity);
@@ -434,8 +485,10 @@ function renderDriveUploadPlan(container: HTMLElement) {
   const entries = plan.entries.filter(entry => !state.query || entry.relativePath.toLocaleLowerCase().includes(state.query.toLocaleLowerCase()));
   const list = el('div', 'operations upload-entries'); list.setAttribute('aria-label', 'Approved folder contents');
   for (const entry of entries.slice(state.uploadPage * pageSize, (state.uploadPage + 1) * pageSize)) {
-    const actionLabels: Record<string, string> = { skip: 'Verify existing copy', resume: 'Resume reserved copy', 'keep-both': 'Keep both versions', create: 'Create folder', upload: 'Copy new file' };
-    const row = el('div', 'operation'); row.append(el('span', 'operation-path', displayPath(entry.relativePath || plan.sourceName)), el('span', 'operation-type', actionLabels[entry.action || ''] || (entry.kind === 'directory' || entry.kind === 'folder' ? 'Create folder' : 'Copy new file')), el('span', 'muted', entry.kind === 'directory' || entry.kind === 'folder' ? '—' : bytes(entry.size))); list.append(row);
+    const actionLabels: Record<string, string> = { skip: 'Verify existing copy', resume: 'Resume reserved copy', 'keep-both': 'Keep both versions', create: 'Create folder', upload: 'Copy new file', recreate: 'Copy again (earlier copy missing)', paused: 'Paused: changed file', unsupported: 'Not copied: link' };
+    const row = el('div', `operation action-${entry.action || 'upload'}`); row.append(el('span', 'operation-path', displayPath(entry.relativePath || plan.sourceName)), el('span', 'operation-type', actionLabels[entry.action || ''] || (entry.kind === 'directory' || entry.kind === 'folder' ? 'Create folder' : 'Copy new file')), el('span', 'muted', entry.kind === 'directory' || entry.kind === 'folder' ? '—' : bytes(entry.size)));
+    if (entry.note) { row.title = entry.note; row.append(el('span', 'operation-note', displayPath(entry.note))); }
+    list.append(row);
   }
   approval.append(list);
   if (entries.length > pageSize) {
@@ -445,6 +498,7 @@ function renderDriveUploadPlan(container: HTMLElement) {
   }
   const detail = el('details', 'plan-details'); detail.append(el('summary', '', 'Approved plan identity'), el('p', 'transfer-path', plan.planDigest)); approval.append(detail);
   container.append(approval);
+  renderAutomationOffer(container, plan);
 }
 
 function render() {
@@ -469,19 +523,25 @@ function render() {
     if (state.view === view) item.setAttribute('aria-current', 'page');
     nav.append(item);
   }
-  for (const [title, symbol] of [['Activity', 'activity'], ['History & Recovery', 'history'], ['Settings', 'settings']]) {
-    const item = button(title, () => {}, 'nav-item planned', symbol);
-    item.disabled = true; item.title = 'Planned for a later release'; item.append(el('small', '', 'Later')); nav.append(item);
+  for (const [view, title, symbol] of [['activity', 'Activity', 'activity'], ['history', 'History & Recovery', 'history'], ['settings', 'Settings', 'settings']] as const) {
+    const item = button(title, () => changeView(view), `nav-item ${state.view === view ? 'active' : ''}`, symbol);
+    if (state.view === view) item.setAttribute('aria-current', 'page');
+    nav.append(item);
   }
   sidebar.append(nav);
-  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', 'Developer alpha · 0.1.0-alpha.4'), el('p', '', state.driveBusy === 'revoke' || state.driveBusy === 'disconnect' ? 'Updating Google Drive access…' : state.drive?.state === 'revoked_local_cleanup_required' ? 'Google access revoked. Local credential cleanup is required.' : state.drive?.state === 'connected' ? 'Google Drive connected. Choose a destination and preview your folder upload.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
+  const automaticCount = state.projects.filter(p => p.automation.enabled && !p.automation.paused).length;
+  if (state.automation?.available && (automaticCount || state.automation.running)) {
+    const auto = el('p', 'sidebar-automation', state.automation.paused ? 'Automatic copies paused' : state.automation.running ? 'Automatic copy running…' : `Automatic copies on for ${automaticCount} pair${automaticCount === 1 ? '' : 's'}`);
+    auto.setAttribute('role', 'status'); sidebar.append(auto);
+  }
+  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', `Developer alpha · ${version}`), el('p', '', state.driveBusy === 'revoke' || state.driveBusy === 'disconnect' ? 'Updating Google Drive access…' : state.drive?.state === 'revoked_local_cleanup_required' ? 'Google access revoked. Local credential cleanup is required.' : state.drive?.state === 'connected' ? 'Google Drive connected. Choose a destination and preview your folder upload.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
   sidebar.append(offline); shell.append(sidebar);
 
   const workspace = el('main', 'workspace');
   const top = el('header', 'topbar');
   const search = el('label', 'search'); search.append(icon('search'));
   const input = el('input'); input.id = 'search'; input.type = 'search'; input.placeholder = 'Search this project'; input.setAttribute('aria-label', 'Search this project'); input.value = state.query;
-  input.disabled = !state.preview || state.busy || state.view === 'policies' || state.view === 'connections';
+  input.disabled = !state.preview || state.busy || ['policies', 'connections', 'activity', 'history', 'settings'].includes(state.view);
   input.addEventListener('input', () => { state.query = input.value; state.page = 0; state.uploadPage = 0; render(); });
   search.append(input); top.append(search);
   top.append(badge(activeTransfer() ? 'Drive upload in progress' : state.destination ? 'Drive destination selected' : 'Local file preview', state.destination ? 'connected' : 'offline'));
@@ -495,8 +555,12 @@ function render() {
     workspace.append(progress);
   }
   const body = el('div', `body ${state.preview ? 'has-preview' : ''}`);
-  const content = el('section', 'content'); content.setAttribute('aria-label', state.view === 'connections' ? 'Account connections' : 'File workspace');
+  const content = el('section', 'content'); content.setAttribute('aria-label', state.view === 'connections' ? 'Account connections' : ['activity', 'history', 'settings'].includes(state.view) ? 'Activity and settings' : 'File workspace');
   if (state.view === 'connections') renderConnections(content);
+  else if (state.view === 'activity') renderActivity(content);
+  else if (state.view === 'history') renderHistory(content);
+  else if (state.view === 'settings') renderSettings(content);
+  else if (state.view === 'preview' && !state.preview) renderPairs(content);
   else if (!state.preview) renderEmpty(content);
   else {
     const heading = el('div', 'heading');
@@ -508,7 +572,7 @@ function render() {
     else renderPolicies(content);
   }
   body.append(content);
-  if (state.preview && state.view !== 'policies' && state.view !== 'connections' && !(state.view === 'preview' && state.destination)) { const inspector = el('aside', 'inspector'); inspector.id = 'inspector'; inspector.setAttribute('aria-label', 'Details and policy explanation'); renderInspector(inspector); body.append(inspector); }
+  if (state.preview && (state.view === 'files' || state.view === 'preview' && !state.destination)) { const inspector = el('aside', 'inspector'); inspector.id = 'inspector'; inspector.setAttribute('aria-label', 'Details and policy explanation'); renderInspector(inspector); body.append(inspector); }
   workspace.append(body); shell.append(workspace); root.append(shell);
   content.scrollTop = contentScroll;
   const inspector = document.getElementById('inspector'); if (inspector) inspector.scrollTop = inspectorScroll;
@@ -713,16 +777,18 @@ function operationLabel(operation: Operation) {
 }
 function renderPreview(container: HTMLElement) {
   const preview = state.preview!; const plan = preview.plan;
+  renderPairList(container, true);
   renderDriveDestination(container);
   if (state.uploadPlan) { renderDriveUploadPlan(container); return; }
   if (state.destination) {
     if (!activeTransfer()) container.append(el('p', 'section-description', 'Preview folder upload to read the current local files, validate this destination and review the exact files and folders before approving.'));
+    renderAutomationPanel(container);
     return;
   }
-  const banner = el('div', 'notice'); banner.append(icon('info'), el('p', '', 'Read-only simulation using an empty test destination. This preview uses a simulated destination and cannot be applied, regardless of your Google Drive connection.')); container.append(banner);
-  const pair = el('div', 'pair'); const local = el('div'); local.append(icon('folder'), el('strong', '', preview.projectName), el('small', '', 'Local folder')); const remote = el('div'); remote.append(icon('cloud'), el('strong', '', 'No Drive destination selected'), el('small', '', 'Local simulation · nothing uploaded')); pair.append(local, icon('arrow'), remote); container.append(pair);
+  const banner = el('div', 'notice'); banner.append(icon('info'), el('p', '', 'Local selection only. Google Drive was not contacted and no Drive destination is selected: this list shows what the current rules select. Choose a destination, then preview the folder upload to see the real plan. Nothing here can be applied.')); container.append(banner);
+  const pair = el('div', 'pair'); const local = el('div'); local.append(icon('folder'), el('strong', '', preview.projectName), el('small', '', 'Local folder')); const remote = el('div'); remote.append(icon('cloud'), el('strong', '', 'No Drive destination selected'), el('small', '', 'Drive not contacted · nothing uploaded')); pair.append(local, icon('arrow'), remote); container.append(pair);
   const stats = el('div', 'stats');
-  for (const [value, label] of [[String(plan.summary.operationCount), 'planned operations'], [bytes(plan.summary.uploadBytes), 'planned copy size'], [String(preview.entries.filter(e => e.decision === 'exclude').length), 'excluded items'], [String(plan.summary.trashCount), 'deletions']]) { const stat = el('div'); stat.append(el('strong', '', value), el('span', '', label)); stats.append(stat); }
+  for (const [value, label] of [[String(plan.summary.operationCount), 'local selection items'], [bytes(plan.summary.uploadBytes), 'selected file size'], [String(preview.entries.filter(e => e.decision === 'exclude').length), 'excluded items'], [String(plan.summary.trashCount), 'deletions']]) { const stat = el('div'); stat.append(el('strong', '', value), el('span', '', label)); stats.append(stat); }
   container.append(stats);
   const filters = el('div', 'filters'); filters.setAttribute('aria-label', 'Preview filters');
   for (const filter of ['all', 'changes', 'excluded', 'conflicts']) { const b = button(filter[0].toUpperCase() + filter.slice(1), () => { state.filter = filter; state.page = 0; render(); }, `filter ${state.filter === filter ? 'active' : ''}`); b.setAttribute('aria-pressed', String(state.filter === filter)); filters.append(b); }
@@ -735,14 +801,16 @@ function renderPreview(container: HTMLElement) {
     row.append(el('span', 'operation-path', displayPath(op.relativePath)), el('span', 'operation-type', operationLabel(op)), el('span', 'muted', op.expectedSize ? bytes(op.expectedSize) : '—')); list.append(row);
   }
   container.append(list); if (!operations.length) container.append(el('p', 'empty-list', 'No operations in this view.')); renderPagination(container, operations.length);
-  const digest = el('details', 'plan-details'); digest.append(el('summary', '', 'Plan identity and limitations'));
-  const details = el('dl', 'details'); field(details, 'Plan digest', plan.planDigest); field(details, 'Rules digest', plan.rulesDigest); field(details, 'Destination identity', plan.destinationIdentity); digest.append(details);
-  for (const risk of plan.risks ?? []) digest.append(el('p', 'muted', risk)); container.append(digest);
+  const digest = el('details', 'plan-details'); digest.append(el('summary', '', 'Selection identity and limitations'));
+  const details = el('dl', 'details'); field(details, 'Selection digest', plan.planDigest); field(details, 'Rules digest', plan.rulesDigest); digest.append(details);
+  container.append(digest);
 }
 function renderPolicies(container: HTMLElement) {
   const preview = state.preview!;
   container.append(el('p', 'section-description', 'Capabilities are reported by the same engine that scans your files. Unsupported adapters block a configuration that requires them.'));
-  const source = el('div', 'notice'); source.append(icon('shield'), el('p', '', 'Choose folder uses optional recursive .gitignore with conservative composition. Open a configuration to use custom filenames, multiple sources, or rclone filter profiles.')); container.append(source);
+  renderPolicyEditor(container);
+  const source = el('div', 'notice'); source.append(icon('shield'), el('p', '', 'Choose folder uses optional recursive .gitignore with conservative composition. Edit a saved sync pair’s policy above, or open a configuration file, to use custom filenames, multiple sources or rclone filter profiles.')); container.append(source);
+  if (preview.pruned?.length) container.append(el('p', 'muted', `${preview.pruned.length} excluded folder${preview.pruned.length === 1 ? ' was' : 's were'} not read because the ignore rules exclude everything inside them.`));
   const list = el('div', 'capabilities');
   for (const capability of preview.capabilities) {
     const card = el('article', 'capability'); const title = el('div', 'capability-title'); title.append(el('h3', '', capability.dialect), badge(capability.supported ? 'Available profile' : 'Not implemented', capability.supported ? 'offline' : '')); card.append(title);
@@ -751,7 +819,330 @@ function renderPolicies(container: HTMLElement) {
   }
   container.append(list);
 }
+
+// ---- Saved sync pairs ------------------------------------------------------
+
+async function loadProjects() {
+  const list = optional('ListProjects');
+  if (!list) return;
+  try { state.projects = await list() ?? []; state.projectError = ''; }
+  catch (error) { state.projectError = describe(error, 'Saved sync pairs could not be read.'); }
+  finally { state.projectsLoaded = true; render(); }
+  void loadAutomation();
+}
+async function loadCurrentProject() {
+  const current = optional('CurrentProject');
+  if (!current) return;
+  try {
+    const project = await current();
+    const changed = project?.id !== state.currentProject?.id || project?.updatedAt !== state.currentProject?.updatedAt;
+    state.currentProject = project ?? null;
+    if (changed) state.policyDraft = null;
+    render();
+  } catch { /* Saved pairs are optional; the open folder remains usable. */ }
+}
+async function loadAutomation() {
+  const status = optional('AutomationStatus');
+  if (!status) return;
+  window.clearTimeout(state.automationPoll);
+  try { state.automation = await status(); } catch { state.automation = null; }
+  render();
+  if (state.automation?.running || state.projects.some(p => p.automation.enabled && !p.automation.paused)) state.automationPoll = window.setTimeout(() => void loadAutomation(), state.automation?.running ? 1500 : 15000);
+}
+async function projectAction(action: () => Promise<unknown>, fallback: string) {
+  if (state.projectBusy) return;
+  state.projectBusy = true; state.projectError = ''; render();
+  try { await action(); }
+  catch (error) { state.projectError = describe(error, fallback); }
+  finally { state.projectBusy = false; await loadProjects(); await loadCurrentProject(); }
+}
+async function openProject(project: Project) {
+  const open = optional('OpenProject');
+  if (!open || state.busy || uploadLocked()) return;
+  invalidateUploadPlan(); state.transfer = null; state.busy = true; state.error = ''; render();
+  try {
+    const session = await open(project.id);
+    state.preview = session.preview; state.path = ''; state.history = ['']; state.historyIndex = 0; state.selected = ''; state.query = ''; state.page = 0;
+    state.currentProject = session.project; state.policyDraft = null;
+    state.destination = session.destination && matchingDestination(session.destination) ? session.destination : null;
+    state.uploadError = session.destinationError ? `${session.destinationError.message} ${guidanceFor(session.destinationError.code)}`.trim() : '';
+    state.view = 'preview';
+  } catch (error) {
+    state.error = describe(error, 'This sync pair could not be opened.');
+  } finally { state.busy = false; render(); }
+}
+function pairState(project: Project) {
+  const run = project.lastRun;
+  if (!run) return 'Not copied yet';
+  const when = date(run.finishedAt);
+  return `${transferLabels[run.state as TransferState] ?? run.state} · ${when}${run.trigger === 'automatic' ? ' · automatic' : ''}`;
+}
+function automationLabel(project: Project) {
+  const a = project.automation;
+  if (!a.enabled) return 'Automatic copies off';
+  if (a.paused) return 'Automatic copies paused';
+  if (a.waiting) return 'Automatic copies waiting';
+  return a.trigger === 'watch' ? `Checks for changes every ${minutes(a.intervalSeconds)}` : `Copies every ${minutes(a.intervalSeconds)}`;
+}
+function minutes(seconds: number) { return seconds % 3600 === 0 ? `${seconds / 3600} h` : `${Math.round(seconds / 60)} min`; }
+function renderPairList(container: HTMLElement, compact = false) {
+  if (!optional('ListProjects')) return;
+  const section = el('section', 'pairs'); section.setAttribute('aria-labelledby', 'pairs-heading');
+  const heading = el('h2', '', 'Saved sync pairs'); heading.id = 'pairs-heading'; section.append(heading);
+  if (state.projectError) { const error = el('div', 'error', state.projectError); error.setAttribute('role', 'alert'); section.append(error); }
+  if (!state.projects.length) {
+    section.append(el('p', 'muted', state.projectsLoaded ? 'No saved pairs yet. Choose a local folder and a Drive destination; an approved upload saves the pair here so you can reopen it later.' : 'Loading saved pairs…'));
+    container.append(section); return;
+  }
+  const list = el('div', 'pair-list'); list.setAttribute('role', 'list');
+  for (const project of compact ? state.projects.slice(0, 6) : state.projects) {
+    const card = el('article', `pair-card ${state.currentProject?.id === project.id ? 'is-open' : ''}`); card.setAttribute('role', 'listitem'); card.setAttribute('aria-label', `Sync pair ${project.name}`);
+    const title = el('div', 'pair-title'); title.append(icon('folder'), el('strong', '', displayPath(project.name)), icon('arrow'), icon('cloud'), el('span', '', displayPath(project.destination.name)));
+    card.append(title, el('p', 'muted pair-source', displayPath(project.sourceRoot)), el('p', 'pair-state', pairState(project)), el('p', `pair-automation ${project.automation.paused ? 'paused' : ''}`, automationLabel(project)));
+    if (project.automation.paused && project.automation.pauseReason) card.append(el('p', 'pair-pause', displayPath(project.automation.pauseReason)));
+    const actions = el('div', 'pair-actions');
+    const open = button(state.currentProject?.id === project.id ? 'Reopen' : 'Open', () => void openProject(project), 'button subtle'); open.disabled = state.busy || uploadLocked() || state.projectBusy; actions.append(open);
+    if (!compact) {
+      const rename = button('Rename', () => {
+        const name = window.prompt('Name this sync pair', project.name); const fn = optional('RenameProject');
+        if (name && name.trim() && fn) void projectAction(() => fn(project.id, name.trim()), 'The sync pair could not be renamed.');
+      }, 'button subtle'); rename.disabled = state.projectBusy; actions.append(rename);
+      const forget = button('Forget on this computer', () => {
+        const fn = optional('ForgetProject');
+        if (fn && window.confirm(`Forget “${project.name}” on this computer? Drive copies, the local folder and LedgeSync’s transfer journal are not changed.`)) void projectAction(() => fn(project.id), 'The sync pair could not be removed.');
+      }, 'button subtle'); forget.disabled = state.projectBusy || state.automation?.activeProjectId === project.id; actions.append(forget);
+    }
+    card.append(actions); list.append(card);
+  }
+  section.append(list);
+  if (compact && state.projects.length > 6) section.append(el('p', 'muted', `${state.projects.length - 6} more in History & Recovery.`));
+  container.append(section);
+}
+function renderPairs(container: HTMLElement) {
+  const heading = el('div', 'heading'); const title = el('div'); title.append(el('p', 'eyebrow', 'SYNC PAIRS'), el('h1', '', 'Sync pairs')); heading.append(title); container.append(heading);
+  container.append(el('p', 'section-description', 'A sync pair is a local folder copied into a LedgeSync-managed folder in Google Drive. Open a pair to preview new and changed files, or choose a new local folder.'));
+  renderPairList(container);
+}
+
+// ---- Automatic copies ------------------------------------------------------
+
+function renderAutomationPanel(container: HTMLElement) {
+  const project = state.currentProject;
+  if (!project || !optional('AuthorizeAutomation') || !state.automation?.available) return;
+  if (project.destination.id !== state.destination?.id) return;
+  const a = project.automation;
+  const section = el('section', 'automation'); section.setAttribute('aria-labelledby', 'automation-heading');
+  const heading = el('h2', '', 'Automatic copies'); heading.id = 'automation-heading'; section.append(heading);
+  section.append(el('p', 'section-description', automationLabel(project)));
+  if (a.enabled && a.authorization) section.append(el('p', 'muted', `Authorized ${date(a.authorization.approvedAt)} for this account, destination, folder, configuration and ignore rules. Any change pauses automatic copies until you review a new preview. Runs only while LedgeSync is open.`));
+  if (a.waiting) section.append(el('p', 'automation-waiting', displayPath(a.waiting)));
+  if (a.paused) { const pause = el('div', 'error', `${displayPath(a.pauseReason ?? 'Paused.')} ${guidanceFor(a.pauseCode ?? '')}`.trim()); pause.setAttribute('role', 'alert'); section.append(pause); }
+  const actions = el('div', 'upload-actions');
+  if (a.enabled) {
+    const check = button('Check now', () => { const fn = optional('CheckProjectNow'); if (fn) void projectAction(() => fn(project.id), 'The automatic check could not start.'); }, 'button subtle'); check.disabled = a.paused || state.projectBusy;
+    const resume = button('Resume', () => { const fn = optional('ResumeAutomation'); if (fn) void projectAction(() => fn(project.id), 'Automatic copies could not resume.'); }, 'button subtle'); resume.disabled = !a.paused || state.projectBusy || a.pauseCode === 'AUTOMATION_REVIEW_REQUIRED';
+    const disable = button('Turn off automatic copies', () => { const fn = optional('DisableAutomation'); if (fn) void projectAction(() => fn(project.id), 'Automatic copies could not be turned off.'); }, 'button subtle'); disable.disabled = state.projectBusy;
+    actions.append(check, resume, disable);
+  } else {
+    actions.append(el('p', 'muted', 'Preview this folder upload, then enable automatic copies from the review.'));
+  }
+  section.append(actions);
+  if (state.automation?.running && state.automation.activeProjectId === project.id && state.automation.transfer) {
+    renderTransferCard(section, state.automation.transfer, true, { label: 'Automatic copy', cancel: () => { const fn = optional('CancelAutomaticCopy'); if (fn) void fn().then(() => loadAutomation()); }, cancelLabel: 'Stop automatic copy' });
+  }
+  container.append(section);
+}
+function renderAutomationOffer(container: HTMLElement, plan: DriveUploadPlan) {
+  if (!optional('AuthorizeAutomation') || !state.automation?.available || (plan.recreatedItems ?? 0) > 0) return;
+  const section = el('section', 'automation-offer'); section.setAttribute('aria-labelledby', 'automation-offer-heading');
+  const heading = el('h3', '', 'Keep this pair up to date automatically'); heading.id = 'automation-offer-heading'; section.append(heading);
+  section.append(el('p', 'muted', 'Optional. While LedgeSync is open, it can copy new and changed files of this exact pair without asking each time. It never deletes or overwrites Drive files, and it pauses for your review if the account, destination, folder, configuration or ignore rules change.'));
+  const form = el('div', 'automation-form');
+  const trigger = el('select'); trigger.id = 'automation-trigger'; trigger.setAttribute('aria-label', 'Automatic copy schedule');
+  for (const [value, label] of [['interval', 'Copy on a schedule'], ['watch', 'Check for local changes on a schedule']] as const) { const o = el('option', '', label); o.value = value; o.selected = state.automationTrigger === value; trigger.append(o); }
+  trigger.addEventListener('change', () => { state.automationTrigger = trigger.value as 'interval' | 'watch'; });
+  const interval = el('select'); interval.id = 'automation-interval'; interval.setAttribute('aria-label', 'How often');
+  for (const [value, label] of [[300, 'Every 5 minutes'], [900, 'Every 15 minutes'], [3600, 'Every hour'], [21600, 'Every 6 hours'], [86400, 'Every day']] as const) { const o = el('option', '', label); o.value = String(value); o.selected = state.automationInterval === value; interval.append(o); }
+  interval.addEventListener('change', () => { state.automationInterval = Number(interval.value); });
+  const enable = button('Allow automatic copies…', () => {
+    const fn = optional('AuthorizeAutomation');
+    if (!fn || !validUploadPlan(plan)) return;
+    if (!window.confirm(`Allow LedgeSync to copy new and changed files from “${plan.sourceName}” to “${plan.destinationName}” automatically while it is open? Existing Drive files are never overwritten or deleted. You can pause or turn this off at any time.`)) return;
+    void projectAction(async () => { state.currentProject = await fn(state.currentProject?.id ?? '', state.automationTrigger, state.automationInterval, plan.planDigest); }, 'Automatic copies could not be enabled.');
+  }, 'button subtle'); enable.id = 'automation-enable'; enable.disabled = state.projectBusy || !validUploadPlan(plan) || uploadLocked();
+  form.append(trigger, interval, enable); section.append(form);
+  if (state.projectError) { const error = el('div', 'error', state.projectError); error.setAttribute('role', 'alert'); section.append(error); }
+  container.append(section);
+}
+
+// ---- Activity, history and settings ----------------------------------------
+
+async function loadHistory(id: string) {
+  const history = optional('ProjectHistory');
+  if (!history) return;
+  try { state.runs = await history(id) ?? []; state.historyError = ''; }
+  catch (error) { state.historyError = describe(error, 'Run history could not be read.'); }
+  render();
+}
+function renderRun(container: HTMLElement, run: RunSummary) {
+  const item = el('article', `run run-${run.state}`); item.setAttribute('aria-label', `${run.projectName} ${run.state}`);
+  const head = el('div', 'run-head'); head.append(el('strong', '', displayPath(run.projectName)), badge(transferLabels[run.state as TransferState] ?? run.state, run.state === 'succeeded' ? 'connected' : ''), el('span', 'muted', `${run.trigger === 'automatic' ? 'Automatic' : 'Manual'} · ${run.finishedAt ? new Date(run.finishedAt).toLocaleString() : '—'}`));
+  item.append(head, el('p', '', displayPath(run.message)));
+  item.append(el('p', 'muted', `${run.completedFiles} of ${run.totalFiles} files verified · ${bytes(run.sentBytes)} sent · destination ${displayPath(run.destination)}`));
+  if (run.errorCode && guidanceFor(run.errorCode)) item.append(el('p', 'transfer-hint', guidanceFor(run.errorCode)));
+  if (run.issues?.length) {
+    const d = el('details'); d.append(el('summary', '', `${run.issues.length} item${run.issues.length === 1 ? '' : 's'} not copied`));
+    const ul = el('ul'); for (const issue of run.issues.slice(0, 100)) { const li = el('li'); li.append(el('code', '', displayPath(issue.path)), el('span', '', ` — ${issue.message}`)); ul.append(li); } d.append(ul); item.append(d);
+  }
+  container.append(item);
+}
+function renderActivity(container: HTMLElement) {
+  const heading = el('div', 'heading'); const title = el('div'); title.append(el('p', 'eyebrow', 'ACTIVITY'), el('h1', '', 'Activity')); heading.append(title);
+  const refresh = button('Refresh', () => { void loadProjects(); void loadHistory(''); }, 'button subtle', 'refresh'); heading.append(refresh); container.append(heading);
+  if (state.transfer && state.transfer.state !== 'idle' && state.transfer.state !== 'awaiting_approval') renderDriveTransfer(container);
+  if (state.automation?.running && state.automation.transfer) renderTransferCard(container, state.automation.transfer, true, { label: 'Automatic copy', cancel: () => { const fn = optional('CancelAutomaticCopy'); if (fn) void fn().then(() => loadAutomation()); }, cancelLabel: 'Stop automatic copy' });
+  if (state.automation?.paused) container.append(el('p', 'notice-inline', 'Automatic copies are paused for all sync pairs in Settings.'));
+  const waiting = state.projects.filter(p => p.automation.enabled && (p.automation.paused || p.automation.waiting));
+  for (const p of waiting) container.append(el('p', p.automation.paused ? 'error' : 'muted', `${p.name}: ${p.automation.paused ? p.automation.pauseReason ?? 'Paused.' : p.automation.waiting}`));
+  container.append(el('h2', '', 'Recent runs'));
+  if (state.historyError) { const error = el('div', 'error', state.historyError); error.setAttribute('role', 'alert'); container.append(error); }
+  if (!state.runs.length) container.append(el('p', 'muted', 'No runs yet. Approved uploads and automatic copies appear here.'));
+  for (const run of state.runs.slice(0, 20)) renderRun(container, run);
+}
+function renderHistory(container: HTMLElement) {
+  const heading = el('div', 'heading'); const title = el('div'); title.append(el('p', 'eyebrow', 'HISTORY & RECOVERY'), el('h1', '', 'History & Recovery')); heading.append(title); container.append(heading);
+  const guide = el('div', 'notice'); guide.append(icon('history'), el('p', '', 'LedgeSync never deletes or overwrites Drive files. To recover after an interruption, open the sync pair and preview again: reserved copies are reconciled by identity, finished files are skipped, and items that are missing, trashed, renamed or moved in Drive are copied again without changing the existing Drive items. Changed files keep their earlier copies.')); container.append(guide);
+  const picker = el('select'); picker.setAttribute('aria-label', 'Sync pair history');
+  const all = el('option', '', 'All sync pairs'); all.value = ''; picker.append(all);
+  for (const p of state.projects) { const o = el('option', '', p.name); o.value = p.id; o.selected = state.historyProject === p.id; picker.append(o); }
+  picker.addEventListener('change', () => { state.historyProject = picker.value; void loadHistory(picker.value); });
+  container.append(picker);
+  const project = state.projects.find(p => p.id === state.historyProject);
+  if (project?.lastRun && (project.lastRun.state === 'succeeded' || project.lastRun.state === 'partial') && optional('OpenProjectDriveFolder')) {
+    container.append(button('Open copy in Google Drive', () => { const fn = optional('OpenProjectDriveFolder'); if (fn) void fn(project.id).catch(error => { state.historyError = describe(error, 'The Drive folder could not be opened.'); render(); }); }, 'button subtle', 'cloud'));
+  }
+  if (state.historyError) { const error = el('div', 'error', state.historyError); error.setAttribute('role', 'alert'); container.append(error); }
+  if (!state.runs.length) container.append(el('p', 'muted', 'No runs recorded for this selection.'));
+  for (const run of state.runs) renderRun(container, run);
+  renderPairList(container);
+}
+async function loadSettings() {
+  const get = optional('GetSettings');
+  if (!get) return;
+  try { state.settings = await get(); state.settingsError = ''; } catch (error) { state.settingsError = describe(error, 'Settings could not be read.'); }
+  render();
+}
+async function saveSettings(next: Settings, notice: string) {
+  const save = optional('SaveSettings');
+  if (!save) return;
+  try { state.settings = await save(next); state.settingsError = ''; state.settingsNotice = notice; }
+  catch (error) { state.settingsError = describe(error, 'Settings could not be saved.'); }
+  render(); void loadAutomation();
+}
+function renderSettings(container: HTMLElement) {
+  const heading = el('div', 'heading'); const title = el('div'); title.append(el('p', 'eyebrow', 'SETTINGS'), el('h1', '', 'Settings')); heading.append(title); container.append(heading);
+  const settings = state.settings;
+  if (state.settingsError) { const error = el('div', 'error', state.settingsError); error.setAttribute('role', 'alert'); container.append(error); }
+  if (state.settingsNotice) { const ok = el('p', 'settings-notice', state.settingsNotice); ok.setAttribute('role', 'status'); container.append(ok); }
+  if (!settings) { container.append(el('p', 'muted', optional('GetSettings') ? 'Loading settings…' : 'Settings are available in the LedgeSync desktop application.')); return; }
+  const form = el('section', 'settings'); form.setAttribute('aria-label', 'Defaults for new sync pairs');
+  form.append(el('h2', '', 'New sync pairs'));
+  const conflict = el('select'); conflict.id = 'settings-conflict'; conflict.setAttribute('aria-label', 'When a copied file changes');
+  for (const [value, label] of [['keep-both', 'Copy the new version and keep the earlier copy'], ['pause', 'Pause changed files for review']] as const) { const o = el('option', '', label); o.value = value; o.selected = settings.defaultConflictPolicy === value; conflict.append(o); }
+  const retries = el('input'); retries.id = 'settings-retries'; retries.type = 'number'; retries.min = '0'; retries.max = '20'; retries.value = String(settings.defaultMaxRetries); retries.setAttribute('aria-label', 'Retries for temporary network errors');
+  const labelled = (text: string, control: HTMLElement) => { const l = el('label', 'field'); l.append(el('span', '', text), control); return l; };
+  form.append(labelled('When a copied file changes', conflict), labelled('Retries for temporary network errors', retries));
+  form.append(button('Save defaults', () => void saveSettings({ ...settings, defaultConflictPolicy: conflict.value as Settings['defaultConflictPolicy'], defaultMaxRetries: Number(retries.value) }, 'Defaults saved. They apply to folders chosen from now on.'), 'button primary'));
+  container.append(form);
+  const auto = el('section', 'settings'); auto.setAttribute('aria-label', 'Automatic copies');
+  auto.append(el('h2', '', 'Automatic copies'), el('p', 'muted', 'Automatic copies run only for sync pairs you authorized, and only while LedgeSync is open. Installing or updating LedgeSync never enables them.'));
+  auto.append(button(settings.automationPaused ? 'Resume automatic copies' : 'Pause all automatic copies', () => void saveSettings({ ...settings, automationPaused: !settings.automationPaused }, settings.automationPaused ? 'Automatic copies resumed.' : 'Automatic copies paused.'), 'button subtle'));
+  container.append(auto);
+  const data = el('section', 'settings'); data.setAttribute('aria-label', 'Local data');
+  data.append(el('h2', '', 'Local data and privacy'), el('p', 'muted', 'LedgeSync keeps its transfer journal, saved pairs and run history in a private folder for your user account. Google authorization stays in your system credential vault. There is no telemetry.'));
+  data.append(button('Clear run history on this computer…', () => {
+    const fn = optional('ClearHistory');
+    if (fn && window.confirm('Clear run history on this computer? Drive files, saved pairs and the transfer journal are not changed.')) void fn().then(() => { state.settingsNotice = 'Run history cleared.'; state.runs = []; render(); }).catch(error => { state.settingsError = describe(error, 'History could not be cleared.'); render(); });
+  }, 'button subtle'));
+  data.append(el('p', 'muted', `LedgeSync ${version}`));
+  container.append(data);
+}
+
+// ---- Policy editor -----------------------------------------------------------
+
+const editableDialects = ['gitignore', 'rclone-filter', 'rclone-include', 'rclone-exclude'];
+function clonePolicy(policy: ProjectPolicy): ProjectPolicy { return JSON.parse(JSON.stringify(policy)) as ProjectPolicy; }
+function renderPolicyEditor(container: HTMLElement) {
+  const project = state.currentProject;
+  const section = el('section', 'policy-editor'); section.setAttribute('aria-labelledby', 'policy-heading');
+  const heading = el('h2', '', 'Selection policy'); heading.id = 'policy-heading'; section.append(heading);
+  if (!project || !optional('UpdateProjectPolicy')) {
+    section.append(el('p', 'muted', 'Open a saved sync pair to edit its rule files, composition and conflict policy. A pair is saved when you approve its first upload.'));
+    container.append(section); return;
+  }
+  if (project.configPath) { section.append(el('p', 'muted', `This pair uses the configuration file ${displayPath(project.configPath)}. Edit that file to change its policy.`)); container.append(section); return; }
+  const draft = state.policyDraft ?? (state.policyDraft = clonePolicy(project.policy));
+  const changed = () => render();
+  const select = (label: string, value: string, options: [string, string][], onChange: (v: string) => void) => {
+    const s = el('select'); s.setAttribute('aria-label', label); for (const [v, text] of options) { const o = el('option', '', text); o.value = v; o.selected = v === value; s.append(o); }
+    s.addEventListener('change', () => { onChange(s.value); changed(); }); const l = el('label', 'field'); l.append(el('span', '', label), s); return l;
+  };
+  section.append(select('Composition', draft.composition, [['conservative', 'Conservative: any rule group can exclude'], ['ordered', 'Ordered: the highest-priority decisive group wins']], v => { draft.composition = v as ProjectPolicy['composition']; }));
+  section.append(select('When a copied file changes', draft.conflictPolicy, [['keep-both', 'Copy the new version and keep the earlier copy'], ['pause', 'Pause changed files for review']], v => { draft.conflictPolicy = v as ProjectPolicy['conflictPolicy']; }));
+  const retries = el('input'); retries.type = 'number'; retries.min = '0'; retries.max = '20'; retries.value = String(draft.maxRetries); retries.setAttribute('aria-label', 'Retries for temporary network errors');
+  retries.addEventListener('change', () => { draft.maxRetries = Number(retries.value); });
+  const retryLabel = el('label', 'field'); retryLabel.append(el('span', '', 'Retries for temporary network errors'), retries); section.append(retryLabel);
+  draft.groups.forEach((group, index) => section.append(renderGroupEditor(draft, group, index)));
+  const add = button('Add rule group', () => {
+    const used = new Set(draft.groups.map(g => g.id)); let n = draft.groups.length + 1; while (used.has(`rules-${n}`)) n++;
+    const priorities = new Set(draft.groups.map(g => g.priority)); let priority = 90; while (priorities.has(priority)) priority--;
+    draft.groups.push({ id: `rules-${n}`, priority, enabled: true, dialect: 'gitignore', scope: 'project', sources: [{ type: 'recursive-basename', value: '.ignore', required: false }] }); changed();
+  }, 'button subtle'); section.append(add);
+  if (state.policyError) { const error = el('div', 'error', state.policyError); error.setAttribute('role', 'alert'); section.append(error); }
+  const actions = el('div', 'upload-actions');
+  const save = button('Save policy and rescan', () => {
+    const fn = optional('UpdateProjectPolicy'); if (!fn || state.busy || uploadLocked()) return;
+    state.policyError = ''; state.busy = true; render();
+    void fn(project.id, draft).then(session => {
+      state.currentProject = session.project; state.policyDraft = null; invalidateUploadPlan();
+      if (session.preview) state.preview = session.preview;
+      if (session.destinationError) state.uploadError = session.destinationError.message;
+    }).catch(error => { state.policyError = describe(error, 'The policy could not be saved.'); }).finally(() => { state.busy = false; render(); void loadProjects(); });
+  }, 'button primary'); save.disabled = state.busy || uploadLocked();
+  const reset = button('Discard changes', () => { state.policyDraft = null; state.policyError = ''; render(); }, 'button subtle');
+  actions.append(save, reset); section.append(actions);
+  section.append(el('p', 'muted', 'Saving a policy invalidates any preview and pauses automatic copies until you review and authorize them again. Unsupported adapters are listed below and cannot be selected.'));
+  container.append(section);
+}
+function renderGroupEditor(draft: ProjectPolicy, group: PolicyGroup, index: number) {
+  const box = el('fieldset', 'policy-group'); box.append(el('legend', '', `Rule group ${group.id}`));
+  const enabled = el('input'); enabled.type = 'checkbox'; enabled.checked = group.enabled; enabled.setAttribute('aria-label', `Enable ${group.id}`); enabled.addEventListener('change', () => { group.enabled = enabled.checked; });
+  const dialect = el('select'); dialect.setAttribute('aria-label', `Dialect of ${group.id}`);
+  for (const d of editableDialects) { const o = el('option', '', d); o.value = d; o.selected = group.dialect === d; dialect.append(o); }
+  dialect.addEventListener('change', () => { group.dialect = dialect.value; if (dialect.value !== 'gitignore') for (const s of group.sources) s.type = 'root-file'; render(); });
+  const priority = el('input'); priority.type = 'number'; priority.min = '0'; priority.max = '1000000'; priority.value = String(group.priority); priority.setAttribute('aria-label', `Priority of ${group.id}`); priority.addEventListener('change', () => { group.priority = Number(priority.value); });
+  const row = el('div', 'policy-row'); const e = el('label'); e.append(enabled, el('span', '', 'Enabled')); row.append(e, dialect, priority); box.append(row);
+  group.sources.forEach((source, i) => {
+    const line = el('div', 'policy-source');
+    const type = el('select'); type.setAttribute('aria-label', `Source type ${i + 1} of ${group.id}`);
+    const types: [string, string][] = group.dialect === 'gitignore' ? [['recursive-basename', 'File name in every folder'], ['root-file', 'One file, path from the folder root']] : [['root-file', 'One file, path from the folder root']];
+    for (const [v, t] of types) { const o = el('option', '', t); o.value = v; o.selected = source.type === v; type.append(o); }
+    type.addEventListener('change', () => { source.type = type.value as typeof source.type; });
+    const value = el('input'); value.type = 'text'; value.value = source.value; value.setAttribute('aria-label', `Source ${i + 1} of ${group.id}`); value.addEventListener('change', () => { source.value = value.value.trim(); });
+    const required = el('input'); required.type = 'checkbox'; required.checked = source.required; required.setAttribute('aria-label', `Source ${i + 1} required`); required.addEventListener('change', () => { source.required = required.checked; });
+    const req = el('label'); req.append(required, el('span', '', 'Required'));
+    const remove = button('Remove', () => { group.sources.splice(i, 1); render(); }, 'button subtle'); remove.disabled = group.sources.length === 1;
+    line.append(type, value, req, remove); box.append(line);
+  });
+  const actions = el('div', 'policy-row');
+  actions.append(button('Add rule file', () => { group.sources.push({ type: group.dialect === 'gitignore' ? 'recursive-basename' : 'root-file', value: group.dialect === 'gitignore' ? '.ignore' : 'filters.txt', required: false }); render(); }, 'button subtle'));
+  const remove = button('Remove group', () => { draft.groups.splice(index, 1); render(); }, 'button subtle'); remove.disabled = draft.groups.length === 1; actions.append(remove);
+  box.append(actions);
+  return box;
+}
 render();
 // The desktop bridge may arrive after web assets initialize. Startup reads only
 // saved connection metadata; destination selection and upload remain explicit.
 if (typeof window.go?.desktop?.App?.GoogleDriveStatus === 'function') void driveAction('status');
+if (optional('ListProjects')) void loadProjects();
+window.runtime?.EventsOn?.('ledgesync:automation', () => { void loadAutomation(); void loadProjects(); });

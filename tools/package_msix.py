@@ -209,12 +209,32 @@ def run(command: list[str | Path]) -> None:
 
 
 def pri_config(makepri: Path, path: Path) -> None:
-    """Create makepri's default configuration, indexing only Assets."""
+    """Create makepri's default configuration, indexing only Assets.
+
+    The default splits scales and languages into resource-package PRI files.
+    This bundle ships no resource packages, so every candidate must stay in
+    the main resources.pri.
+    """
     run([makepri, "createconfig", "/cf", path, "/dq", "en-US", "/pv", "10.0.0", "/o"])
     text = path.read_text(encoding="utf-8-sig")
     if text.count('startIndexAt="\\"') != 1:
         raise ValueError("Unexpected makepri configuration layout")
-    path.write_text(text.replace('startIndexAt="\\"', 'startIndexAt="Assets"'), encoding="utf-8")
+    text = re.sub(r"\s*<packaging>.*?</packaging>", "", text.replace('startIndexAt="\\"', 'startIndexAt="Assets"'), flags=re.S)
+    if "<packaging" in text or "autoResourcePackage" in text:
+        raise ValueError("Unexpected makepri packaging configuration")
+    path.write_text(text, encoding="utf-8")
+
+
+def verify_pri(makepri: Path, stage: Path, dump: Path) -> None:
+    """Require one resources.pri that indexes every logo file."""
+    split = sorted(path.name for path in stage.glob("resources*.pri") if path.name != "resources.pri")
+    if split:
+        raise ValueError(f"Unexpected resource-package PRI files: {', '.join(split)}")
+    run([makepri, "dump", "/if", stage / "resources.pri", "/of", dump, "/o"])
+    text = dump.read_text(encoding="utf-8-sig", errors="replace")
+    missing = [name for name in asset_plan() if f"Assets\\{name}" not in text]
+    if missing:
+        raise ValueError(f"resources.pri does not index {', '.join(missing)}")
 
 
 def package(inputs: Path, identity: dict[str, str], version: str, output: Path, makeappx: Path, makepri: Path, validation: bool) -> dict:
@@ -242,6 +262,7 @@ def package(inputs: Path, identity: dict[str, str], version: str, output: Path, 
             write_assets(stage / "Assets")
             (stage / "AppxManifest.xml").write_text(render_manifest(identity, package_version, msix_arch), encoding="utf-8")
             run([makepri, "new", "/pr", stage, "/cf", config, "/mn", stage / "AppxManifest.xml", "/of", stage / "resources.pri", "/o"])
+            verify_pri(makepri, stage, work / f"resources-{msix_arch}.xml")
             run([makeappx, "pack", "/d", stage, "/p", packages / f"LedgeSync_{package_version}_{msix_arch}.msix", "/o"])
             inputs_file = inputs / f"windows-{arch}" / "inputs.json"
             sources[msix_arch] = json.loads(inputs_file.read_text(encoding="utf-8"))["desktop"] if inputs_file.is_file() else None

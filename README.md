@@ -12,18 +12,22 @@ interface; the native CLI (including `ledgesync sync watch` for servers) uses
 the same engine. See [two-way sync](docs/research/TWO_WAY_SYNC.md).
 
 [Website](https://ledgesync.com/) ·
-[Download 0.1.0-alpha.7](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.7) ·
+[Download 0.1.0-alpha.8](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.8) ·
 [Connection guide](docs/GOOGLE_DRIVE_AUTH.md) ·
 [CLI/server guide](docs/CLI.md) ·
 [Apache-2.0 license](LICENSE)
 
-**Current developer alpha: 0.1.0-alpha.7** (pre-release, application source
-`f9319c1ff3ad56e1e14c6dec2ee47c7037fc9092`). It adds two-way sync like Google
-Drive for desktop. Sync needs full Google Drive access, so existing connections
-reconnect once.
+**Current developer alpha: 0.1.0-alpha.8** (pre-release, application source
+`d9f5234ec584dcbe45fe611806bb39dccfb17e29`). It fixes connecting Google Drive
+when Google lists earlier or basic profile permissions next to full Drive
+access. That case failed on Windows with "The authorization callback was
+invalid" ([ADR-035](docs/12_ADR_DECISIONS.md)). Errors now say what Google
+granted and what to do, and one-time copies choose the Drive folder inside the
+app.
 
-Live testing against real Google Drive passed all 10 steps, with two folders
-standing in for two computers:
+Alpha.7 added two-way sync like Google Drive for desktop. Live testing against
+real Google Drive passed all 10 steps, with two folders standing in for two
+computers:
 - the first sync;
 - joining from the second computer;
 - edits, new files and deletions in both directions;
@@ -31,10 +35,10 @@ standing in for two computers:
 - the mass-deletion guard with restore;
 - background sync without commands.
 
-All 37 release assets are published, Windows and Ubuntu installers passed on
-clean native runners, and the signed APT repository serves alpha.7. See the
-[two-way sync design](docs/research/TWO_WAY_SYNC.md),
-[release evidence](docs/research/DRIVE_SYNC_ALPHA7_RELEASE.json) and
+All 37 alpha.8 release assets are published, Windows and Ubuntu installers
+passed on clean native runners, and the signed APT repository serves alpha.8.
+See the [two-way sync design](docs/research/TWO_WAY_SYNC.md),
+[release evidence](docs/research/DRIVE_SYNC_ALPHA8_RELEASE.json) and
 [status](docs/17_AGENT_HANDOFF_AND_STATUS.md).
 
 > macOS and Windows downloads are **unsigned developer builds**: publisher
@@ -43,14 +47,14 @@ clean native runners, and the signed APT repository serves alpha.7. See the
 
 ## Downloads
 
-| System | Alpha.7 download |
+| System | Alpha.8 download |
 |---|---|
-| macOS 13+, Apple Silicon | [ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.7/LedgeSync-0.1.0-alpha.7-macos-arm64.dmg) |
-| macOS 13+, Intel | [x64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.7/LedgeSync-0.1.0-alpha.7-macos-amd64.dmg) |
-| Windows 11, x64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.7/LedgeSync-0.1.0-alpha.7-windows-amd64-setup.exe) |
-| Windows 11, ARM64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.7/LedgeSync-0.1.0-alpha.7-windows-arm64-setup.exe) |
+| macOS 13+, Apple Silicon | [ARM64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.8/LedgeSync-0.1.0-alpha.8-macos-arm64.dmg) |
+| macOS 13+, Intel | [x64 DMG](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.8/LedgeSync-0.1.0-alpha.8-macos-amd64.dmg) |
+| Windows 11, x64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.8/LedgeSync-0.1.0-alpha.8-windows-amd64-setup.exe) |
+| Windows 11, ARM64 | [Graphical setup EXE](https://github.com/alexandroit/LedgeSync/releases/download/v0.1.0-alpha.8/LedgeSync-0.1.0-alpha.8-windows-arm64-setup.exe) |
 | Ubuntu 24.04, amd64/arm64 | [Signed APT repository](docs/PLATFORMS.md#ubuntu-apt): `apt-get install ledgesync` after setup |
-| Native CLI, all six targets | [CLI archives and checksums](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.7) |
+| Native CLI, all six targets | [CLI archives and checksums](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.8) |
 
 On macOS, open the DMG and drag `LedgeSync.app` to Applications. Windows setup
 opens a graphical installation wizard and installs for the current user. Ubuntu

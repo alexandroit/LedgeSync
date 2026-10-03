@@ -1,10 +1,13 @@
 # LedgeSync CLI: sync and copies for servers
 
-**0.1.0-alpha.7 (current pre-release).** Adds **two-way sync** like Google Drive
-for desktop (see [Two-way sync](#two-way-sync)), sharing saved folders and the
-engine with the desktop app. Saved pairs, approved one-time copies, automatic
-copies and restore remain available. CLI archives for all six targets are in
-the [release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.7),
+**0.1.0-alpha.8 (current pre-release).** Fixes `auth connect` when Google
+reports earlier or basic profile permissions next to full Drive access, and
+names what to do when access is incomplete ([ADR-035](12_ADR_DECISIONS.md)).
+Alpha.7 added **two-way sync** like Google Drive for desktop (see
+[Two-way sync](#two-way-sync)), sharing saved folders and the engine with the
+desktop app. Saved pairs, approved one-time copies, automatic copies and
+restore remain available. CLI archives for all six targets are in the
+[release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.8),
 and `sudo apt-get install ledgesync-cli` installs the CLI from the signed APT
 repository. The alpha.4 description further below is historical.
 

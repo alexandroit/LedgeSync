@@ -1,6 +1,46 @@
 # 17 — Agent Handoff and Current Status
 
-**Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
+**Updated:** 2026-10-03. **Product:** LedgeSync. **Specification:** 0.2.1.
+
+## Alpha.8 published — Google connection fix
+
+**Owner report (2026-10-03):** connecting on Windows failed after Google's
+consent with "The authorization callback was invalid. Connect again to
+restart.", and the browser showed "LedgeSync authorization was not completed."
+The callback and the token response accepted only the exact scope string.
+Any other report from Google looked like a malformed callback, for example the
+earlier `drive.file` grant listed next to full access, basic profile scopes
+from another client of the same Cloud project, or a permission left unchecked.
+
+[ADR-035](12_ADR_DECISIONS.md) records the fix:
+- A grant that includes full Drive access is accepted, with `drive.file` and
+  Google's basic profile scopes beside it.
+- Declined access, unrequested scopes and missing folder selections each get
+  their own error and guidance.
+- `AUTH_CALLBACK_INVALID` names the failed check without any returned value.
+- One-time copies choose the destination in the in-app folder browser.
+
+**Published 2026-10-03** as pre-release
+[v0.1.0-alpha.8](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.8)
+from `d9f5234` ([pull request 5](https://github.com/alexandroit/LedgeSync/pull/5)),
+with 37 assets.
+
+| Gate | Result |
+|---|---|
+| Official build | [run 37096252105](https://github.com/alexandroit/LedgeSync/actions/runs/37096252105): 16/16 |
+| Installers | [run 37096792431](https://github.com/alexandroit/LedgeSync/actions/runs/37096792431): Windows Server 2022 x64, Windows 11 ARM64, Ubuntu amd64/arm64 |
+| Signed APT | `20261003-alpha8-d9f5234` active; 84 previous files unchanged; public [run 37097029131](https://github.com/alexandroit/LedgeSync/actions/runs/37097029131) passed on amd64/arm64 |
+| Website | Release `a5ef61c` at the origin and on Pages; shared server unchanged |
+| Live Google connection | Pending: the owner connects on the affected Windows machine with alpha.8 |
+
+Exact identities are in the [alpha.8 evidence](research/DRIVE_SYNC_ALPHA8_RELEASE.json).
+
+### Next safe steps (alpha.8)
+1. Owner: install alpha.8 on Windows and choose **Connect Google Drive**. If it
+   still fails, the message names the failed check; report it as shown.
+2. The open alpha.7 steps below remain: a Drive website upload into a synced
+   folder, removing the test folders, signing material and Google
+   verification, the Cloudflare decision, then the next work items.
 
 ## Alpha.7 published — two-way sync like Google Drive
 
@@ -36,7 +76,7 @@ Also fixed before release:
   `ledgesync sync watch` never sync at the same time.
 - Syncs added, paused or removed in one process are followed by the others.
 
-### Next safe steps (alpha.7)
+### Next safe steps (alpha.7, still open)
 
 1. Owner: upload a file to a synced folder through the Drive website and
    confirm that it arrives locally. Files from another computer were received

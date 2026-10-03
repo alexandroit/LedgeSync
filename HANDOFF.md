@@ -1,6 +1,6 @@
 # Continuation handoff — Finish LedgeSync from the current checkout
 
-**Updated:** 2026-10-02, America/Toronto. **Product:** LedgeSync.
+**Updated:** 2026-10-03, America/Toronto. **Product:** LedgeSync.
 **Priority:** the owner reports that the application is not synchronizing files.
 **Status:** the failure was reproduced and fixed. Alpha.5 fixed four defects
 found with an emulator. The live Google acceptance then found two upload
@@ -10,7 +10,9 @@ steps and is published (release, installers, signed APT, website). The owner
 then asked for Google Drive-like behavior. Alpha.7 is published with two-way
 sync and full Drive access, and passed 10/10 live sync steps
 ([ADR-034](docs/12_ADR_DECISIONS.md),
-[two-way sync](docs/research/TWO_WAY_SYNC.md)). Publisher signing awaits owner
+[two-way sync](docs/research/TWO_WAY_SYNC.md)). Alpha.8 is published and fixes a
+Google connection failure that the owner saw on Windows
+([ADR-035](docs/12_ADR_DECISIONS.md)). Publisher signing awaits owner
 steps. Current
 dispositions, commands and blockers are in
 [current status](docs/17_AGENT_HANDOFF_AND_STATUS.md); the original brief below

@@ -1,6 +1,25 @@
 # Platform builds and installation
 
-**0.1.0-alpha.7 — current developer pre-release (2026-10-03).** It adds
+**0.1.0-alpha.8 — current developer pre-release (2026-10-03).** It fixes
+connecting Google Drive when Google reports earlier or basic profile
+permissions next to full Drive access. That case failed on Windows with "The
+authorization callback was invalid". Errors now say what Google granted and
+what to do, and one-time copies choose the Drive folder inside the app
+([ADR-035](12_ADR_DECISIONS.md)).
+
+| Gate | Result |
+|---|---|
+| Pull request checks | [pull request 5](https://github.com/alexandroit/LedgeSync/pull/5): 24/24 |
+| Official build (publisher OAuth client on all six targets) | [run 37096252105](https://github.com/alexandroit/LedgeSync/actions/runs/37096252105): 16/16 at `d9f5234` |
+| Release | [v0.1.0-alpha.8](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.8): 37 assets, `SHA256SUMS`, `RELEASE.json`, `INSTALLERS_RELEASE.json` |
+| Clean-machine installers | [run 37096792431](https://github.com/alexandroit/LedgeSync/actions/runs/37096792431): Windows Server 2022 x64 and Windows 11 ARM64; Ubuntu amd64/arm64; local signed APT |
+| Public APT | Snapshot `20261003-alpha8-d9f5234` active; [run 37097029131](https://github.com/alexandroit/LedgeSync/actions/runs/37097029131): `apt-get install ledgesync` and `ledgesync-cli` on clean amd64/arm64 |
+| Live Google Drive | Pending: the Windows account that reported the error connects with alpha.8 |
+| Publisher signing | Not available: see [Publisher signing](#publisher-signing) |
+
+Exact hashes and results: [alpha.8 release evidence](research/DRIVE_SYNC_ALPHA8_RELEASE.json).
+
+**0.1.0-alpha.7 — previous pre-release (2026-10-03).** It adds
 **two-way sync** like Google Drive for desktop ([ADR-034](12_ADR_DECISIONS.md),
 [design](research/TWO_WAY_SYNC.md)) and requests full Drive access; existing
 connections reconnect once.

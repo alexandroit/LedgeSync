@@ -109,8 +109,12 @@ func NewManager(state *transferstate.SyncState, remote Remote, accounts Accounts
 		pair := p
 		m.pairs[p.ID] = &pair
 		m.rt[p.ID] = &runtimeState{dirty: true, status: Status{State: "starting", Message: "Starting…", Issues: []Issue{}}}
-		if p.Paused {
+		switch {
+		case p.Paused:
 			m.rt[p.ID].status = Status{State: "paused", Message: pauseMessage(p), Issues: []Issue{}}
+		case p.LastSyncAt != "":
+			// Until this process runs a pass, report the last completed one.
+			m.rt[p.ID].status = Status{State: "synced", Message: "Up to date as of the last pass", Issues: []Issue{}}
 		}
 	}
 	return m, nil

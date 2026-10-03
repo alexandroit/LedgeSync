@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/alexandroit/LedgeSync/frontend"
@@ -63,6 +64,9 @@ func main() {
 					OnChange:  notifySync,
 					Validate:  func(p string) error { return connections.ValidateSourceSelection(p, false) },
 					Protected: []string{stateDir},
+					Lock: func() (func(), error) {
+						return transferstate.AcquireProcessLock(filepath.Join(stateDir, "sync-lock"))
+					},
 				})
 				if err != nil {
 					syncManager = nil

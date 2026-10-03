@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -35,6 +36,9 @@ func newSyncManager() (*syncer.Manager, func(), error) {
 	m, err := syncer.NewManager(state, drive.New(auth), auth, syncer.Options{
 		Validate:  func(p string) error { return connections.ValidateSourceSelection(p, false) },
 		Protected: []string{directory},
+		Lock: func() (func(), error) {
+			return transferstate.AcquireProcessLock(filepath.Join(directory, "sync-lock"))
+		},
 	})
 	if err != nil {
 		_ = state.Close()

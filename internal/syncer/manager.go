@@ -38,6 +38,10 @@ type Options struct {
 	// not a system folder). Protected paths may not overlap a synced folder.
 	Validate  func(string) error
 	Protected []string
+	// Lock serializes passes across processes (the desktop app and the CLI
+	// share saved folders). It returns transferstate.ErrLockBusy when another
+	// process is running a pass. Nil disables cross-process locking.
+	Lock func() (func(), error)
 }
 
 type runtimeState struct {
@@ -234,10 +238,73 @@ func (m *Manager) setStatus(id string, fn func(*Status)) {
 	}
 }
 
+// reload makes the saved pairs the source of truth, so a sync added, paused,
+// resumed or removed by another LedgeSync process is respected here.
+func (m *Manager) reload() {
+	raw, err := m.state.Pairs()
+	if err != nil {
+		return
+	}
+	saved := map[string]Pair{}
+	for _, r := range raw {
+		var p Pair
+		if json.Unmarshal(r, &p) == nil && p.ID != "" {
+			saved[p.ID] = p
+		}
+	}
+	m.mu.Lock()
+	changed := false
+	for id, rt := range m.rt {
+		if _, ok := saved[id]; !ok {
+			if rt.cancel != nil {
+				rt.cancel()
+			}
+			delete(m.pairs, id)
+			delete(m.rt, id)
+			changed = true
+		}
+	}
+	for id, p := range saved {
+		current, ok := m.pairs[id]
+		switch {
+		case !ok:
+			pair := p
+			m.pairs[id] = &pair
+			m.rt[id] = &runtimeState{dirty: true, status: Status{State: "starting", Message: "Starting…", Issues: []Issue{}}}
+			if p.Paused {
+				m.rt[id].status = Status{State: "paused", Message: pauseMessage(p), Issues: []Issue{}}
+			}
+			changed = true
+		case current.Paused != p.Paused:
+			current.Paused, current.PauseCode, current.PauseReason = p.Paused, p.PauseCode, p.PauseReason
+			rt := m.rt[id]
+			if p.Paused {
+				rt.status.State, rt.status.Message = "paused", pauseMessage(p)
+				if rt.cancel != nil {
+					rt.cancel()
+				}
+			} else {
+				rt.dirty, rt.status.State, rt.status.Message = true, "starting", "Starting…"
+			}
+			changed = true
+		}
+		if ok && current.LastSyncAt < p.LastSyncAt {
+			// Another process completed a pass: compare again with fresh state.
+			current.LastSyncAt = p.LastSyncAt
+			m.rt[id].snapshot, m.rt[id].dirty = nil, true
+		}
+	}
+	m.mu.Unlock()
+	if changed {
+		m.notify()
+	}
+}
+
 func (m *Manager) tick() {
 	if m.ctx.Err() != nil {
 		return
 	}
+	m.reload()
 	account, waiting := m.account(m.ctx)
 	m.mu.Lock()
 	ids := make([]string, 0, len(m.pairs))
@@ -372,6 +439,20 @@ func classify(err error) (state string, pause bool) {
 func (m *Manager) runCycle(id, account string, progress Progress) (Result, error) {
 	m.cycle.Lock()
 	defer m.cycle.Unlock()
+	if m.opts.Lock != nil {
+		release, err := m.opts.Lock()
+		if err != nil {
+			m.mu.Lock()
+			if rt := m.rt[id]; rt != nil {
+				rt.dirty, rt.retryAt = true, m.opts.Now().Add(15*time.Second)
+			}
+			m.mu.Unlock()
+			const message = "Another LedgeSync window or sync command is syncing these folders. This one continues when it stops."
+			m.setStatus(id, func(s *Status) { s.State, s.ErrorCode, s.Message = "waiting", "SYNC_BUSY", message })
+			return Result{}, domain.Fail("SYNC_BUSY", message)
+		}
+		defer release()
+	}
 	m.mu.Lock()
 	pair, rt := m.pairs[id], m.rt[id]
 	if pair == nil || rt == nil || pair.Paused {

@@ -555,3 +555,56 @@ func TestSyncRestoreInsteadOfMassDeletionCopiesFilesBack(t *testing.T) {
 	}
 	equalTrees(t, "local", localTree(t, root), files)
 }
+
+func TestTwoProcessesNeverRunPassesAtTheSameTime(t *testing.T) {
+	var lock sync.Mutex
+	shared := func() (func(), error) {
+		if !lock.TryLock() {
+			return nil, transferstate.ErrLockBusy
+		}
+		return lock.Unlock, nil
+	}
+	h := newHarness(t, Options{Lock: shared})
+	root := filepath.Join(t.TempDir(), "Shared Lock")
+	write(t, root, map[string]string{"a.txt": "a"})
+	status := h.add(root)
+	lock.Lock() // another process is in the middle of a pass
+	_, err := h.mgr.RunOnce(context.Background(), status.Pair.ID, nil)
+	current, _ := h.mgr.Get(status.Pair.ID)
+	if domain.ErrorCode(err) != "SYNC_BUSY" || current.State != "waiting" || len(h.server.Children(status.Pair.RemoteRootID)) != 0 {
+		t.Fatalf("a pass must wait while another process syncs: %v %+v", err, current)
+	}
+	lock.Unlock()
+	if result := h.run(status.Pair.ID); result.Uploaded != 1 {
+		t.Fatalf("after the other process stops the pass runs: %+v", result)
+	}
+}
+
+func TestManagerFollowsSyncsChangedByAnotherProcess(t *testing.T) {
+	h := newHarness(t, Options{})
+	other, err := NewManager(h.state, h.client, &fakeAccounts{reference: syncAccount}, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := filepath.Join(t.TempDir(), "Elsewhere")
+	write(t, root, map[string]string{"a.txt": "a"})
+	status := h.add(root)
+	other.reload()
+	if list := other.List(); len(list) != 1 || list[0].Pair.ID != status.Pair.ID {
+		t.Fatalf("a sync added by another process must appear: %+v", list)
+	}
+	if err = h.mgr.Pause(status.Pair.ID); err != nil {
+		t.Fatal(err)
+	}
+	other.reload()
+	if s, _ := other.Get(status.Pair.ID); !s.Pair.Paused || s.State != "paused" {
+		t.Fatalf("a pause by another process must be respected: %+v", s)
+	}
+	if err = h.mgr.Remove(status.Pair.ID); err != nil {
+		t.Fatal(err)
+	}
+	other.reload()
+	if list := other.List(); len(list) != 0 {
+		t.Fatalf("a sync removed by another process must stop here too: %+v", list)
+	}
+}

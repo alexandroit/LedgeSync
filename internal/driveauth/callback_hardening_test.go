@@ -303,6 +303,24 @@ func TestCancellationClosesListenerWhileBrowserLauncherReturns(t *testing.T) {
 	}
 }
 
+func TestCallbackFailureNamesTheCheckWithoutValues(t *testing.T) {
+	for query, reason := range map[string]string{
+		"code=synthetic-code&authuser=0&authuser=synthetic-value":  "(repeated parameter)",
+		"code=synthetic-code&iss=https://synthetic-issuer.invalid": "(unexpected issuer)",
+		"code=synthetic-code&access_token=synthetic-private-token": "(token in callback)",
+		"code=synthetic-code&error_description=synthetic-text":     "(error details without an error)",
+		"code=synthetic-code&error=access_denied":                  "(no usable code or error)",
+	} {
+		result := make(chan callbackResult, 1)
+		handler := newCallback(context.Background(), "synthetic-state", callbackHost, result)
+		handler.ServeHTTP(httptest.NewRecorder(), callbackRequest("/?state=synthetic-state&"+query))
+		got := <-result
+		if !errors.Is(got.err, ErrCallback) || !strings.Contains(got.err.Error(), reason) || strings.Contains(got.err.Error(), "synthetic") {
+			t.Fatalf("%s: %v", query, got.err)
+		}
+	}
+}
+
 func TestCallbackScopeProblemsAreExplained(t *testing.T) {
 	for name, tc := range map[string]struct {
 		scope string

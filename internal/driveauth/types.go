@@ -15,6 +15,17 @@ import (
 // per-file drive.file scope cannot list (ADR-034).
 const Scope = "https://www.googleapis.com/auth/drive"
 
+// CallbackFailure is ErrCallback naming the check that failed. It never holds
+// a value from the callback, so its message is safe to show and to report.
+type CallbackFailure string
+
+func (f CallbackFailure) Error() string {
+	return "The authorization callback was invalid (" + string(f) + "). Connect again to restart."
+}
+
+// Is matches ErrCallback.
+func (f CallbackFailure) Is(target error) bool { return target == ErrCallback }
+
 // legacyScope is the per-file scope of earlier versions. Google may report it
 // next to full Drive access for accounts that granted it before. Full access
 // contains it, so it is accepted only together with Scope.

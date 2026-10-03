@@ -79,6 +79,10 @@ func onlineError(ctx context.Context, err error) error {
 	if _, ok := err.(*domain.Error); ok {
 		return err
 	}
+	var callback driveauth.CallbackFailure
+	if errors.As(err, &callback) {
+		return domain.Fail("AUTH_CALLBACK_INVALID", "%s", callback.Error())
+	}
 	for _, item := range []struct {
 		err  error
 		code string
@@ -94,6 +98,7 @@ func onlineError(ctx context.Context, err error) error {
 		{driveauth.ErrScopeUnexpected, "AUTH_SCOPE_UNEXPECTED"},
 		{driveauth.ErrNoFolderSelected, "DRIVE_FOLDER_NOT_SELECTED"},
 		{driveauth.ErrDenied, "AUTH_DENIED"},
+		{driveauth.ErrCallback, "AUTH_CALLBACK_INVALID"},
 		{driveauth.ErrTimeout, "AUTH_TIMEOUT"},
 		{driveauth.ErrConnected, "AUTH_CONNECTED"},
 		{driveauth.ErrBrowser, "AUTH_BROWSER_UNAVAILABLE"},

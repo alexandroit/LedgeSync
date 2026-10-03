@@ -54,7 +54,7 @@ func (s *Service) authorizeSelection(ctx context.Context, client *clientConfig, 
 	challenge := sha256.Sum256([]byte(verifier))
 	listener, err := net.Listen("tcp4", "127.0.0.1:0")
 	if err != nil {
-		return nil, "", ErrCallback
+		return nil, "", CallbackFailure("the local return address could not be opened")
 	}
 	redirect := "http://" + listener.Addr().String() + "/"
 	results := make(chan callbackResult, 1)
@@ -107,7 +107,7 @@ func (s *Service) authorizeSelection(ctx context.Context, client *clientConfig, 
 		if ctx.Err() != nil {
 			return nil, "", contextError(ctx)
 		}
-		return nil, "", ErrCallback
+		return nil, "", CallbackFailure("the local return address stopped")
 	case result = <-results:
 	}
 	// The callback has one purpose and must not remain reachable during the
@@ -159,9 +159,10 @@ func newSelectionCallback(ctx context.Context, state, host string, result chan<-
 			return
 		}
 		value := callbackResult{}
+		problem := callbackProblem(q)
 		switch {
-		case !validCallbackParameters(q):
-			value.err = ErrCallback
+		case problem != "":
+			value.err = CallbackFailure(problem)
 		case len(q["error"]) == 1 && q.Get("error") != "" && len(q["code"]) == 0:
 			value.err = ErrDenied
 		case len(q["code"]) == 1 && len(q["error"]) == 0 && safeSecret(q.Get("code")) && len(q.Get("code")) <= 4096:
@@ -169,7 +170,7 @@ func newSelectionCallback(ctx context.Context, state, host string, result chan<-
 				value.code = q.Get("code")
 			}
 		default:
-			value.err = ErrCallback
+			value.err = CallbackFailure("no usable code or error")
 		}
 		if folder {
 			switch {
@@ -178,7 +179,7 @@ func newSelectionCallback(ctx context.Context, state, host string, result chan<-
 			case value.err == nil && len(q["picked_file_ids"]) == 0:
 				value.err = ErrNoFolderSelected
 			case value.err == nil || len(q["picked_file_ids"]) != 0:
-				value.err = ErrCallback
+				value.err = CallbackFailure("invalid folder selection")
 			}
 		}
 		if ctx.Err() != nil {
@@ -218,29 +219,31 @@ func validFolderID(id string) bool {
 	return true
 }
 
-func validCallbackParameters(q url.Values) bool {
+// callbackProblem names what makes a callback malformed, or returns "". The
+// name is a fixed phrase and never contains a value from the callback.
+func callbackProblem(q url.Values) string {
 	for _, values := range q {
 		if len(values) != 1 {
-			return false
+			return "repeated parameter"
 		}
 	}
 	// This is a code flow: callback tokens must never become credentials. The
-	// actual granted scope is independently validated in the token response.
+	// granted scope is checked with the code and again in the token response.
 	for _, name := range []string{"access_token", "refresh_token", "id_token", "token_type", "expires_in"} {
 		if _, present := q[name]; present {
-			return false
+			return "token in callback"
 		}
 	}
 	if issuer, present := q["iss"]; present && issuer[0] != "https://accounts.google.com" {
-		return false
+		return "unexpected issuer"
 	}
 	if len(q["error"]) == 0 && (len(q["error_description"]) != 0 || len(q["error_uri"]) != 0) {
-		return false
+		return "error details without an error"
 	}
 	// RFC 6749 section 4.1.2 requires ignoring unrecognized response parameters.
 	// Bounded, single-valued extensions (for example authuser and prompt) are
 	// never forwarded, interpreted as credentials, reflected or logged.
-	return true
+	return ""
 }
 
 // signInScopes are Google's basic profile scopes. Google may report them next

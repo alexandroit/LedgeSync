@@ -287,9 +287,10 @@ the same Cloud project, or a permission left unchecked.
   | `AUTH_SCOPE_NOT_GRANTED` | The grant lacks full Drive access. | How to allow it. |
   | `AUTH_SCOPE_UNEXPECTED` | The grant includes scopes that were not requested. | Remove the app's access at Google, then connect again. |
   | `DRIVE_FOLDER_NOT_SELECTED` | A browser folder selection returned no folder. | Choose a folder in Google's window. |
-  | `AUTH_CALLBACK_INVALID` | The callback is malformed (unchanged). | Connect again. |
+  | `AUTH_CALLBACK_INVALID` | The callback is malformed. | Which check failed, for example "(repeated parameter)", then connect again. |
 
-  The callback page still shows none of the returned values.
+  The callback page still shows none of the returned values, and neither do the
+  messages.
 - **Copies destination.** With full access, the desktop chooses an existing
   Drive folder for one-time copies in the same in-app browser as sync. It
   validates the folder again before use. Choosing a folder no longer needs a

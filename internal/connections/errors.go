@@ -27,6 +27,10 @@ func PublicError(err error) error {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return domain.Wrap("TIMEOUT", "The operation took too long. Check the connection and try again.", err)
 	}
+	var callback driveauth.CallbackFailure
+	if errors.As(err, &callback) {
+		return domain.Wrap("AUTH_CALLBACK_INVALID", callback.Error(), err)
+	}
 	for _, item := range []struct {
 		err  error
 		code string

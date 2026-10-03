@@ -1,8 +1,8 @@
 import './style.css';
 import { describe, guidanceFor, parseError } from './errors';
-import type { AutomationView, RestoreProgress, DesktopBridge, DriveConnectionStatus, DriveDestination, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, PolicyGroup, Preview, Project, ProjectPolicy, RunSummary, Settings, TransferState } from './types';
+import type { AutomationView, RestoreProgress, DesktopBridge, DriveConnectionStatus, DriveDestination, DriveFolder, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, PolicyGroup, Preview, Project, ProjectPolicy, RunSummary, Settings, SyncActivity, SyncState, SyncStatus, TransferState } from './types';
 
-type View = 'files' | 'preview' | 'policies' | 'connections' | 'activity' | 'history' | 'settings';
+type View = 'sync' | 'files' | 'preview' | 'policies' | 'connections' | 'activity' | 'history' | 'settings';
 const version = '0.1.0-alpha.6';
 type DriveAction = 'status' | 'connect' | 'check' | 'disconnect' | 'revoke';
 const state = {
@@ -46,6 +46,13 @@ const state = {
   restorePoll: 0,
   automationTrigger: 'interval' as 'interval' | 'watch',
   automationInterval: 900,
+  syncs: [] as SyncStatus[],
+  syncLoaded: false,
+  syncError: '',
+  syncBusy: '',
+  syncActivity: [] as SyncActivity[],
+  syncParent: { id: 'root', name: 'My Drive' },
+  folderBrowser: { open: false, stack: [] as { id: string; name: string }[], folders: [] as DriveFolder[], loading: false, error: '' },
 };
 // Optional bridge methods are absent from older builds and browser previews.
 function optional<K extends keyof DesktopBridge>(name: K): NonNullable<DesktopBridge[K]> | null {
@@ -142,6 +149,7 @@ function changeView(view: View) {
   if (view === 'activity' || view === 'history') void loadHistory(view === 'history' ? state.historyProject : '');
   if (view === 'settings') void loadSettings();
   if (view === 'policies') void loadCurrentProject();
+  if (view === 'sync') { void loadSyncs(); void loadSyncActivity(); }
 }
 async function driveAction(action: DriveAction, confirmed = false, expectedAccountReference = '') {
   if (action === 'revoke' && (!confirmed || !expectedAccountReference)) return;
@@ -518,10 +526,18 @@ function render() {
   const sidebar = el('aside', 'sidebar');
   const brand = el('div', 'brand'); brand.append(icon('check', 'brand-mark'), el('span', '', 'LedgeSync'));
   sidebar.append(brand);
-  const choose = button('Choose folder', () => void scan('OpenFolder'), 'button primary choose-folder', 'folder');
-  choose.disabled = state.busy || uploadLocked(); sidebar.append(choose);
+  const syncing = syncAvailable();
+  if (syncing) {
+    const add = button('Sync a folder', () => void addSync(), 'button primary choose-folder', 'refresh');
+    add.disabled = Boolean(state.syncBusy) || state.drive?.state !== 'connected'; sidebar.append(add);
+  } else {
+    const choose = button('Choose folder', () => void scan('OpenFolder'), 'button primary choose-folder', 'folder');
+    choose.disabled = state.busy || uploadLocked(); sidebar.append(choose);
+  }
   const nav = el('nav', 'nav'); nav.setAttribute('aria-label', 'Main navigation');
-  for (const [view, title, symbol] of [['files', 'Files', 'folder'], ['preview', 'Sync pairs', 'arrow'], ['policies', 'Policies', 'shield'], ['connections', 'Connections', 'cloud']] as const) {
+  const mainViews: [View, string, string][] = [['files', 'Files', 'folder'], ['preview', syncing ? 'One-time copies' : 'Sync pairs', 'arrow'], ['policies', 'Policies', 'shield'], ['connections', 'Connections', 'cloud']];
+  if (syncing) mainViews.unshift(['sync', 'Sync', 'refresh']);
+  for (const [view, title, symbol] of mainViews) {
     const item = button(title, () => changeView(view), `nav-item ${state.view === view ? 'active' : ''}`, symbol);
     if (state.view === view) item.setAttribute('aria-current', 'page');
     nav.append(item);
@@ -537,14 +553,14 @@ function render() {
     const auto = el('p', 'sidebar-automation', state.automation.paused ? 'Automatic copies paused' : state.automation.running ? 'Automatic copy running…' : `Automatic copies on for ${automaticCount} pair${automaticCount === 1 ? '' : 's'}`);
     auto.setAttribute('role', 'status'); sidebar.append(auto);
   }
-  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', 'Preview before transfer'), el('p', '', `Developer alpha · ${version}`), el('p', '', state.driveBusy === 'revoke' || state.driveBusy === 'disconnect' ? 'Updating Google Drive access…' : state.drive?.state === 'revoked_local_cleanup_required' ? 'Google access revoked. Local credential cleanup is required.' : state.drive?.state === 'connected' ? 'Google Drive connected. Choose a destination and preview your folder upload.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
+  const offline = el('div', 'sidebar-note'); offline.append(icon('shield'), el('strong', '', syncing ? syncSummary() : 'Preview before transfer'), el('p', '', `Developer alpha · ${version}`), el('p', '', state.driveBusy === 'revoke' || state.driveBusy === 'disconnect' ? 'Updating Google Drive access…' : state.drive?.state === 'revoked_local_cleanup_required' ? 'Google access revoked. Local credential cleanup is required.' : state.drive?.state === 'connected' ? 'Google Drive connected. Choose a destination and preview your folder upload.' : state.drive?.state === 'reconnect_required' ? 'Google Drive needs reconnection.' : state.drive?.state === 'client_changed' ? 'Google Drive needs a new authorization. Open Connections.' : 'Connect Google Drive in Connections.'));
   sidebar.append(offline); shell.append(sidebar);
 
   const workspace = el('main', 'workspace');
   const top = el('header', 'topbar');
   const search = el('label', 'search'); search.append(icon('search'));
   const input = el('input'); input.id = 'search'; input.type = 'search'; input.placeholder = 'Search this project'; input.setAttribute('aria-label', 'Search this project'); input.value = state.query;
-  input.disabled = !state.preview || state.busy || ['policies', 'connections', 'activity', 'history', 'settings'].includes(state.view);
+  input.disabled = !state.preview || state.busy || ['sync', 'policies', 'connections', 'activity', 'history', 'settings'].includes(state.view);
   input.addEventListener('input', () => { state.query = input.value; state.page = 0; state.uploadPage = 0; render(); });
   search.append(input); top.append(search);
   top.append(badge(activeTransfer() ? 'Drive upload in progress' : state.destination ? 'Drive destination selected' : 'Local file preview', state.destination ? 'connected' : 'offline'));
@@ -559,7 +575,8 @@ function render() {
   }
   const body = el('div', `body ${state.preview ? 'has-preview' : ''}`);
   const content = el('section', 'content'); content.setAttribute('aria-label', state.view === 'connections' ? 'Account connections' : ['activity', 'history', 'settings'].includes(state.view) ? 'Activity and settings' : 'File workspace');
-  if (state.view === 'connections') renderConnections(content);
+  if (state.view === 'sync') renderSync(content);
+  else if (state.view === 'connections') renderConnections(content);
   else if (state.view === 'activity') renderActivity(content);
   else if (state.view === 'history') renderHistory(content);
   else if (state.view === 'settings') renderSettings(content);
@@ -1180,9 +1197,189 @@ function renderGroupEditor(draft: ProjectPolicy, group: PolicyGroup, index: numb
   box.append(actions);
   return box;
 }
+// ---- Two-way sync ----------------------------------------------------------
+
+const syncStateLabels: Record<SyncState, string> = { starting: 'Starting', syncing: 'Syncing', synced: 'Up to date', paused: 'Paused', waiting: 'Waiting', confirm_deletes: 'Needs your confirmation', error: 'Needs attention' };
+const activityLabels: Record<string, string> = {
+  upload: 'Uploaded to Drive', download: 'Downloaded from Drive', update_up: 'Updated in Drive', update_down: 'Updated on this computer',
+  delete_up: 'Moved to the Google Drive trash', delete_down: 'Moved to the LedgeSync trash on this computer', conflict: 'Changed on both sides — both versions kept',
+  folder_up: 'Folder created in Drive', folder_down: 'Folder created on this computer', sync_added: 'Started syncing', restore_deletes: 'Restoring deleted files',
+};
+let syncReload = 0;
+let activityLoadedAt = 0;
+function syncAvailable() { return Boolean(optional('SyncList')); }
+function scheduleSyncReload() {
+  if (syncReload) return;
+  syncReload = window.setTimeout(() => { syncReload = 0; void loadSyncs(); }, 250);
+}
+async function loadSyncs() {
+  const fn = optional('SyncList'); if (!fn) return;
+  try { state.syncs = await fn(); state.syncLoaded = true; }
+  catch (error) { state.syncError = describe(error, 'The sync status could not be read.'); }
+  if (state.view === 'sync' && Date.now() - activityLoadedAt > 2000) void loadSyncActivity();
+  render();
+}
+async function loadSyncActivity() {
+  const fn = optional('SyncActivity'); if (!fn) return;
+  activityLoadedAt = Date.now();
+  try { state.syncActivity = await fn(''); } catch { /* activity is informative only */ }
+  render();
+}
+async function syncAction(action: () => Promise<unknown>, fallback: string, busy: string) {
+  if (state.syncBusy) return;
+  state.syncBusy = busy; state.syncError = ''; render();
+  try { await action(); } catch (error) { state.syncError = describe(error, fallback); }
+  finally { state.syncBusy = ''; }
+  await loadSyncs();
+}
+async function addSync() {
+  const fn = optional('SyncChooseFolder'); if (!fn) return;
+  state.view = 'sync';
+  await syncAction(() => fn(state.syncParent.id, state.syncParent.name), 'This folder could not be synced. Check that Google Drive is connected, then try again.', 'add');
+}
+function syncSummary() {
+  if (!state.syncs.length) return 'Two-way sync';
+  if (state.syncs.some(s => s.state === 'confirm_deletes' || s.state === 'error')) return 'A synced folder needs attention';
+  if (state.syncs.some(s => s.state === 'syncing' || s.state === 'starting')) return 'Syncing…';
+  if (state.syncs.every(s => s.state === 'synced')) return 'All folders up to date';
+  return `${state.syncs.length} synced folder${state.syncs.length === 1 ? '' : 's'}`;
+}
+function renderSync(container: HTMLElement) {
+  const heading = el('div', 'heading');
+  const title = el('div'); title.append(el('p', 'eyebrow', 'TWO-WAY SYNC'), el('h1', '', 'Synced folders'));
+  heading.append(title);
+  const add = button('Sync a folder', () => void addSync(), 'button primary', 'folder'); add.id = 'sync-add';
+  add.disabled = Boolean(state.syncBusy) || state.drive?.state !== 'connected';
+  heading.append(add); container.append(heading);
+  container.append(el('p', 'section-description', 'Like Google Drive for desktop: choose a folder and LedgeSync keeps it and its Google Drive copy the same, in both directions, while LedgeSync is open. Changes on either side reach the other, deleted files go to the trash on the other side, and when a file changes on both sides both versions are kept.'));
+  if (state.drive && state.drive.state !== 'connected') {
+    const notice = el('div', 'notice sync-connect');
+    notice.append(icon('cloud'), el('p', '', state.drive.state === 'reconnect_required' || state.drive.state === 'client_changed' ? 'Reconnect Google Drive to grant the full Drive access that sync needs.' : 'Connect Google Drive to start syncing.'));
+    notice.append(button('Open Connections', () => changeView('connections'), 'button subtle'));
+    container.append(notice);
+  }
+  const location = el('div', 'sync-location');
+  location.append(icon('cloud'), el('span', '', 'New folders sync into'), el('strong', '', displayPath(state.syncParent.name)));
+  const change = button('Change', () => void openFolderBrowser(), 'button subtle'); change.id = 'sync-location-change';
+  change.disabled = state.drive?.state !== 'connected' || Boolean(state.syncBusy) || !optional('DriveFolders');
+  location.append(change); container.append(location);
+  if (state.syncError) { const error = el('div', 'error', state.syncError); error.setAttribute('role', 'alert'); container.append(error); }
+  if (state.folderBrowser.open) renderFolderBrowser(container);
+  const list = el('div', 'sync-list'); list.setAttribute('role', 'list');
+  if (!state.syncs.length) list.append(el('p', 'empty-list', state.syncLoaded ? 'No folders are synced yet. Choose “Sync a folder” to start.' : 'Loading…'));
+  for (const s of state.syncs) list.append(renderSyncCard(s));
+  container.append(list);
+  renderSyncActivityList(container);
+}
+function renderSyncCard(s: SyncStatus): HTMLElement {
+  const card = el('article', `sync-card sync-${s.state}`); card.setAttribute('role', 'listitem'); card.setAttribute('aria-label', `Synced folder ${s.pair.name}`);
+  const head = el('div', 'sync-head');
+  head.append(icon('folder'), el('strong', '', displayPath(s.pair.name)), badge(syncStateLabels[s.state] ?? s.state, `sync-badge ${s.state}`));
+  card.append(head, el('p', 'muted sync-path', displayPath(s.pair.localRoot)), el('p', 'sync-remote', `Google Drive: ${displayPath(s.pair.parent?.name || 'My Drive')} › ${displayPath(s.pair.name)}`));
+  const line = s.state === 'synced' && s.lastSyncAt ? `${s.message} · checked ${date(s.lastSyncAt)}` : s.message;
+  const status = el('p', 'sync-message', displayPath(line)); status.setAttribute('role', 'status'); card.append(status);
+  if (s.state === 'syncing' && s.total > 0) {
+    const progress = el('progress'); progress.max = s.total; progress.value = s.done; card.append(progress);
+    card.append(el('p', 'sync-counts', `${s.done} of ${s.total} · ↑ ${s.uploads} to Drive · ↓ ${s.downloads} to this computer`));
+    if (s.currentPath) card.append(el('p', 'transfer-path', displayPath(s.currentPath)));
+  }
+  if ((s.state === 'error' || s.state === 'waiting') && s.errorCode) { const hint = guidanceFor(s.errorCode); if (hint) card.append(el('p', 'transfer-hint', hint)); }
+  if (s.state === 'confirm_deletes') {
+    const box = el('div', 'sync-confirm'); box.setAttribute('role', 'alert');
+    const parts: string[] = [];
+    if (s.remoteDeletes) parts.push(`${s.remoteDeletes} file${s.remoteDeletes === 1 ? '' : 's'} deleted on this computer would be moved to the Google Drive trash`);
+    if (s.localDeletes) parts.push(`${s.localDeletes} file${s.localDeletes === 1 ? '' : 's'} deleted in Google Drive would be moved to the LedgeSync trash on this computer`);
+    box.append(el('p', '', `${parts.join('; ')}. So many at once can mean a disconnected disk or a mistake, so LedgeSync waits for you.`));
+    const actions = el('div', 'pair-actions');
+    const confirm = button('Delete on the other side too', () => { const fn = optional('SyncConfirmDeletes'); if (fn) void syncAction(() => fn(s.pair.id), 'The deletions could not be confirmed.', s.pair.id); }, 'button primary'); confirm.id = `sync-confirm-${s.pair.id}`;
+    const restore = button('Restore the files instead', () => { const fn = optional('SyncRestoreDeletes'); if (fn) void syncAction(() => fn(s.pair.id), 'The files could not be restored.', s.pair.id); }, 'button subtle'); restore.id = `sync-restore-${s.pair.id}`;
+    confirm.disabled = restore.disabled = Boolean(state.syncBusy);
+    actions.append(confirm, restore); box.append(actions); card.append(box);
+  }
+  if (s.issues.length) {
+    const details = el('details', 'transfer-issues'); details.append(el('summary', '', `${s.issues.length} item${s.issues.length === 1 ? '' : 's'} not synced`));
+    const list = el('ul'); for (const issue of s.issues.slice(0, 50)) list.append(el('li', '', `${displayPath(issue.path)} — ${displayPath(issue.message)}`));
+    details.append(list); card.append(details);
+  }
+  const actions = el('div', 'pair-actions');
+  const paused = s.pair.paused;
+  const pause = button(paused ? 'Resume' : 'Pause', () => { const fn = optional(paused ? 'SyncResume' : 'SyncPause'); if (fn) void syncAction(() => fn(s.pair.id), 'The sync could not be changed.', s.pair.id); }, 'button subtle'); pause.id = `sync-pause-${s.pair.id}`;
+  const now = button('Sync now', () => { const fn = optional('SyncNow'); if (fn) void syncAction(() => fn(s.pair.id), 'The sync could not start.', s.pair.id); }, 'button subtle'); now.id = `sync-now-${s.pair.id}`;
+  const openFailed = (error: unknown) => { state.syncError = describe(error, 'The folder could not be opened.'); render(); };
+  const openLocal = button('Open folder', () => { const fn = optional('SyncOpenLocal'); if (fn) void fn(s.pair.id).catch(openFailed); }, 'button subtle');
+  const openDrive = button('Open in Drive', () => { const fn = optional('SyncOpenDrive'); if (fn) void fn(s.pair.id).catch(openFailed); }, 'button subtle');
+  const remove = button('Stop syncing', () => { const fn = optional('SyncRemove'); if (fn && window.confirm(`Stop syncing “${s.pair.name}”? Files stay on this computer and in Google Drive.`)) void syncAction(() => fn(s.pair.id), 'The sync could not be removed.', s.pair.id); }, 'button subtle'); remove.id = `sync-remove-${s.pair.id}`;
+  now.disabled = paused;
+  for (const control of [pause, now, remove]) control.disabled = control.disabled || Boolean(state.syncBusy);
+  actions.append(pause, now, openLocal, openDrive, remove); card.append(actions);
+  return card;
+}
+function renderSyncActivityList(container: HTMLElement) {
+  if (!optional('SyncActivity')) return;
+  const section = el('section', 'sync-activity'); section.setAttribute('aria-labelledby', 'sync-activity-heading');
+  const heading = el('h2', '', 'Recent activity'); heading.id = 'sync-activity-heading'; section.append(heading);
+  if (!state.syncActivity.length) { section.append(el('p', 'muted', 'Changes appear here as they sync.')); container.append(section); return; }
+  const list = el('ul');
+  for (const a of state.syncActivity.slice(0, 40)) {
+    const item = el('li');
+    item.append(el('span', 'activity-kind', activityLabels[a.kind] ?? a.kind), el('span', 'activity-path', displayPath(a.path || a.detail || '')), el('span', 'muted', date(a.at)));
+    if (a.kind === 'conflict' && a.detail) item.append(el('span', 'muted activity-detail', `Your version was kept as ${displayPath(a.detail)}`));
+    list.append(item);
+  }
+  section.append(list); container.append(section);
+}
+async function openFolderBrowser() {
+  state.folderBrowser = { open: true, stack: [{ id: 'root', name: 'My Drive' }], folders: [], loading: true, error: '' };
+  render(); await loadFolders();
+}
+async function loadFolders() {
+  const fn = optional('DriveFolders'); if (!fn) return;
+  const fb = state.folderBrowser;
+  const current = fb.stack[fb.stack.length - 1];
+  fb.loading = true; fb.error = ''; render();
+  try { fb.folders = await fn(current.id); }
+  catch (error) { fb.error = describe(error, 'Drive folders could not be listed.'); fb.folders = []; }
+  finally { fb.loading = false; render(); }
+}
+function renderFolderBrowser(container: HTMLElement) {
+  const fb = state.folderBrowser;
+  const box = el('section', 'folder-browser'); box.setAttribute('aria-label', 'Choose a Google Drive folder');
+  const crumbs = el('div', 'breadcrumbs');
+  fb.stack.forEach((entry, index) => {
+    if (index) crumbs.append(el('span', 'separator', '›'));
+    crumbs.append(button(entry.name, () => { fb.stack = fb.stack.slice(0, index + 1); void loadFolders(); }, 'crumb'));
+  });
+  box.append(crumbs);
+  if (fb.error) box.append(el('div', 'error', fb.error));
+  const list = el('div', 'folder-list');
+  if (fb.loading) list.append(el('p', 'muted', 'Loading folders…'));
+  else if (!fb.folders.length) list.append(el('p', 'muted', 'No folders here.'));
+  for (const f of fb.folders) {
+    const row = button(f.name, () => { fb.stack.push({ id: f.id, name: f.name }); void loadFolders(); }, 'folder-row', 'folder');
+    row.disabled = fb.loading; list.append(row);
+  }
+  box.append(list);
+  const current = fb.stack[fb.stack.length - 1];
+  const actions = el('div', 'pair-actions');
+  const use = button(`Use “${current.name}”`, () => {
+    state.syncParent = { id: current.id, name: current.name }; fb.open = false;
+    try { localStorage.setItem('ledgesync.syncParent', JSON.stringify(state.syncParent)); } catch { /* per-viewer convenience only */ }
+    render();
+  }, 'button primary'); use.id = 'folder-use';
+  const cancel = button('Cancel', () => { fb.open = false; render(); }, 'button subtle');
+  actions.append(use, cancel); box.append(actions); container.append(box);
+}
+try {
+  const saved = JSON.parse(localStorage.getItem('ledgesync.syncParent') ?? 'null') as { id?: unknown; name?: unknown } | null;
+  if (saved && typeof saved.id === 'string' && typeof saved.name === 'string') state.syncParent = { id: saved.id, name: saved.name };
+} catch { /* per-viewer convenience only */ }
+if (syncAvailable()) state.view = 'sync';
+
 render();
 // The desktop bridge may arrive after web assets initialize. Startup reads only
 // saved connection metadata; destination selection and upload remain explicit.
 if (typeof window.go?.desktop?.App?.GoogleDriveStatus === 'function') void driveAction('status');
 if (optional('ListProjects')) void loadProjects();
 window.runtime?.EventsOn?.('ledgesync:automation', () => { void loadAutomation(); void loadProjects(); });
+if (syncAvailable()) { void loadSyncs(); void loadSyncActivity(); }
+window.runtime?.EventsOn?.('ledgesync:sync', scheduleSyncReload);

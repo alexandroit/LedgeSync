@@ -56,6 +56,7 @@ func (a *App) ConnectGoogleDrive() (driveauth.Status, error) {
 	if err == nil {
 		a.invalidateTransfer()
 	}
+	a.syncAccountChanged()
 	if err == nil && status.State == "connected" && a.connectionContext.Err() == nil && a.showAfterConnect != nil {
 		a.showAfterConnect()
 	}
@@ -73,6 +74,7 @@ func (a *App) CheckGoogleDrive() (driveauth.Status, error) {
 	if status.State != "connected" {
 		a.invalidateTransfer()
 	}
+	a.syncAccountChanged()
 	return status, connections.PublicError(err)
 }
 func (a *App) DisconnectGoogleDrive() (driveauth.Status, error) {
@@ -85,6 +87,7 @@ func (a *App) DisconnectGoogleDrive() (driveauth.Status, error) {
 	}
 	defer done()
 	status, err := a.google.Disconnect(a.connectionContext)
+	a.syncAccountChanged()
 	return status, connections.PublicError(err)
 }
 func (a *App) RevokeGoogleDrive(expectedAccountReference string, confirmed bool) (driveauth.Status, error) {
@@ -102,6 +105,7 @@ func (a *App) RevokeGoogleDrive(expectedAccountReference string, confirmed bool)
 	}
 	defer done()
 	status, err := a.google.Revoke(a.connectionContext, expectedAccountReference, true)
+	a.syncAccountChanged()
 	return status, connections.PublicError(err)
 }
 func (a *App) CancelGoogleDrive() {
@@ -111,6 +115,9 @@ func (a *App) CancelGoogleDrive() {
 	}
 }
 func (a *App) Shutdown() {
+	if a.sync != nil {
+		a.sync.Stop()
+	}
 	if a.scheduler != nil {
 		a.scheduler.Stop()
 	}

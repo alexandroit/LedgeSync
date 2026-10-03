@@ -26,8 +26,8 @@ where a synced folder lives.
   scopes** and add `.../auth/drive`. Until Google verifies the restricted scope,
   Google shows an "unverified app" screen at consent (**Advanced → Go to
   LedgeSync**). Unverified apps are limited to 100 users. Public distribution
-  needs Google's restricted-scope verification, including a security
-  assessment.
+  needs Google's restricted-scope verification; see
+  [Google verification](GOOGLE_VERIFICATION.md).
 
 
 ## Connect your account

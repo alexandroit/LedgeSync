@@ -1,6 +1,26 @@
 # Platform builds and installation
 
-**0.1.0-alpha.6 — current developer pre-release (2026-10-02).** It makes file
+**0.1.0-alpha.7 — current developer pre-release (2026-10-03).** It adds
+**two-way sync** like Google Drive for desktop ([ADR-034](12_ADR_DECISIONS.md),
+[design](research/TWO_WAY_SYNC.md)) and requests full Drive access; existing
+connections reconnect once.
+
+| Gate | Result |
+|---|---|
+| Pull request checks | [pull request 4](https://github.com/alexandroit/LedgeSync/pull/4): 24/24 |
+| Official build (publisher OAuth client on all six targets) | [run 37091217487](https://github.com/alexandroit/LedgeSync/actions/runs/37091217487): 16/16 at `f9319c1`, after re-running a transient macOS `hdiutil: Resource busy` disk-image failure |
+| Release | [v0.1.0-alpha.7](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.7): 37 assets, `SHA256SUMS`, `RELEASE.json`, `INSTALLERS_RELEASE.json` |
+| Clean-machine installers | [run 37092218276](https://github.com/alexandroit/LedgeSync/actions/runs/37092218276): Windows Server 2022 x64 and Windows 11 ARM64; Ubuntu amd64/arm64; local signed APT |
+| Public APT | Snapshot `20261003-alpha7-f9319c1` active; [run 37092498889](https://github.com/alexandroit/LedgeSync/actions/runs/37092498889): `apt-get install ledgesync` and `ledgesync-cli` on clean amd64/arm64 |
+| Live Google Drive | Two-way sync: 10/10 steps on the owner's account ([design and results](research/TWO_WAY_SYNC.md)) |
+| Publisher signing | Not available: see [Publisher signing](#publisher-signing) |
+
+Exact hashes and results: [alpha.7 release evidence](research/DRIVE_SYNC_ALPHA7_RELEASE.json).
+Earlier evidence cites commit IDs from before the 2026-10-02 history rewrite; see
+the [commit ID map](COMMIT_ID_MAP.md). Windows 11 x64 has no GitHub-hosted runner;
+the x64 installer was exercised on Windows Server 2022.
+
+**0.1.0-alpha.6 — previous pre-release (2026-10-02).** It makes file
 uploads to Google Drive work: alpha.5 created folders but rejected the session
 parameter (`session_crd`) that Google adds to resumable uploads, and it failed
 files whose media type Drive detects. Live acceptance against real Google Drive

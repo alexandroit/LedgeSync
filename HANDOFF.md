@@ -7,8 +7,9 @@ found with an emulator. The live Google acceptance then found two upload
 defects that alpha.5 still had (Google's `session_crd` session parameter, and
 Drive-detected media types). With those fixes, alpha.6 passes all 14 live
 steps and is published (release, installers, signed APT, website). The owner
-then asked for Google Drive-like behavior. Alpha.7 adds two-way sync with full
-Drive access ([ADR-034](docs/12_ADR_DECISIONS.md),
+then asked for Google Drive-like behavior. Alpha.7 is published with two-way
+sync and full Drive access, and passed 10/10 live sync steps
+([ADR-034](docs/12_ADR_DECISIONS.md),
 [two-way sync](docs/research/TWO_WAY_SYNC.md)). Publisher signing awaits owner
 steps. Current
 dispositions, commands and blockers are in

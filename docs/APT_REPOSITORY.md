@@ -124,7 +124,22 @@ CLI installation and removal preserving synthetic user data. The downloaded
 reports were checked against GitHub's artifact ZIP digests. See
 [alpha.3 deployment evidence](research/OAUTH_ONECLICK_DEPLOYMENT_VERIFICATION.json).
 
-## Current alpha.6 publication
+## Current alpha.7 publication
+
+Current snapshot: `20261003-alpha7-f9319c1`, Debian version `0.1.0~alpha.7-1`,
+built from the published alpha.7 archives (application `f9319c1`, packaging
+`37dea38`) with the existing server key. Before activation, all 72 previous pool
+and by-hash files were verified unchanged in the new snapshot, the alpha.7
+packages were listed for amd64 and arm64, and the `InRelease` signature was
+verified. The `public` symlink was replaced atomically; the alpha.6 snapshot is
+retained for rollback. [Installer run 37092218276](https://github.com/alexandroit/LedgeSync/actions/runs/37092218276)
+passed native packaging and the local signed lifecycle.
+[Public run 37092498889](https://github.com/alexandroit/LedgeSync/actions/runs/37092498889)
+passed on amd64 and arm64 against `https://ledgesync.com/apt`. No package was
+installed on the production server and Nginx was not reloaded. See
+[alpha.7 evidence](research/DRIVE_SYNC_ALPHA7_RELEASE.json).
+
+## Previous alpha.6 publication
 
 Current snapshot: `20261002-alpha6-c1e00b1`, Debian version `0.1.0~alpha.6-1`,
 built from the published alpha.6 archives (application `c1e00b1`, packaging

@@ -115,3 +115,23 @@ enabled at login.
   update, trash and change-feed endpoints. Callback and token responses still
   reject any scope other than the requested one.
 - Playwright `tests/sync.spec.ts`: 5 tests (58 in total).
+
+## Live acceptance (2026-10-02/03, owner's account, full Drive access)
+
+[live_sync_acceptance.py](../../tools/live_sync_acceptance.py) uses two local
+folders with the same name, standing in for two computers on one new Drive
+folder. It passed all 10 steps:
+1. Connected with full Drive access.
+2. The first sync uploaded 6 files and 4 folders.
+3. The second computer joined and downloaded everything.
+4. An edit on A reached B.
+5. A new file on B reached A.
+6. A deletion on A moved B's copy to its local trash.
+7. Edits on both sides kept both versions everywhere.
+8. Deleting 25 files at once waited for confirmation.
+9. **Restore the files instead** brought them back.
+10. `sync watch` sent and received in 6 seconds without commands.
+
+Re-adding a folder to an existing identical Drive folder made no changes.
+Pending: a file uploaded through the Drive website, which awaits the owner's
+upload.

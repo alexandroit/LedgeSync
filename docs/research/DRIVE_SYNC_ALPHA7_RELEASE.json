@@ -1,0 +1,268 @@
+{
+  "product": "LedgeSync",
+  "version": "0.1.0-alpha.7",
+  "tag": "v0.1.0-alpha.7",
+  "prerelease": true,
+  "releaseUrl": "https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.7",
+  "applicationSourceCommit": "f9319c1ff3ad56e1e14c6dec2ee47c7037fc9092",
+  "installerPackagingCommit": "37dea38",
+  "websiteSourceCommit": "c1c3e2da3f4afe5f8e4fa1398f2bcdeebfe220a4",
+  "pullRequest": "https://github.com/alexandroit/LedgeSync/pull/4",
+  "feature": "two-way sync like Google Drive for desktop (ADR-034)",
+  "googleAccess": "https://www.googleapis.com/auth/drive (full Drive access; existing drive.file connections reconnect once)",
+  "ci": {
+    "pullRequestChecks": "24/24",
+    "officialBuild": {
+      "runId": 37091217487,
+      "result": "16/16 success after re-running a transient macOS 'hdiutil: Resource busy' disk-image failure",
+      "publisherOAuthClient": "injected on all six desktop/CLI targets"
+    }
+  },
+  "signing": {
+    "macOS": "unsigned developer build (ad-hoc); Developer ID signing and notarization blocked on owner material",
+    "windows": "unsigned developer build; Authenticode blocked on owner material",
+    "ubuntu": "APT InRelease/Release.gpg signed with existing RSA4096 key 11B35F4E066806C33AA8653A51AD694F4729F5AB"
+  },
+  "releaseAssetCount": 37,
+  "applicationAssets": [
+    {
+      "name": "LedgeSync-0.1.0-alpha.7-macos-amd64.dmg",
+      "sha256": "f02da3a6ce01f27e6eced7ed7aca2d814c029c42be0db891f3477f291819a46a",
+      "size": 7811725
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.7-macos-amd64.dmg.sha256",
+      "sha256": "bd88021a44337d6940aa051843b82f7f0fa25680f789cac194dd1aa773fa74bd",
+      "size": 106
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.7-macos-arm64.dmg",
+      "sha256": "fb44370097f7751379e21bfc4bb0912ef8e8a44258ad974fc5f9d54552be6a3a",
+      "size": 7175597
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.7-macos-arm64.dmg.sha256",
+      "sha256": "30274bd47268d2727898936b65960e36c06ae9071af2a11f4d9dce55281ade5b",
+      "size": 106
+    },
+    {
+      "name": "RELEASE.json",
+      "sha256": "d848faf7ed899bc5386f6eb18c871c86e43795d1e9273989b6686fda03cc4086",
+      "size": 3847
+    },
+    {
+      "name": "SHA256SUMS",
+      "sha256": "214e23154060d9f17fc3c890295543965633278d651a9c189faf3b075ef0785a",
+      "size": 1568
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.7-darwin-amd64.tar.gz",
+      "sha256": "ee464a2ce2531a750b423b797552f4cce50834d5a6eb19d5bd57e71e47d1e535",
+      "size": 11305888
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.7-darwin-arm64.tar.gz",
+      "sha256": "748833dcd76056c785e1482d49d05496a50b35f3ceaeba0686d614b6f86e6de5",
+      "size": 10632134
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.7-linux-amd64.tar.gz",
+      "sha256": "77547b98a6b539179f78a9c7e2e5e071c07adf66d9c272aab26663b7ebfc6d5b",
+      "size": 11106956
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.7-linux-arm64.tar.gz",
+      "sha256": "131b4ea2d1df094c54d31c1efc8c8c26dfc3b7d84b45ed54e3a0193b17f5ceed",
+      "size": 10348011
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.7-windows-amd64.zip",
+      "sha256": "e0a19ddf6f40a908167ef0b4ecd0ce2686fa245fd2a34f9412329772a2be9e40",
+      "size": 10969311
+    },
+    {
+      "name": "ledgesync-0.1.0-alpha.7-windows-arm64.zip",
+      "sha256": "1b2984c0f5b7f31fbf5342b3030fddadf428a646c90ca68ea5601a9ca6bd1729",
+      "size": 10169694
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-darwin-amd64.tar.gz",
+      "sha256": "b6dc193617bd8efd739767aae57949e14c0cbbb82363496751e4e19d653b8ff8",
+      "size": 7037844
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-darwin-amd64.tar.gz.sha256",
+      "sha256": "a3315a8a64bbfcf9f881be4b53127d2bb18a425a8b466b598a6a7b6caffe46b5",
+      "size": 118
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-darwin-arm64.tar.gz",
+      "sha256": "30c99296a3163c6a4b8aae0625fac972cdb5f494c9ce57e9f88bdbcc0bc7696e",
+      "size": 6514405
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-darwin-arm64.tar.gz.sha256",
+      "sha256": "a15540e49ea421dc0e97e30019c14a7c26b5c9febc09c68ad4a310daad45cc99",
+      "size": 118
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-linux-amd64.tar.gz",
+      "sha256": "2a7eea5aea25a513f58863ae9d4f907de77acc036cde546670b10ef693b24f4c",
+      "size": 7080876
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-linux-amd64.tar.gz.sha256",
+      "sha256": "cb486d71cd73292b5ae3f003a295414df371110b29efea512a6442d3fbc9749c",
+      "size": 117
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-linux-arm64.tar.gz",
+      "sha256": "af24a41d7afedd2509e21f714b53dba2cdf1f862d8f087339796380261bd7812",
+      "size": 6535238
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-linux-arm64.tar.gz.sha256",
+      "sha256": "6457006dec434c66de977b79b00b66daf86aecfc00bcf80cc4975879646fa020",
+      "size": 117
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-windows-amd64.zip",
+      "sha256": "62b18817ec7dcc7fe967b29e16ab8b741ef162e7228fcf755eef75c0f3a1dcbc",
+      "size": 7518243
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-windows-amd64.zip.sha256",
+      "sha256": "e295fbfae4a8db41df7b5777c2c1f7ab9fa7e8a769361a020f92612f2a57bb2c",
+      "size": 117
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-windows-arm64.zip",
+      "sha256": "19cd687e7446246e4a13e866061f3fccfcc8a5d74695b80ef8bf30fded010ba3",
+      "size": 6859732
+    },
+    {
+      "name": "ledgesync-desktop-0.1.0-alpha.7-windows-arm64.zip.sha256",
+      "sha256": "77a27a092a3aaf3ee5564da4117b112194049a49af6c796a6e233a9f2e1556ae",
+      "size": 117
+    }
+  ],
+  "installerAssets": [
+    {
+      "name": "ledgesync-cli_0.1.0~alpha.7-1_amd64.deb",
+      "sha256": "c47852f3f1629f4711dedee57b446f905d1c14629ab81d3ed589e417fecd4bec",
+      "size": 9835920
+    },
+    {
+      "name": "ledgesync_0.1.0~alpha.7-1_amd64.deb",
+      "sha256": "b27b4da76439afc3e283a69ec03b7d4565eb27c37b43f1823e68df0b8fefa307",
+      "size": 5541804
+    },
+    {
+      "name": "ledgesync-cli_0.1.0~alpha.7-1_arm64.deb",
+      "sha256": "37caa8bfd22263d23b6321461237e91af6637a662646a0cd08f6f43402ff4da1",
+      "size": 8921144
+    },
+    {
+      "name": "ledgesync_0.1.0~alpha.7-1_arm64.deb",
+      "sha256": "a6a93a492cc8e6a8efc3aa7d3150a25abd655c2989ec79a27c680282f1650d2a",
+      "size": 4821304
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.7-windows-amd64-setup.exe",
+      "sha256": "fbc2681b602fcef5e8874ae9f6a390b30550cc16308058a37c49c41b6ebe14c7",
+      "size": 8345378
+    },
+    {
+      "name": "LedgeSync-0.1.0-alpha.7-windows-arm64-setup.exe",
+      "sha256": "a19be713cffefbba803d1b35915be7af51705b16625a4e988422d3852c1c704e",
+      "size": 7783086
+    }
+  ],
+  "installerRun": {
+    "runId": 37092218276,
+    "result": "success",
+    "windows": {
+      "amd64": "Windows Server 2022 (10.0.20348): passed",
+      "arm64": "Windows 11 ARM64 (10.0.26200): passed"
+    },
+    "ubuntu": {
+      "amd64": "install, payload, GUI startup, removal passed",
+      "arm64": "install, payload, GUI startup, removal passed"
+    },
+    "localSignedApt": "passed"
+  },
+  "apt": {
+    "snapshot": "20261003-alpha7-f9319c1",
+    "previousActiveSnapshot": "20261002-alpha6-c1e00b1",
+    "previousPoolAndByHashFilesUnchanged": 72,
+    "signature": "Good signature from LedgeSync APT Archive",
+    "activation": "atomic symlink replacement",
+    "debianVersion": "0.1.0~alpha.7-1"
+  },
+  "publicAPT": {
+    "runId": 37092498889,
+    "baseURL": "https://ledgesync.com/apt",
+    "results": {
+      "amd64": {
+        "baseURL": "https://ledgesync.com/apt",
+        "architecture": "amd64",
+        "version": "0.1.0~alpha.7-1",
+        "signatureVerified": true,
+        "tamperedMetadataRejected": true,
+        "byHashForced": true,
+        "desktopInstalled": true,
+        "secretServiceInstalled": true,
+        "headlessCliInstalled": true,
+        "uninstallPreservedUserFixture": true
+      },
+      "arm64": {
+        "baseURL": "https://ledgesync.com/apt",
+        "architecture": "arm64",
+        "version": "0.1.0~alpha.7-1",
+        "signatureVerified": true,
+        "tamperedMetadataRejected": true,
+        "byHashForced": true,
+        "desktopInstalled": true,
+        "secretServiceInstalled": true,
+        "headlessCliInstalled": true,
+        "uninstallPreservedUserFixture": true
+      }
+    }
+  },
+  "website": {
+    "release": "/var/www/ledgesync/releases/c1c3e2da3f4afe5f8e4fa1398f2bcdeebfe220a4",
+    "previous": "/var/www/ledgesync/releases/0716392bbe0803eb34126d81af2d4588c2280c7d",
+    "serverFilesMatchSource": "all site files verified by SHA-256",
+    "originHomepageMatchesSource": true,
+    "privacyPolicyDisclosesFullAccess": true,
+    "pagesRunId": 37092584371
+  },
+  "sharedServerPreservation": {
+    "configurationHashesUnchanged": 57,
+    "hipermusicasPIDUnchanged": true,
+    "nginxConfigurationValid": true,
+    "nginxReloaded": false,
+    "hipermusicasPublicStatus": 200,
+    "hipermusicasOriginStatus": 200
+  },
+  "liveSyncAcceptance": {
+    "date": "2026-10-02",
+    "account": "owner's Google account, full Drive access",
+    "result": "passed",
+    "steps": [
+      "connected with full Drive access",
+      "device A: first sync uploads the folder",
+      "device B: joining downloads everything",
+      "edit on A reaches B",
+      "new file on B reaches A",
+      "deletion on A moves B's copy to its local trash",
+      "edits on both sides keep both versions everywhere",
+      "deleting 25 files at once waits for confirmation",
+      "restore brings the files back instead of deleting them",
+      "background sync sends and receives without commands"
+    ],
+    "cli": "LedgeSync 0.1.0-alpha.7 built locally from the merged branch head (same tree as f9319c1)",
+    "report": "build/live-sync/ (local, not committed)",
+    "pending": "a file uploaded through the Drive website arriving locally: awaiting the owner's upload; files from other computers were received live"
+  }
+}

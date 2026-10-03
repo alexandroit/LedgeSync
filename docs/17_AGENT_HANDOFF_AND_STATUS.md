@@ -2,33 +2,55 @@
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
 
-## Alpha.7 — two-way sync like Google Drive (in progress)
+## Alpha.7 published — two-way sync like Google Drive
 
 **Owner request (2026-10-02):** "it has to be like Google Drive: once I select
 the directory it starts sending and receiving." The owner made two decisions:
 - **Full Drive access**, so that files added through the website or the phone
   are received.
-- **Deletions propagate with trash recovery**, and the sync pauses when many
-  files disappear at once.
+- **Deletions propagate with trash recovery**, and sync pauses when many files
+  disappear at once.
 
 Both are recorded in [ADR-034](12_ADR_DECISIONS.md). The design, safety rules,
 limitations and tests are in [two-way sync](research/TWO_WAY_SYNC.md).
 
-| Area | State |
-|---|---|
-| Engine (`internal/syncer`) | Implemented. 19 tests pass with `-race`, including end-to-end runs through the real Drive client and the emulator, and the background loop syncing both ways |
-| Drive client and request boundary | Implemented: revisions (resumable PATCH), trash, change feed, modification time; boundary tests |
-| Desktop | Implemented: **Synced folders** view, in-app Drive folder browser, guard choices, activity, minimize-to-keep-syncing; 5 new Playwright tests (58 in total) |
-| CLI | Implemented: `ledgesync sync add/list/run/watch/pause/resume/remove/confirm-deletes/restore-deletes/activity`; CLI test |
-| Privacy policy, terms, website | Updated for full access, local writes and deletion behavior |
-| Live Google acceptance | **Pending.** The owner adds the `drive` scope to the consent screen and reconnects once |
-| Release | **Pending:** 0.1.0-alpha.7 |
+**Published 2026-10-03** as pre-release
+[v0.1.0-alpha.7](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.7)
+from `f9319c1` ([pull request 4](https://github.com/alexandroit/LedgeSync/pull/4)),
+with 37 assets.
 
-**Owner actions:**
-1. In Google Cloud Console, add `https://www.googleapis.com/auth/drive` under
-   **Google Auth Platform → Data Access**.
-2. Reconnect Google Drive once (the existing grant is `drive.file`).
-3. For public distribution, Google's restricted-scope verification is required.
+| Gate | Result |
+|---|---|
+| Official build | [run 37091217487](https://github.com/alexandroit/LedgeSync/actions/runs/37091217487): 16/16 (one transient macOS disk-image failure re-run) |
+| Installers | [run 37092218276](https://github.com/alexandroit/LedgeSync/actions/runs/37092218276): Windows Server 2022 x64, Windows 11 ARM64, Ubuntu amd64/arm64 |
+| Signed APT | `20261003-alpha7-f9319c1` active; 72 previous files unchanged; public [run 37092498889](https://github.com/alexandroit/LedgeSync/actions/runs/37092498889) passed on amd64/arm64 |
+| Website | Release `c1c3e2d` at the origin and on Pages; privacy policy and terms disclose full access; shared server unchanged |
+| Live Google Drive | Two-way sync: 10/10 steps on the owner's account with the full-access connection |
+
+Exact identities are in the [alpha.7 evidence](research/DRIVE_SYNC_ALPHA7_RELEASE.json).
+A desktop test build of the same source is installed at
+`/Applications/LedgeSync.app` on the build Mac.
+
+Also fixed before release:
+- Passes are now serialized across processes, so the desktop app and
+  `ledgesync sync watch` never sync at the same time.
+- Syncs added, paused or removed in one process are followed by the others.
+
+### Next safe steps (alpha.7)
+
+1. Owner: upload a file to a synced folder through the Drive website and
+   confirm that it arrives locally. Files from another computer were received
+   live; the emulator covers files from other apps.
+2. Owner: remove the test folders from My Drive (`LedgeSync sync test …`,
+   `LedgeSync teste outro app …`, `LedgeSync acceptance …`).
+3. Owner: publisher signing material ([Publisher signing](PLATFORMS.md#publisher-signing))
+   and, for public distribution, Google's restricted-scope verification for
+   full Drive access.
+4. Owner: Cloudflare Web Analytics injection decision.
+5. Next work:
+   - start at login and background operation without the window;
+   - rename detection;
+   - shared drives.
 
 ## Alpha.6 published — file uploads to Google Drive work
 

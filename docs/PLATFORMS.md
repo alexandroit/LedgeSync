@@ -410,6 +410,37 @@ The installer and its bundled app remain unsigned developer builds. The x64
 setup engine can run under Windows 11 ARM64 emulation; the ARM64 package
 contains the native ARM64 app and accepts only ARM64 Windows.
 
+### Microsoft Store package (MSIX)
+
+The Store distributes the same released app as an MSIX bundle that Microsoft
+signs on publication, so it installs without the SmartScreen warning
+([ADR-036](12_ADR_DECISIONS.md)). The bundle is built by the
+[Store workflow](../.github/workflows/store.yml). The workflow verifies the
+pinned x64 and ARM64 release archives, then runs
+[package_msix.py](../tools/package_msix.py) with the Windows SDK's `makepri`
+and `makeappx`. It uploads the `ledgesync-store-msix` artifact, which holds
+the `.msixbundle` and `STORE-PACKAGE.json`.
+
+- **Identity.** `deploy/msix/identity.json` holds the three values on Partner
+  Center's **Product management → Product identity** page:
+  `identityName` (Package/Identity/Name), `publisher`
+  (Package/Identity/Publisher) and `publisherDisplayName`
+  (Package/Properties/PublisherDisplayName). They are public identifiers, not
+  secrets. Without the file, the workflow builds a validation bundle that
+  Partner Center rejects.
+- **Version.** 0.1.0-alpha.8 is package version 1.1.8.0 (the mapping is in
+  ADR-036). Each submission needs a higher version.
+- **Submission.** Upload the `.msixbundle` under **Packages**. The Store
+  listing language must be English (United States), the language the package
+  declares. When Partner Center asks why the app needs `runFullTrust`, give
+  this reason: LedgeSync is a Win32 desktop app that syncs folders the user
+  chooses with Google Drive. It stores the Google authorization in Windows
+  Credential Manager and receives Google's sign-in response on a local
+  loopback address.
+- **Limits.** The package requires Windows 11, which includes the WebView2
+  Runtime. Store builds are installed through the Store; the bundle itself is
+  not installable before the Store signs it.
+
 ### Ubuntu APT
 
 The signed project repository supports **Ubuntu 24.04, amd64 and arm64**. APT

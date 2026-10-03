@@ -1,0 +1,53 @@
+name: Microsoft Store package
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/store.yml'
+      - 'deploy/msix/**'
+      - 'deploy/installers/source-release.json'
+      - 'tools/package_msix.py'
+      - 'tools/test_package_msix.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/store.yml'
+      - 'deploy/msix/**'
+      - 'deploy/installers/source-release.json'
+      - 'tools/package_msix.py'
+      - 'tools/test_package_msix.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: store-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  msix:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - run: python tools/test_package_msix.py
+      - name: Fetch and verify the released desktop payloads
+        shell: bash
+        run: |
+          version=$(python -c "import json; print(json.load(open('deploy/installers/source-release.json'))['version'])")
+          echo "LEDGESYNC_RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+          for arch in amd64 arm64; do
+            python tools/fetch_installer_inputs.py --platform windows --arch "$arch" --version "$version"
+          done
+      - name: Build the Store bundle (unsigned; the Store signs it)
+        shell: bash
+        run: |
+          # Without the Store identity, prove the pipeline with a bundle marked not for upload.
+          if [ -f deploy/msix/identity.json ]; then source=(--identity deploy/msix/identity.json); else source=(--validation); fi
+          python tools/package_msix.py --version "$LEDGESYNC_RELEASE_VERSION" "${source[@]}" --output build/msix
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: ledgesync-store-msix
+          path: build/msix/
+          if-no-files-found: error

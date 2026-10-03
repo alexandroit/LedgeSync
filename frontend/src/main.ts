@@ -3,7 +3,7 @@ import { describe, guidanceFor, parseError } from './errors';
 import type { AutomationView, RestoreProgress, DesktopBridge, DriveConnectionStatus, DriveDestination, DriveFolder, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, PolicyGroup, Preview, Project, ProjectPolicy, RunSummary, Settings, SyncActivity, SyncState, SyncStatus, TransferState } from './types';
 
 type View = 'sync' | 'files' | 'preview' | 'policies' | 'connections' | 'activity' | 'history' | 'settings';
-const version = '0.1.0-alpha.6';
+const version = '0.1.0-alpha.7';
 type DriveAction = 'status' | 'connect' | 'check' | 'disconnect' | 'revoke';
 const state = {
   preview: null as Preview | null, view: 'files' as View, path: '', query: '',

@@ -211,7 +211,7 @@ jobs:
         if: runner.os == 'macOS' && env.LEDGESYNC_MACOS_IDENTITY != ''
         env:
           LEDGESYNC_DMG_ARCH: ${{ matrix.runner == 'macos-15' && 'arm64' || 'amd64' }}
-        run: python3 tools/sign_macos.py --app build/bin/LedgeSync.app --dmg-arch "$LEDGESYNC_DMG_ARCH" --version 0.1.0-alpha.6 --output build/packages --report "build/packages/macos-signing-$LEDGESYNC_DMG_ARCH.json"
+        run: python3 tools/sign_macos.py --app build/bin/LedgeSync.app --dmg-arch "$LEDGESYNC_DMG_ARCH" --version 0.1.0-alpha.7 --output build/packages --report "build/packages/macos-signing-$LEDGESYNC_DMG_ARCH.json"
       - name: Package native CLI with the same publisher configuration
         env:
           AZURE_TENANT_ID: ${{ secrets.ARTIFACT_SIGNING_TENANT_ID }}
@@ -224,17 +224,17 @@ jobs:
         run: |
           options=()
           if [ "$LEDGESYNC_OFFICIAL" = true ]; then options+=(--require-oauth-client); fi
-          python tools/package_cli.py --platform "$LEDGESYNC_PLATFORM" --native --version 0.1.0-alpha.6 --output build/packages "${options[@]}"
+          python tools/package_cli.py --platform "$LEDGESYNC_PLATFORM" --native --version 0.1.0-alpha.7 --output build/packages "${options[@]}"
       - name: Remove generated OAuth client source
         if: always()
         run: python tools/configure_oauth_client.py --clean
       - name: Archive desktop bundle
-        run: python tools/package_desktop.py --runner "${{ matrix.runner }}" --version 0.1.0-alpha.6
+        run: python tools/package_desktop.py --runner "${{ matrix.runner }}" --version 0.1.0-alpha.7
       - name: Package and verify unsigned developer disk image
         if: runner.os == 'macOS' && env.LEDGESYNC_MACOS_IDENTITY == ''
         env:
           LEDGESYNC_DMG_ARCH: ${{ matrix.runner == 'macos-15' && 'arm64' || 'amd64' }}
-        run: python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch "$LEDGESYNC_DMG_ARCH" --version 0.1.0-alpha.6 --output build/packages
+        run: python3 tools/package_dmg.py --app build/bin/LedgeSync.app --arch "$LEDGESYNC_DMG_ARCH" --version 0.1.0-alpha.7 --output build/packages
       - name: Record publisher signing state
         env:
           SIGNED: ${{ env.LEDGESYNC_MACOS_IDENTITY != '' || env.LEDGESYNC_WINDOWS_SIGNING != '' }}

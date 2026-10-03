@@ -18,7 +18,7 @@ signed and notarized (Apple cannot staple a bare Mach-O; Gatekeeper checks its
 ticket online). Every step is verified, including `spctl` assessment.
 
   python3 tools/sign_macos.py --app build/bin/LedgeSync.app --dmg-arch arm64 \\
-      --version 0.1.0-alpha.6 --output build/packages [--cli path/to/ledgesync]
+      --version 0.1.0-alpha.7 --output build/packages [--cli path/to/ledgesync]
   python3 tools/sign_macos.py --check   # report whether signing can run here
 """
 from __future__ import annotations

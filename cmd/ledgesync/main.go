@@ -19,8 +19,8 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/policy"
 )
 
-const version = "0.1.0-alpha.6"
-const usage = `LedgeSync 0.1.0-alpha.6 — approved folder copies to Google Drive and local policy previews
+const version = "0.1.0-alpha.7"
+const usage = `LedgeSync 0.1.0-alpha.7 — two-way folder sync with Google Drive, approved copies and local policy previews
 
 Usage:
   ledgesync browse --root DIRECTORY --json
@@ -44,6 +44,10 @@ Usage:
   ledgesync automatic run [--pair PAIR_ID]
   ledgesync automatic watch
   ledgesync restore --pair PAIR_ID --to EMPTY_DIRECTORY
+  ledgesync sync add --root DIRECTORY [--parent FOLDER_ID] [--watch]
+  ledgesync sync list | run [--pair ID] | watch | activity [--pair ID]
+  ledgesync sync pause|resume|remove --pair ID
+  ledgesync sync confirm-deletes --pair ID --count N | restore-deletes --pair ID
   ledgesync --version
 
 Browse/explain/plan are offline previews against a fake destination.
@@ -55,7 +59,14 @@ create-only copies bound to the reviewed preview; "automatic run" (for cron or a
 systemd timer) and "automatic watch" execute only authorized pairs and pause them
 when the account, destination, folder, configuration or ignore rules change.
 "restore" downloads a pair's verified Drive copy into a new empty folder.
-Nothing deletes or overwrites Drive files, and no service is installed or enabled.
+Copies never delete or overwrite Drive files.
+"sync" keeps a folder and a Drive folder of the same name the same in both
+directions, like Google Drive for desktop: edits become new Drive revisions,
+deletions go to the Drive trash or to the folder's .ledgesync-trash, and when
+both sides changed a file both versions are kept. "sync watch" (or a systemd
+service you create) keeps syncing; a pass that would delete many files waits for
+"confirm-deletes" with the exact count, or "restore-deletes". No service is
+installed or enabled.
 For SSH servers, --no-browser displays loopback forwarding instructions for your browser.
 Git policy is patterns-only; no Git or rclone executable is needed at runtime.
 `
@@ -88,6 +99,9 @@ func run(ctx context.Context, args []string, out, errOut io.Writer) int {
 	}
 	if args[0] == "copy" && len(args) == 3 && args[1] == "--pair" {
 		return runPairCopy(ctx, args[2], os.Stdin, out, errOut, interactiveTerminal(os.Stdin, out, errOut), newPairServices)
+	}
+	if args[0] == "sync" {
+		return runSync(ctx, args, out, errOut, newSyncManager)
 	}
 	if args[0] == "pairs" || args[0] == "automatic" || args[0] == "restore" {
 		return runPairs(ctx, args, os.Stdin, out, errOut, interactiveTerminal(os.Stdin, out, errOut), newPairServices)

@@ -212,7 +212,7 @@ func TestAuthorizedRequestRejectsUntrustedDestinationsBeforeVault(t *testing.T) 
 			t.Error("unsafe destination was accepted")
 		}
 	}
-	for _, method := range []string{http.MethodPatch, http.MethodDelete, http.MethodHead} {
+	for _, method := range []string{http.MethodDelete, http.MethodHead, http.MethodOptions} {
 		if _, err := f.service.DoAuthorized(context.Background(), connected.Account.Reference, driveRequest(method)); !errors.Is(err, ErrProvider) {
 			t.Error("unsupported method accepted")
 		}
@@ -440,5 +440,46 @@ func TestDataRequestsGetLongerCredentialBoundThanMetadata(t *testing.T) {
 	meta, _ := http.NewRequest(http.MethodGet, "https://www.googleapis.com/drive/v3/files/abc?fields=id", nil)
 	if requestLimit(put) != 5*time.Minute || requestLimit(media) != 5*time.Minute || requestLimit(meta) != time.Minute {
 		t.Fatal("unexpected request bounds")
+	}
+}
+
+func TestDriveRequestBoundaryAllowsOnlyTheSyncEndpoints(t *testing.T) {
+	build := func(method, raw string) *http.Request {
+		var body io.Reader
+		if method != http.MethodGet {
+			body = strings.NewReader("{}")
+		}
+		req, err := http.NewRequest(method, raw, body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return req
+	}
+	const base = "https://www.googleapis.com"
+	for _, c := range [][2]string{
+		{http.MethodPatch, base + "/drive/v3/files/abc_DEF-1?fields=id%2Ctrashed"},
+		{http.MethodPatch, base + "/upload/drive/v3/files/abc_DEF-1?uploadType=resumable"},
+		{http.MethodGet, base + "/drive/v3/changes?pageToken=12&pageSize=1000"},
+		{http.MethodGet, base + "/drive/v3/changes/startPageToken?fields=startPageToken"},
+	} {
+		if !AllowedDriveRequest(build(c[0], c[1])) {
+			t.Errorf("%s %s should be allowed", c[0], c[1])
+		}
+	}
+	for _, c := range [][2]string{
+		{http.MethodPost, base + "/drive/v3/changes"},
+		{http.MethodPatch, base + "/drive/v3/changes"},
+		{http.MethodGet, base + "/upload/drive/v3/changes"},
+		{http.MethodPost, base + "/drive/v3/changes/watch"},
+		{http.MethodGet, base + "/drive/v3/changes/watch"},
+		{http.MethodDelete, base + "/drive/v3/files/abc"},
+		{http.MethodGet, base + "/drive/v3/about"},
+		{http.MethodPatch, base + "/drive/v3/files/abc?access_token=x"},
+		{http.MethodPatch, "https://evil.invalid/drive/v3/files/abc"},
+		{http.MethodPatch, base + "/drive/v3/files/../about"},
+	} {
+		if AllowedDriveRequest(build(c[0], c[1])) {
+			t.Errorf("%s %s must be rejected", c[0], c[1])
+		}
 	}
 }

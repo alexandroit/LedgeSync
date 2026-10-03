@@ -131,5 +131,32 @@ export interface DesktopBridge {
   RestoreProjectCopy?(id: string): Promise<RestoreProgress | null>;
   RestoreStatus?(): Promise<RestoreProgress | null>;
   CancelRestore?(): Promise<void>;
+  SyncList?(): Promise<SyncStatus[]>;
+  SyncChooseFolder?(parentID: string, parentName: string): Promise<SyncStatus>;
+  SyncPause?(id: string): Promise<SyncStatus>;
+  SyncResume?(id: string): Promise<SyncStatus>;
+  SyncNow?(id: string): Promise<SyncStatus>;
+  SyncConfirmDeletes?(id: string): Promise<SyncStatus>;
+  SyncRestoreDeletes?(id: string): Promise<SyncStatus>;
+  SyncRemove?(id: string): Promise<void>;
+  SyncActivity?(id: string): Promise<SyncActivity[]>;
+  SyncOpenLocal?(id: string): Promise<void>;
+  SyncOpenDrive?(id: string): Promise<void>;
+  DriveFolders?(parentID: string): Promise<DriveFolder[]>;
 }
+
+export type SyncState = 'starting' | 'syncing' | 'synced' | 'paused' | 'waiting' | 'confirm_deletes' | 'error';
+export interface SyncIssue { path: string; code: string; message: string }
+export interface SyncPair {
+  id: string; name: string; localRoot: string; accountReference: string;
+  parent: { folderId: string; name: string }; remoteRootId: string;
+  paused: boolean; pauseCode?: string; pauseReason?: string; createdAt: string; lastSyncAt?: string;
+}
+export interface SyncStatus {
+  pair: SyncPair; state: SyncState; message: string; errorCode?: string;
+  uploads: number; downloads: number; done: number; total: number; currentPath?: string;
+  localDeletes?: number; remoteDeletes?: number; issues: SyncIssue[]; lastSyncAt?: string; driveUrl?: string;
+}
+export interface SyncActivity { at: string; kind: string; path: string; detail?: string }
+export interface DriveFolder { id: string; name: string; parents: string[]; canAddChildren: boolean }
 declare global { interface Window { go?: { desktop?: { App?: DesktopBridge } }; runtime?: { EventsOn?(name: string, callback: () => void): () => void } } }

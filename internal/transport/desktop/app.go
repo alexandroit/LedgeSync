@@ -74,6 +74,10 @@ type App struct {
 	projectID         string
 	runProjectID      string
 	lastPlan          *transfer.Plan
+	sync              SyncService
+	syncFolders       FolderLister
+	syncPicker        Picker
+	openLocal         func(string) error
 }
 
 func New(service previewService, folderPicker, configPicker Picker) *App {

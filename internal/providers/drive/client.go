@@ -26,7 +26,7 @@ const (
 	apiURL            = "https://www.googleapis.com/drive/v3/files"
 	uploadURL         = "https://www.googleapis.com/upload/drive/v3/files"
 	folderMIME        = "application/vnd.google-apps.folder"
-	objectFields      = "id,name,mimeType,parents,size,md5Checksum,version,appProperties,trashed,driveId,capabilities(canAddChildren)"
+	objectFields      = "id,name,mimeType,parents,size,md5Checksum,version,modifiedTime,appProperties,trashed,driveId,capabilities(canAddChildren)"
 	maxResponse       = 2 << 20
 	maxAttempts       = 4
 	operationProperty = "ledgesyncOperation"
@@ -58,6 +58,7 @@ type Object struct {
 	Size          int64             `json:"size,string"`
 	MD5           string            `json:"md5Checksum"`
 	Version       string            `json:"version"`
+	ModifiedTime  string            `json:"modifiedTime"`
 	AppProperties map[string]string `json:"appProperties"`
 	Trashed       bool              `json:"trashed"`
 }

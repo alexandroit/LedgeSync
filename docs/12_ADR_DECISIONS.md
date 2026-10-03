@@ -223,3 +223,46 @@ a folder or a Google-native type.
 real upload ([live findings](research/DRIVE_SYNC_FAILURE_ANALYSIS.md#live-acceptance-findings-alpha6)).
 **Consequence:** the Drive emulator models both behaviors so CI covers them.
 Provider-facing checks need live evidence, not only the emulator.
+
+## ADR-034 — Two-way sync like Google Drive for desktop; full Drive access
+
+**Accepted, 2026-10-02 (owner decision).** The owner asked that LedgeSync
+behave like Google Drive for desktop: once a folder is chosen it starts sending
+and receiving changes. The owner chose full Drive access over the per-file
+scope, and chose to propagate deletions with trash recovery.
+
+- **Scope.** The app requests `https://www.googleapis.com/auth/drive`.
+  `drive.file` cannot list files that the Drive website or other apps add to a
+  synced folder, so those could never be received. Access is used only for
+  folders the user syncs or copies and for the location browser. This
+  supersedes ADR-028's reliance on `drive.file`. Existing connections must
+  reconnect, and the owner's Google Cloud consent screen must list the scope.
+  Public distribution requires Google's restricted-scope verification.
+- **Model.** Each pass is a three-way comparison of the local folder, the Drive
+  folder and the last state both agreed on. Additions, edits and deletions
+  propagate both ways. An edit wins over a deletion. When both sides changed a
+  file, the Drive version keeps the name and the local version is kept as
+  `name (conflict <time>).ext` and uploaded.
+- **Safety.**
+  - Drive edits are stored as new revisions of the same file.
+  - Deletions go to the Drive trash, or locally to `.ledgesync-trash` inside
+    the synced folder for 30 days.
+  - A pass that would delete at least 20 files and more than 30% of the synced
+    files, or that empties one side, waits for an explicit confirmation of
+    that exact deletion set or a restore.
+  - An unavailable local folder or a trashed Drive folder never causes
+    deletions.
+  - Creations reserve their Drive ID first.
+  - Local writes go through `os.Root`, use temporary files verified by MD5,
+    and check the target first.
+- **Scope of what syncs.** Ignore rules apply in both directions. Links, special
+  files, Google-native files, duplicate Drive names and names the local system
+  cannot store are reported and never synced. Sync runs while LedgeSync (or
+  `ledgesync sync watch`) runs; nothing is installed.
+- **Supersedes.** ADR-031's disabled overwrite and mirror, and the read-only
+  source rule (local writes now happen inside the synced folder only). One-time
+  approved copies (ADR-026, ADR-030) remain available unchanged.
+
+**Consequence:** the emulator models full access, revisions, trash, the change
+feed and files added outside the app. Live acceptance must include a file added
+through another app.

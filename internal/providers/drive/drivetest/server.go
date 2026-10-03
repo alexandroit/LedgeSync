@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 const FolderMIME = "application/vnd.google-apps.folder"
@@ -49,6 +50,7 @@ type Object struct {
 	DriveID        string
 	CanAddChildren bool
 	Version        int64
+	Modified       time.Time
 }
 
 // Fault is applied to the next request matched by a FaultRule.
@@ -81,6 +83,13 @@ type session struct {
 	crd      string
 	received []byte
 	done     *Object
+	updateID string // content update of an existing file
+}
+
+type changeRecord struct {
+	seq     int64
+	fileID  string
+	removed bool
 }
 
 type createRequest struct {
@@ -103,6 +112,11 @@ type Server struct {
 	faults       []*faultRule
 	requests     []string
 	version      int64
+	// FullScope emulates the full drive scope: every object is visible and
+	// My Drive's own metadata is readable.
+	FullScope bool
+	changes   []changeRecord
+	changeSeq int64
 }
 
 // New starts a server. Close it with Close (tests usually use t.Cleanup).
@@ -140,8 +154,9 @@ func (s *Server) AddUserFolder(name, parent string, granted bool) string {
 		parent = s.RootID
 	}
 	id := s.nextID("userFolder")
-	s.version++
-	s.objects[id] = &Object{ID: id, Name: name, MimeType: FolderMIME, Parents: []string{parent}, Granted: granted, CanAddChildren: true, Version: s.version}
+	o := &Object{ID: id, Name: name, MimeType: FolderMIME, Parents: []string{parent}, Granted: granted, CanAddChildren: true}
+	s.objects[id] = o
+	s.touch(o)
 	return id
 }
 
@@ -154,6 +169,17 @@ func (s *Server) Get(id string) (Object, bool) {
 		return Object{}, false
 	}
 	return clone(o), true
+}
+
+// All returns copies of every object, including trashed ones.
+func (s *Server) All() []Object {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]Object, 0, len(s.objects))
+	for _, o := range s.objects {
+		out = append(out, clone(o))
+	}
+	return out
 }
 
 // Children returns copies of all non-trashed children of a folder, sorted by name.
@@ -182,8 +208,7 @@ func (s *Server) Update(id string, change func(*Object)) {
 	defer s.mu.Unlock()
 	if o, ok := s.objects[id]; ok {
 		change(o)
-		s.version++
-		o.Version = s.version
+		s.touch(o)
 	}
 }
 
@@ -192,6 +217,7 @@ func (s *Server) Delete(id string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.objects, id)
+	s.record(id, true)
 }
 
 // Inject applies fault to the next count requests accepted by match.
@@ -220,7 +246,40 @@ func clone(o *Object) Object {
 }
 
 func (s *Server) visible(o *Object) bool {
-	return o != nil && (o.CreatedByApp || o.Granted || (o.ID == s.RootID && s.RootReadable))
+	return o != nil && (s.FullScope || o.CreatedByApp || o.Granted || (o.ID == s.RootID && s.RootReadable))
+}
+
+// record appends a change-feed entry under the caller-held lock.
+func (s *Server) record(id string, removed bool) {
+	s.changeSeq++
+	s.changes = append(s.changes, changeRecord{s.changeSeq, id, removed})
+}
+
+func (s *Server) touch(o *Object) {
+	s.version++
+	o.Version = s.version
+	o.Modified = time.Now().UTC()
+	s.record(o.ID, false)
+}
+
+// AddUserFile creates a file the application did not create, as if it were
+// uploaded through the Drive website. It is visible only with FullScope.
+func (s *Server) AddUserFile(name, parent string, content []byte) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if parent == "" || parent == "root" {
+		parent = s.RootID
+	}
+	id := s.nextID("userFile")
+	o := &Object{ID: id, Name: name, MimeType: detectedType(name, "application/octet-stream"), Parents: []string{parent}, Content: append([]byte{}, content...)}
+	s.objects[id] = o
+	s.touch(o)
+	return id
+}
+
+// SetContent replaces a file's content as an edit made elsewhere would.
+func (s *Server) SetContent(id string, content []byte) {
+	s.Update(id, func(o *Object) { o.Content = append([]byte{}, content...) })
 }
 
 func driveError(w http.ResponseWriter, status int, reason, message string) {
@@ -245,6 +304,9 @@ func (s *Server) resource(o *Object) map[string]any {
 	}
 	if len(o.AppProperties) > 0 {
 		m["appProperties"] = o.AppProperties
+	}
+	if !o.Modified.IsZero() {
+		m["modifiedTime"] = o.Modified.UTC().Format(time.RFC3339Nano)
 	}
 	if o.DriveID != "" {
 		m["driveId"] = o.DriveID
@@ -343,8 +405,19 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 		s.createFolder(w, r)
 	case r.Method == http.MethodPost && path == "/upload/drive/v3/files" && r.URL.Query().Get("uploadType") == "resumable":
 		s.startUpload(w, r)
-	case r.Method == http.MethodPut && path == "/upload/drive/v3/files" && r.URL.Query().Get("upload_id") != "":
+	case r.Method == http.MethodPatch && strings.HasPrefix(path, "/upload/drive/v3/files/") && r.URL.Query().Get("uploadType") == "resumable":
+		s.startUpdate(w, r, strings.TrimPrefix(path, "/upload/drive/v3/files/"))
+	case r.Method == http.MethodPut && strings.HasPrefix(path, "/upload/drive/v3/files") && r.URL.Query().Get("upload_id") != "":
 		s.putUpload(w, r)
+	case r.Method == http.MethodPatch && strings.HasPrefix(path, "/drive/v3/files/"):
+		s.patch(w, r, strings.TrimPrefix(path, "/drive/v3/files/"))
+	case r.Method == http.MethodGet && path == "/drive/v3/changes/startPageToken":
+		s.mu.Lock()
+		token := strconv.FormatInt(s.changeSeq, 10)
+		s.mu.Unlock()
+		writeJSON(w, http.StatusOK, map[string]any{"kind": "drive#startPageToken", "startPageToken": token})
+	case r.Method == http.MethodGet && path == "/drive/v3/changes":
+		s.listChanges(w, r)
 	default:
 		driveError(w, http.StatusNotFound, "notFound", "Unsupported test endpoint.")
 	}
@@ -452,8 +525,7 @@ func (s *Server) create(meta createRequest, content []byte) *Object {
 		id = s.nextID("auto")
 	}
 	delete(s.reserved, id)
-	s.version++
-	o := &Object{ID: id, Name: meta.Name, MimeType: detectedType(meta.Name, meta.MimeType), Parents: []string{parent}, Content: content, CreatedByApp: true, CanAddChildren: true, Version: s.version}
+	o := &Object{ID: id, Name: meta.Name, MimeType: detectedType(meta.Name, meta.MimeType), Parents: []string{parent}, Content: content, CreatedByApp: true, CanAddChildren: true}
 	if meta.AppProperties != nil {
 		o.AppProperties = map[string]string{}
 		for k, v := range meta.AppProperties {
@@ -461,6 +533,7 @@ func (s *Server) create(meta createRequest, content []byte) *Object {
 		}
 	}
 	s.objects[id] = o
+	s.touch(o)
 	return o
 }
 
@@ -578,6 +651,18 @@ func (s *Server) putUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) progress(w http.ResponseWriter, sess *session) {
+	if int64(len(sess.received)) == sess.size && sess.updateID != "" {
+		o := s.objects[sess.updateID]
+		if o == nil || !s.visible(o) || o.Trashed {
+			driveError(w, http.StatusNotFound, "notFound", "File not found.")
+			return
+		}
+		o.Content = append([]byte{}, sess.received...)
+		s.touch(o)
+		sess.done = o
+		writeJSON(w, http.StatusOK, s.resource(o))
+		return
+	}
 	if int64(len(sess.received)) == sess.size {
 		if status, reason := s.validateCreate(sess.meta); status != 0 {
 			driveError(w, status, reason, "Upload completion rejected.")
@@ -678,4 +763,93 @@ func (s *Server) list(w http.ResponseWriter, r *http.Request) {
 		result["nextPageToken"] = "page-" + strconv.Itoa(end)
 	}
 	writeJSON(w, http.StatusOK, result)
+}
+
+// startUpdate opens a resumable session that replaces an existing file's content.
+func (s *Server) startUpdate(w http.ResponseWriter, r *http.Request, id string) {
+	size, err := strconv.ParseInt(r.Header.Get("X-Upload-Content-Length"), 10, 64)
+	if err != nil || size < 0 {
+		driveError(w, http.StatusBadRequest, "invalid", "Invalid update metadata.")
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	o := s.objects[id]
+	if !s.visible(o) || o.Trashed || o.MimeType == FolderMIME {
+		driveError(w, http.StatusNotFound, "notFound", "File not found: "+id+".")
+		return
+	}
+	sid, crd := s.nextID("session"), s.nextID("crd")
+	s.sessions[sid] = &session{size: size, crd: crd, updateID: id}
+	echo := r.URL.Query()
+	echo.Set("upload_id", sid)
+	echo.Set("session_crd", crd)
+	w.Header().Set("Location", "https://www.googleapis.com/upload/drive/v3/files/"+id+"?"+echo.Encode())
+	w.WriteHeader(http.StatusOK)
+}
+
+// patch updates the trashed flag or name of an item.
+func (s *Server) patch(w http.ResponseWriter, r *http.Request, id string) {
+	var body struct {
+		Trashed *bool   `json:"trashed"`
+		Name    *string `json:"name"`
+	}
+	raw, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil || json.Unmarshal(raw, &body) != nil {
+		driveError(w, http.StatusBadRequest, "invalid", "Invalid metadata.")
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	o := s.objects[id]
+	if id == s.RootID || id == "root" || !s.visible(o) {
+		driveError(w, http.StatusNotFound, "notFound", "File not found: "+id+".")
+		return
+	}
+	if body.Trashed != nil {
+		o.Trashed = *body.Trashed
+	}
+	if body.Name != nil {
+		o.Name = *body.Name
+	}
+	s.touch(o)
+	writeJSON(w, http.StatusOK, s.resource(o))
+}
+
+// listChanges returns every change after the page token in one page.
+func (s *Server) listChanges(w http.ResponseWriter, r *http.Request) {
+	from, err := strconv.ParseInt(r.URL.Query().Get("pageToken"), 10, 64)
+	if err != nil || from < 0 {
+		driveError(w, http.StatusBadRequest, "invalid", "Invalid page token.")
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if from > s.changeSeq {
+		driveError(w, http.StatusBadRequest, "invalid", "Invalid page token.")
+		return
+	}
+	latest := map[string]changeRecord{}
+	order := []string{}
+	for _, c := range s.changes {
+		if c.seq <= from {
+			continue
+		}
+		if _, seen := latest[c.fileID]; !seen {
+			order = append(order, c.fileID)
+		}
+		latest[c.fileID] = c
+	}
+	changes := []map[string]any{}
+	for _, id := range order {
+		c := latest[id]
+		entry := map[string]any{"kind": "drive#change", "fileId": id, "removed": c.removed}
+		if o := s.objects[id]; !c.removed && s.visible(o) {
+			entry["file"] = map[string]any{"parents": append([]string{}, o.Parents...), "trashed": o.Trashed}
+		} else {
+			entry["removed"] = true
+		}
+		changes = append(changes, entry)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "drive#changeList", "changes": changes, "newStartPageToken": strconv.FormatInt(s.changeSeq, 10)})
 }

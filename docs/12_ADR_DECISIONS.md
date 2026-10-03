@@ -296,3 +296,32 @@ the same Cloud project, or a permission left unchecked.
   validates the folder again before use. Choosing a folder no longer needs a
   second browser consent or Google's Picker. The CLI keeps `--destination` and
   the optional browser Picker.
+
+## ADR-036 — Microsoft Store distribution as an unsigned MSIX bundle
+
+**Accepted, 2026-10-03 (owner decision).** The owner asked for the cheapest
+way, preferably free, to distribute LedgeSync on Windows. Building an EXE, MSI
+or MSIX installer costs nothing; signing is what costs money, and an unsigned
+EXE or MSI gets the same SmartScreen warning. Individual developer accounts on
+the Microsoft Store are free, and the Store signs the MSIX packages it
+publishes.
+
+- **Package.** [package_msix.py](../tools/package_msix.py) packages the
+  released and verified x64 and ARM64 desktop payloads unchanged, as two MSIX
+  packages in one `.msixbundle`. The app runs as a full-trust desktop app
+  (`runFullTrust`). Logos are rasterized from the app's vector mark at the
+  sizes Windows uses.
+- **Identity and signing.** The package identity comes from Partner Center
+  (`deploy/msix/identity.json`). The bundle is unsigned, and the Store signs it
+  on publication. No self-signed or test certificate is used. Without the
+  Store identity, the pipeline still runs and produces a bundle marked not for
+  upload.
+- **Version.** The Store requires the first version part to be at least 1 and
+  reserves the fourth. `MAJOR.MINOR.PATCH-alpha.N` maps to
+  `(MAJOR+1).MINOR.(PATCH×1000+N).0`; beta adds 300, rc adds 600, and a final
+  release uses 999. For example, 0.1.0-alpha.8 is 1.1.8.0.
+- **Local state.** Windows keeps a packaged app's AppData separate, so the
+  Store app and the setup EXE do not share local state. Install only one of
+  them.
+- **Distribution.** The setup EXE stays available on the website and on GitHub.
+

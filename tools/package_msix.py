@@ -29,6 +29,8 @@ MARK = ROOT / "frontend/native/mark.json"
 ARCHITECTURES = {"amd64": "x64", "arm64": "arm64"}
 PRERELEASE_OFFSETS = {"alpha": 0, "beta": 300, "rc": 600}
 IDENTITY_KEYS = {"identityName", "publisher", "publisherDisplayName"}
+# Logo references in deploy/msix/AppxManifest.xml.in, resolved through resources.pri.
+MANIFEST_LOGOS = ("StoreLogo.png", "Square44x44Logo.png", "Square150x150Logo.png", "Wide310x150Logo.png")
 # Used only to prove the packaging pipeline before the Store identity is known.
 # Partner Center rejects it, and its outputs are marked as not for upload.
 VALIDATION_IDENTITY = {
@@ -209,32 +211,38 @@ def run(command: list[str | Path]) -> None:
 
 
 def pri_config(makepri: Path, path: Path) -> None:
-    """Create makepri's default configuration, indexing only Assets.
+    """Create makepri's default configuration without resource-package splits.
 
     The default splits scales and languages into resource-package PRI files.
     This bundle ships no resource packages, so every candidate must stay in
     the main resources.pri.
     """
     run([makepri, "createconfig", "/cf", path, "/dq", "en-US", "/pv", "10.0.0", "/o"])
-    text = path.read_text(encoding="utf-8-sig")
-    if text.count('startIndexAt="\\"') != 1:
+    text = re.sub(r"\s*<packaging>.*?</packaging>", "", path.read_text(encoding="utf-8-sig"), flags=re.S)
+    if "<packaging" in text or "autoResourcePackage" in text or text.count('root="\\" startIndexAt="\\"') != 1:
         raise ValueError("Unexpected makepri configuration layout")
-    text = re.sub(r"\s*<packaging>.*?</packaging>", "", text.replace('startIndexAt="\\"', 'startIndexAt="Assets"'), flags=re.S)
-    if "<packaging" in text or "autoResourcePackage" in text:
-        raise ValueError("Unexpected makepri packaging configuration")
     path.write_text(text, encoding="utf-8")
 
 
-def verify_pri(makepri: Path, stage: Path, dump: Path) -> None:
-    """Require one resources.pri that indexes every logo file."""
+def index_assets(makepri: Path, config: Path, stage: Path, index_root: Path, dump: Path) -> None:
+    """Build resources.pri for the logos only, named as the manifest refers to them.
+
+    Indexing a copy of Assets from its parent keeps resource names relative to
+    the package root (Files/Assets/StoreLogo.png), which is how Windows and
+    Partner Center resolve "Assets\\StoreLogo.png", without indexing the app's
+    license files.
+    """
+    shutil.copytree(stage / "Assets", index_root / "Assets")
+    run([makepri, "new", "/pr", index_root, "/cf", config, "/mn", stage / "AppxManifest.xml", "/of", stage / "resources.pri", "/o"])
     split = sorted(path.name for path in stage.glob("resources*.pri") if path.name != "resources.pri")
     if split:
         raise ValueError(f"Unexpected resource-package PRI files: {', '.join(split)}")
     run([makepri, "dump", "/if", stage / "resources.pri", "/of", dump, "/o"])
     text = dump.read_text(encoding="utf-8-sig", errors="replace")
-    missing = [name for name in asset_plan() if f"Assets\\{name}" not in text]
+    missing = [f"Files/Assets/{name}" for name in MANIFEST_LOGOS if f"/Files/Assets/{name}" not in text]
+    missing += [f"Assets\\{name}" for name in asset_plan() if f"Assets\\{name}" not in text]
     if missing:
-        raise ValueError(f"resources.pri does not index {', '.join(missing)}")
+        raise ValueError(f"resources.pri lacks {', '.join(missing)}; see {dump.name}")
 
 
 def package(inputs: Path, identity: dict[str, str], version: str, output: Path, makeappx: Path, makepri: Path, validation: bool) -> dict:
@@ -261,8 +269,7 @@ def package(inputs: Path, identity: dict[str, str], version: str, output: Path, 
             shutil.copytree(payload, stage, symlinks=False)
             write_assets(stage / "Assets")
             (stage / "AppxManifest.xml").write_text(render_manifest(identity, package_version, msix_arch), encoding="utf-8")
-            run([makepri, "new", "/pr", stage, "/cf", config, "/mn", stage / "AppxManifest.xml", "/of", stage / "resources.pri", "/o"])
-            verify_pri(makepri, stage, work / f"resources-{msix_arch}.xml")
+            index_assets(makepri, config, stage, work / f"index-{msix_arch}", output / f"resources-{msix_arch}{suffix}.pri.xml")
             run([makeappx, "pack", "/d", stage, "/p", packages / f"LedgeSync_{package_version}_{msix_arch}.msix", "/o"])
             inputs_file = inputs / f"windows-{arch}" / "inputs.json"
             sources[msix_arch] = json.loads(inputs_file.read_text(encoding="utf-8"))["desktop"] if inputs_file.is_file() else None

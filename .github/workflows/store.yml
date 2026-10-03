@@ -46,6 +46,7 @@ jobs:
           if [ -f deploy/msix/identity.json ]; then source=(--identity deploy/msix/identity.json); else source=(--validation); fi
           python tools/package_msix.py --version "$LEDGESYNC_RELEASE_VERSION" "${source[@]}" --output build/msix
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
         with:
           name: ledgesync-store-msix
           path: build/msix/

@@ -7,8 +7,8 @@ import unittest
 import xml.etree.ElementTree as ElementTree
 import zlib
 
-from package_msix import (VALIDATION_IDENTITY, asset_plan, check_identity, msix_version, png, render_icon,
-                          render_manifest, write_assets)
+from package_msix import (MANIFEST_LOGOS, VALIDATION_IDENTITY, asset_plan, check_identity, msix_version, png,
+                          render_icon, render_manifest, write_assets)
 
 STORE_IDENTITY = {
     "identityName": "12345Example.LedgeSync",
@@ -67,6 +67,7 @@ class StorePackageGuards(unittest.TestCase):
             references = [root.find("m:Properties/m:Logo", NS).text]
             visual = application.find("uap:VisualElements", NS)
             references += [visual.get("Square150x150Logo"), visual.get("Square44x44Logo"), visual.find("uap:DefaultTile", NS).get("Wide310x150Logo")]
+            self.assertEqual(sorted(reference.split("\\")[1] for reference in references), sorted(MANIFEST_LOGOS))
             plan = asset_plan()
             for reference in references:
                 folder, name = reference.split("\\")

@@ -10,7 +10,10 @@ import (
 	"time"
 )
 
-const Scope = "https://www.googleapis.com/auth/drive.file"
+// Scope is full Google Drive access. Two-way sync must see and download files
+// added to a synced folder by the Drive website or other apps, which the
+// per-file drive.file scope cannot list (ADR-034).
+const Scope = "https://www.googleapis.com/auth/drive"
 const storageKey = "google-drive-oauth-v1"
 const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth"
 const tokenEndpoint = "https://oauth2.googleapis.com/token"
@@ -34,7 +37,7 @@ var (
 	ErrCallback           = errors.New("The authorization callback was invalid. Connect again to restart.")
 	ErrNetwork            = errors.New("Google could not be reached. Check your connection and try again.")
 	ErrToken              = errors.New("Google returned an invalid authorization response. Connect again to restart.")
-	ErrScope              = errors.New("The authorization did not grant exactly the requested Google Drive file access. Connect again.")
+	ErrScope              = errors.New("The authorization did not grant exactly the requested Google Drive access. Connect again.")
 	ErrReconnect          = errors.New("Google authorization has expired or was revoked. Connect again to authorize access.")
 	ErrIdentity           = errors.New("The authorized Google account changed. Disconnect before selecting another account.")
 	ErrRevokeConfirmation = errors.New("Revoking access at Google may remove this account’s authorizations for other applications whose OAuth clients share this Google Cloud project. Confirm this impact before revoking remotely.")

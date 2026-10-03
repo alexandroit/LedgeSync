@@ -22,12 +22,12 @@ const binaryMIME = "application/octet-stream"
 // (upload_id and, as observed live, session_crd) and may echo the initiation
 // query, so an echoed parameter must equal the sent value, other parameters
 // must be single plain keys, and credential parameters are refused.
-func validSession(raw string, sent url.Values) bool {
+func validSession(raw string, sent url.Values, path string) bool {
 	if len(raw) > 8192 {
 		return false
 	}
 	u, err := url.Parse(raw)
-	if err != nil || u.Scheme != "https" || u.Host != "www.googleapis.com" || u.User != nil || u.Fragment != "" || u.RawPath != "" || u.Path != "/upload/drive/v3/files" {
+	if err != nil || u.Scheme != "https" || u.Host != "www.googleapis.com" || u.User != nil || u.Fragment != "" || u.RawPath != "" || u.Path != path {
 		return false
 	}
 	q, err := url.ParseQuery(u.RawQuery)
@@ -176,7 +176,7 @@ func (c *Client) startUpload(ctx context.Context, account, id, parent, name, ope
 		return "", err
 	}
 	locations := r.header.Values("Location")
-	if len(locations) != 1 || !validSession(locations[0], params) {
+	if len(locations) != 1 || !validSession(locations[0], params, "/upload/drive/v3/files") {
 		return "", unknown()
 	}
 	return locations[0], nil

@@ -241,14 +241,19 @@ func allowedDriveRequest(req *http.Request) bool {
 	if u.Scheme != "https" || u.Host != "www.googleapis.com" || u.User != nil || u.Opaque != "" || u.RawPath != "" || u.Fragment != "" || u.RawFragment != "" || u.OmitHost || len(u.RawQuery) > 8192 || strings.Contains(u.Path, "\\") || path.Clean(u.Path) != u.Path {
 		return false
 	}
-	if req.Method != http.MethodGet && req.Method != http.MethodPost && req.Method != http.MethodPut {
+	if req.Method != http.MethodGet && req.Method != http.MethodPost && req.Method != http.MethodPut && req.Method != http.MethodPatch {
 		return false
 	}
 	if req.Method == http.MethodGet && req.Body != nil && req.Body != http.NoBody {
 		return false
 	}
+	upload := strings.HasPrefix(u.Path, "/upload/")
 	resource := strings.TrimPrefix(u.Path, "/upload")
-	if resource != "/drive/v3/files" && !(strings.HasPrefix(resource, "/drive/v3/files/") && validDriveResourceID(strings.TrimPrefix(resource, "/drive/v3/files/"))) {
+	switch {
+	case resource == "/drive/v3/files":
+	case strings.HasPrefix(resource, "/drive/v3/files/") && validDriveResourceID(strings.TrimPrefix(resource, "/drive/v3/files/")):
+	case !upload && req.Method == http.MethodGet && (u.Path == "/drive/v3/changes" || u.Path == "/drive/v3/changes/startPageToken"):
+	default:
 		return false
 	}
 	query, err := url.ParseQuery(u.RawQuery)

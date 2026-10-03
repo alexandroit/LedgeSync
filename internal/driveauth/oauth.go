@@ -54,7 +54,7 @@ func (s *Service) authorizeSelection(ctx context.Context, client *clientConfig, 
 	challenge := sha256.Sum256([]byte(verifier))
 	listener, err := net.Listen("tcp4", "127.0.0.1:0")
 	if err != nil {
-		return nil, "", ErrCallback
+		return nil, "", CallbackFailure("the local return address could not be opened")
 	}
 	redirect := "http://" + listener.Addr().String() + "/"
 	results := make(chan callbackResult, 1)
@@ -107,7 +107,7 @@ func (s *Service) authorizeSelection(ctx context.Context, client *clientConfig, 
 		if ctx.Err() != nil {
 			return nil, "", contextError(ctx)
 		}
-		return nil, "", ErrCallback
+		return nil, "", CallbackFailure("the local return address stopped")
 	case result = <-results:
 	}
 	// The callback has one purpose and must not remain reachable during the
@@ -159,21 +159,27 @@ func newSelectionCallback(ctx context.Context, state, host string, result chan<-
 			return
 		}
 		value := callbackResult{}
+		problem := callbackProblem(q)
 		switch {
-		case !validCallbackParameters(q):
-			value.err = ErrCallback
+		case problem != "":
+			value.err = CallbackFailure(problem)
 		case len(q["error"]) == 1 && q.Get("error") != "" && len(q["code"]) == 0:
 			value.err = ErrDenied
 		case len(q["code"]) == 1 && len(q["error"]) == 0 && safeSecret(q.Get("code")) && len(q.Get("code")) <= 4096:
-			value.code = q.Get("code")
+			if value.err = callbackScopeError(q); value.err == nil {
+				value.code = q.Get("code")
+			}
 		default:
-			value.err = ErrCallback
+			value.err = CallbackFailure("no usable code or error")
 		}
 		if folder {
-			if value.err == nil && len(q["picked_file_ids"]) == 1 && validFolderID(q.Get("picked_file_ids")) {
+			switch {
+			case value.err == nil && len(q["picked_file_ids"]) == 1 && validFolderID(q.Get("picked_file_ids")):
 				value.folderID = q.Get("picked_file_ids")
-			} else if value.err == nil || len(q["picked_file_ids"]) != 0 {
-				value.err = ErrCallback
+			case value.err == nil && len(q["picked_file_ids"]) == 0:
+				value.err = ErrNoFolderSelected
+			case value.err == nil || len(q["picked_file_ids"]) != 0:
+				value.err = CallbackFailure("invalid folder selection")
 			}
 		}
 		if ctx.Err() != nil {
@@ -213,38 +219,94 @@ func validFolderID(id string) bool {
 	return true
 }
 
-func validCallbackParameters(q url.Values) bool {
+// callbackProblem names what makes a callback malformed, or returns "". The
+// name is a fixed phrase and never contains a value from the callback.
+func callbackProblem(q url.Values) string {
 	for _, values := range q {
 		if len(values) != 1 {
-			return false
+			return "repeated parameter"
 		}
 	}
 	// This is a code flow: callback tokens must never become credentials. The
-	// actual granted scope is independently validated in the token response.
+	// granted scope is checked with the code and again in the token response.
 	for _, name := range []string{"access_token", "refresh_token", "id_token", "token_type", "expires_in"} {
 		if _, present := q[name]; present {
-			return false
+			return "token in callback"
 		}
 	}
-	if scope, present := q["scope"]; present && !acceptedScope(scope[0], false) {
-		return false
-	}
 	if issuer, present := q["iss"]; present && issuer[0] != "https://accounts.google.com" {
-		return false
+		return "unexpected issuer"
 	}
 	if len(q["error"]) == 0 && (len(q["error_description"]) != 0 || len(q["error_uri"]) != 0) {
-		return false
+		return "error details without an error"
 	}
 	// RFC 6749 section 4.1.2 requires ignoring unrecognized response parameters.
 	// Bounded, single-valued extensions (for example authuser and prompt) are
 	// never forwarded, interpreted as credentials, reflected or logged.
-	return true
+	return ""
 }
 
-func acceptedScope(value string, allowMissing bool) bool {
-	if value == "" {
-		return allowMissing
+// signInScopes are Google's basic profile scopes. Google may report them next
+// to Drive access when the account signed in to another client of the same
+// Cloud project. They reveal nothing that Drive access does not.
+var signInScopes = map[string]bool{
+	"openid":  true,
+	"email":   true,
+	"profile": true,
+	"https://www.googleapis.com/auth/userinfo.email":   true,
+	"https://www.googleapis.com/auth/userinfo.profile": true,
+}
+
+// scopeGrant classifies a reported scope set: whether full Drive access is
+// granted, and whether it holds anything unexpected, that is a repeated scope
+// or one other than Drive access and Google's basic profile scopes.
+func scopeGrant(value string) (granted, unexpected bool) {
+	seen := map[string]bool{}
+	for _, s := range strings.Fields(value) {
+		switch {
+		case seen[s]:
+			unexpected = true
+		case s == Scope:
+			granted = true
+		case s == legacyScope || signInScopes[s]:
+		default:
+			unexpected = true
+		}
+		seen[s] = true
 	}
-	scopes := strings.Fields(value)
-	return len(scopes) == 1 && scopes[0] == Scope
+	return granted, unexpected
+}
+
+// scopeError explains a granted scope set that LedgeSync cannot use, or
+// returns nil. An empty set is accepted only when allowMissing is set: a
+// refresh may omit scope and then retains the already validated grant.
+func scopeError(value string, allowMissing bool) error {
+	if value == "" {
+		if allowMissing {
+			return nil
+		}
+		return ErrScope
+	}
+	granted, unexpected := scopeGrant(value)
+	switch {
+	case unexpected:
+		return ErrScopeUnexpected
+	case !granted:
+		return ErrScopeNotGranted
+	}
+	return nil
+}
+
+// callbackScopeError checks the scope a callback reports, if any. A reported
+// but empty scope means that nothing was granted, for example when the
+// permission was left unchecked. The token response is checked again.
+func callbackScopeError(q url.Values) error {
+	scope, present := q["scope"]
+	switch {
+	case !present:
+		return nil
+	case strings.TrimSpace(scope[0]) == "":
+		return ErrScopeNotGranted
+	}
+	return scopeError(scope[0], false)
 }

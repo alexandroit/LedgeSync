@@ -266,3 +266,33 @@ scope, and chose to propagate deletions with trash recovery.
 **Consequence:** the emulator models full access, revisions, trash, the change
 feed and files added outside the app. Live acceptance must include a file added
 through another app.
+
+## ADR-035 — Grants that include full Drive access; in-app destination for copies
+
+**Accepted, 2026-10-03.** A Windows connection failed with "The authorization
+callback was invalid" after Google's consent. The callback and the token
+response accepted only the exact scope string. Any other report from Google
+looked like a malformed callback, for example the earlier `drive.file` grant
+listed next to full access, basic profile scopes granted to another client of
+the same Cloud project, or a permission left unchecked.
+
+- **Accepted grant.** Full Drive access must be granted. Two kinds of scope may
+  appear beside it: `drive.file`, which full access contains, and Google's
+  basic profile scopes (`openid`, `email`, `profile`, `userinfo.email`,
+  `userinfo.profile`). Any other or repeated scope rejects the grant.
+- **Errors.**
+
+  | Code | Cause | What the message tells the user |
+  |---|---|---|
+  | `AUTH_SCOPE_NOT_GRANTED` | The grant lacks full Drive access. | How to allow it. |
+  | `AUTH_SCOPE_UNEXPECTED` | The grant includes scopes that were not requested. | Remove the app's access at Google, then connect again. |
+  | `DRIVE_FOLDER_NOT_SELECTED` | A browser folder selection returned no folder. | Choose a folder in Google's window. |
+  | `AUTH_CALLBACK_INVALID` | The callback is malformed. | Which check failed, for example "(repeated parameter)", then connect again. |
+
+  The callback page still shows none of the returned values, and neither do the
+  messages.
+- **Copies destination.** With full access, the desktop chooses an existing
+  Drive folder for one-time copies in the same in-app browser as sync. It
+  validates the folder again before use. Choosing a folder no longer needs a
+  second browser consent or Google's Picker. The CLI keeps `--destination` and
+  the optional browser Picker.

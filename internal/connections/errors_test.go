@@ -24,6 +24,8 @@ func TestPublicErrorsAreTypedAndRedacted(t *testing.T) {
 		{fmt.Errorf("%s: %w", secret, driveauth.ErrBusy), "AUTH_BUSY"},
 		{context.Canceled, "CANCELLED"},
 		{errors.New(secret), "INTERNAL_ERROR"},
+		{driveauth.ErrCallback, "AUTH_CALLBACK_INVALID"},
+		{fmt.Errorf("%s: %w", secret, driveauth.CallbackFailure("repeated parameter")), "AUTH_CALLBACK_INVALID"},
 	}
 	for _, c := range cases {
 		got := PublicError(c.err)
@@ -37,6 +39,13 @@ func TestPublicErrorsAreTypedAndRedacted(t *testing.T) {
 	}
 	if PublicError(nil) != nil {
 		t.Fatal("nil error became a failure")
+	}
+}
+
+func TestCallbackFailureKeepsItsReason(t *testing.T) {
+	got := PublicError(driveauth.CallbackFailure("unexpected issuer"))
+	if domain.ErrorCode(got) != "AUTH_CALLBACK_INVALID" || !strings.Contains(got.Error(), "(unexpected issuer)") || !errors.Is(got, driveauth.ErrCallback) {
+		t.Fatalf("callback failure lost its reason or cause: %v", got)
 	}
 }
 

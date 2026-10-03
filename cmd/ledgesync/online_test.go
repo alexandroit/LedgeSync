@@ -294,3 +294,22 @@ func TestDestinationPickerAliasAndManualBrowserFlag(t *testing.T) {
 		t.Fatalf("manual browser flag failed: %d %s", code, &errOut)
 	}
 }
+
+func TestOnlineAuthorizationErrorsKeepTheirCodeAndReason(t *testing.T) {
+	for _, c := range []struct {
+		err    error
+		code   string
+		phrase string
+	}{
+		{driveauth.CallbackFailure("unexpected issuer"), "AUTH_CALLBACK_INVALID", "(unexpected issuer)"},
+		{driveauth.ErrCallback, "AUTH_CALLBACK_INVALID", "callback was invalid"},
+		{driveauth.ErrScopeNotGranted, "AUTH_SCOPE_NOT_GRANTED", "did not grant"},
+		{driveauth.ErrScopeUnexpected, "AUTH_SCOPE_UNEXPECTED", "myaccount.google.com/connections"},
+		{driveauth.ErrNoFolderSelected, "DRIVE_FOLDER_NOT_SELECTED", "No folder"},
+	} {
+		got := onlineError(context.Background(), c.err)
+		if domain.ErrorCode(got) != c.code || !strings.Contains(got.Error(), c.phrase) {
+			t.Fatalf("%v mapped to %v", c.err, got)
+		}
+	}
+}

@@ -27,6 +27,10 @@ func PublicError(err error) error {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return domain.Wrap("TIMEOUT", "The operation took too long. Check the connection and try again.", err)
 	}
+	var callback driveauth.CallbackFailure
+	if errors.As(err, &callback) {
+		return domain.Wrap("AUTH_CALLBACK_INVALID", callback.Error(), err)
+	}
 	for _, item := range []struct {
 		err  error
 		code string
@@ -41,6 +45,9 @@ func PublicError(err error) error {
 		{driveauth.ErrClientChanged, "AUTH_CLIENT_CHANGED"},
 		{driveauth.ErrIdentity, "AUTH_IDENTITY_CHANGED"},
 		{driveauth.ErrScope, "AUTH_SCOPE_REQUIRED"},
+		{driveauth.ErrScopeNotGranted, "AUTH_SCOPE_NOT_GRANTED"},
+		{driveauth.ErrScopeUnexpected, "AUTH_SCOPE_UNEXPECTED"},
+		{driveauth.ErrNoFolderSelected, "DRIVE_FOLDER_NOT_SELECTED"},
 		{driveauth.ErrDenied, "AUTH_DENIED"},
 		{driveauth.ErrTimeout, "AUTH_TIMEOUT"},
 		{driveauth.ErrConnected, "AUTH_CONNECTED"},

@@ -14,6 +14,22 @@ import (
 // added to a synced folder by the Drive website or other apps, which the
 // per-file drive.file scope cannot list (ADR-034).
 const Scope = "https://www.googleapis.com/auth/drive"
+
+// CallbackFailure is ErrCallback naming the check that failed. It never holds
+// a value from the callback, so its message is safe to show and to report.
+type CallbackFailure string
+
+func (f CallbackFailure) Error() string {
+	return "The authorization callback was invalid (" + string(f) + "). Connect again to restart."
+}
+
+// Is matches ErrCallback.
+func (f CallbackFailure) Is(target error) bool { return target == ErrCallback }
+
+// legacyScope is the per-file scope of earlier versions. Google may report it
+// next to full Drive access for accounts that granted it before. Full access
+// contains it, so it is accepted only together with Scope.
+const legacyScope = "https://www.googleapis.com/auth/drive.file"
 const storageKey = "google-drive-oauth-v1"
 const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth"
 const tokenEndpoint = "https://oauth2.googleapis.com/token"
@@ -38,6 +54,9 @@ var (
 	ErrNetwork            = errors.New("Google could not be reached. Check your connection and try again.")
 	ErrToken              = errors.New("Google returned an invalid authorization response. Connect again to restart.")
 	ErrScope              = errors.New("The authorization did not grant exactly the requested Google Drive access. Connect again.")
+	ErrScopeNotGranted    = errors.New("Google did not grant access to your Google Drive files. Connect again and allow LedgeSync to see, edit, create and delete your Drive files; if Google shows a checkbox for this permission, select it.")
+	ErrScopeUnexpected    = errors.New("Google reported permissions for LedgeSync that it did not request. Remove LedgeSync's access at https://myaccount.google.com/connections, then connect again.")
+	ErrNoFolderSelected   = errors.New("No folder was selected in Google's window. Choose a folder there and select it to continue.")
 	ErrReconnect          = errors.New("Google authorization has expired or was revoked. Connect again to authorize access.")
 	ErrIdentity           = errors.New("The authorized Google account changed. Disconnect before selecting another account.")
 	ErrRevokeConfirmation = errors.New("Revoking access at Google may remove this account’s authorizations for other applications whose OAuth clients share this Google Cloud project. Confirm this impact before revoking remotely.")

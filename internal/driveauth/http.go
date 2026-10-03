@@ -102,8 +102,8 @@ func (s *Service) exchangeWithFallback(ctx context.Context, client *clientConfig
 	}
 	// Initial consent must explicitly report its granted scope. A refresh may
 	// omit scope per OAuth 2.0; it then retains the already validated grant.
-	if !acceptedScope(response.Scope, refresh != "") {
-		return nil, ErrScope
+	if err := scopeError(response.Scope, refresh != ""); err != nil {
+		return nil, err
 	}
 	if response.RefreshToken == "" {
 		response.RefreshToken = refresh

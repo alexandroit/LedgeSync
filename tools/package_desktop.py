@@ -20,7 +20,7 @@ TARGETS = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runner", required=True, choices=TARGETS)
-    parser.add_argument("--version", default="0.1.0-alpha.7")
+    parser.add_argument("--version", default="0.1.0-alpha.8")
     args = parser.parse_args()
     for value in (args.runner, args.version):
         if not all(c.isalnum() or c in ".-" for c in value):

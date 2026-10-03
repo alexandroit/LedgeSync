@@ -1,6 +1,6 @@
 # Connect Google Drive
 
-LedgeSync **0.1.0-alpha.7** connects directly to Google and keeps folders in
+LedgeSync **0.1.0-alpha.8** connects directly to Google and keeps folders in
 **two-way sync** with Google Drive through its desktop and native CLI. One-time
 approved copies remain available. Official builds include the project's Google
 OAuth Desktop client. You do not create a Google Cloud project, download
@@ -28,6 +28,14 @@ where a synced folder lives.
   LedgeSync**). Unverified apps are limited to 100 users. Public distribution
   needs Google's restricted-scope verification; see
   [Google verification](GOOGLE_VERIFICATION.md).
+- **What Google may report (alpha.8 and later).** The connection is accepted
+  when Google grants full Drive access, even if it also lists the earlier
+  `drive.file` grant or basic profile scopes ([ADR-035](12_ADR_DECISIONS.md)).
+  If Google did not grant full access, LedgeSync explains how to allow it
+  (`AUTH_SCOPE_NOT_GRANTED`). If Google reports permissions that LedgeSync did
+  not request, remove LedgeSync at
+  [myaccount.google.com/connections](https://myaccount.google.com/connections)
+  and connect again (`AUTH_SCOPE_UNEXPECTED`).
 
 
 ## Connect your account
@@ -62,10 +70,11 @@ a different account. A failed disconnect leaves the previous record intact.
 1. Choose a local folder, or open a project configuration, and connect Google
    Drive using the flow above.
 2. In Files, choose **Use My Drive** or **Choose existing Drive folder**.
-   The existing-folder option opens Google's native Picker in your system
-   browser. Select one writable folder in My Drive, authorize it and return to
-   LedgeSync. Canceling keeps the previous destination; preview again before
-   uploading. Shared drives are not supported by this workflow.
+   The existing-folder option opens the same in-app folder browser as sync
+   (alpha.8 and later). Open the folder you want and choose **Use “name”**.
+   LedgeSync validates that the folder is writable. **Cancel** keeps the
+   previous destination. Preview again before uploading. Shared drives are not
+   supported by this workflow.
 3. Choose **Preview folder upload** and review the account, destination ID,
    included hierarchy, exclusions and planned actions. Choose **Upload folder**
    to approve that exact preview. Selecting files or a destination alone never
@@ -94,7 +103,8 @@ for disposable-fixture verification and unimplemented capabilities.
 In an interactive terminal, use `ledgesync auth connect`, followed by
 `ledgesync copy --root "./local-folder" --destination picker`. Review the complete
 preview and type its exact digest before uploading. `--destination root` selects
-My Drive; a folder ID works only when already authorized to this application.
+My Drive, and `--destination FOLDER_ID` selects any of your writable Drive
+folders (full access, alpha.7 and later).
 The same account binding, filtering, journal and verification rules apply as in
 the desktop. Online commands do not accept redirected approval or unattended
 `--yes` execution.

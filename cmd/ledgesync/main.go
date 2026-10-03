@@ -19,8 +19,8 @@ import (
 	"github.com/alexandroit/LedgeSync/internal/policy"
 )
 
-const version = "0.1.0-alpha.7"
-const usage = `LedgeSync 0.1.0-alpha.7 — two-way folder sync with Google Drive, approved copies and local policy previews
+const version = "0.1.0-alpha.8"
+const usage = `LedgeSync 0.1.0-alpha.8 — two-way folder sync with Google Drive, approved copies and local policy previews
 
 Usage:
   ledgesync browse --root DIRECTORY --json

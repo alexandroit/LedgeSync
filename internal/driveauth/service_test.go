@@ -321,10 +321,11 @@ func TestInvalidTokenResponsesAreRedacted(t *testing.T) {
 		"bad-type":        {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"MAC","scope":"` + Scope + `","expires_in":3600}`, 200, ErrToken},
 		"bad-expiry":      {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"` + Scope + `","expires_in":-1}`, 200, ErrToken},
 		"missing-refresh": {`{"access_token":"fake-access-token","token_type":"Bearer","scope":"` + Scope + `","expires_in":3600}`, 200, ErrToken},
-		"broad-scope":     {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.readonly","expires_in":3600}`, 200, ErrScope},
-		"narrow-scope":    {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"https://www.googleapis.com/auth/drive.file","expires_in":3600}`, 200, ErrScope},
+		"broad-scope":     {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.readonly","expires_in":3600}`, 200, ErrScopeUnexpected},
+		"narrow-scope":    {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"https://www.googleapis.com/auth/drive.file","expires_in":3600}`, 200, ErrScopeNotGranted},
 		"missing-scope":   {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","expires_in":3600}`, 200, ErrScope},
-		"extra-scope":     {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"` + Scope + ` openid","expires_in":3600}`, 200, ErrScope},
+		"extra-scope":     {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"` + Scope + ` https://www.googleapis.com/auth/drive.appdata","expires_in":3600}`, 200, ErrScopeUnexpected},
+		"repeated-scope":  {`{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"` + Scope + ` ` + Scope + `","expires_in":3600}`, 200, ErrScopeUnexpected},
 		"invalid-grant":   {`{"error":"invalid_grant","error_description":"secret-provider-body"}`, 400, ErrReconnect},
 		"provider-error":  {`{"error":"secret-provider-body"}`, 500, ErrNetwork},
 		"oversize":        {strings.Repeat("secret-provider-body", 4096), 200, ErrToken},
@@ -618,5 +619,20 @@ func TestVaultSizeAndMetadataCompaction(t *testing.T) {
 	f2.tokenReply = fmt.Sprintf(`{"access_token":"fake-access-token","refresh_token":"%s","token_type":"Bearer","scope":"%s","expires_in":3600}`, strings.Repeat("R", 3000), Scope)
 	if st, err := f2.service.Connect(context.Background()); !errors.Is(err, ErrStorage) || st.Account != nil {
 		t.Fatal(st, err)
+	}
+}
+
+func TestConnectAcceptsFullDriveReportedWithEarlierOrSignInScopes(t *testing.T) {
+	for _, scope := range []string{
+		legacyScope + " " + Scope,
+		"openid email profile " + Scope,
+		"https://www.googleapis.com/auth/userinfo.email " + Scope + " https://www.googleapis.com/auth/userinfo.profile",
+	} {
+		f := newFixture(t)
+		f.tokenReply = `{"access_token":"fake-access-token","refresh_token":"fake-refresh-token","token_type":"Bearer","scope":"` + scope + `","expires_in":3600}`
+		st, err := f.service.Connect(context.Background())
+		if err != nil || st.State != "connected" || st.Account == nil {
+			t.Fatal(scope, st, err)
+		}
 	}
 }

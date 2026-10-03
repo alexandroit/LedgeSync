@@ -25,8 +25,8 @@ interface UploadHarness {
   resolveLateStatus(): void;
 }
 declare global { interface Window { uploadHarness: UploadHarness } }
-async function start(page: Page) {
-  await page.addInitScript(({ connected, destination, rootDestination, preview, plan, idle, uploading }) => {
+async function start(page: Page, inApp = false) {
+  await page.addInitScript(({ connected, destination, rootDestination, preview, plan, idle, uploading, inApp }) => {
     let chosen: DriveDestination | null = null;
     let selected = destination;
     let prepared = plan;
@@ -61,8 +61,12 @@ async function start(page: Page) {
       DriveTransferStatus: async () => { calls.push('status'); if (statusFailure) throw new Error('sensitive-status-failure'); if (statusPending) { statusPending = false; const snapshot = current; return new Promise(resolve => { resolveLateStatus = () => resolve(snapshot); }); } return current; },
       CancelDriveUpload: async () => { calls.push('cancel'); if (cancelPending) return new Promise(resolve => { resolveCancel = resolve; }); current = { ...current, state: 'cancelled', message: 'Cancellation confirmed. Previously created files are preserved.' }; },
       OpenUploadedDriveFolder: async () => { calls.push('open-verified-folder'); },
+      ...(inApp ? {
+        DriveFolders: async (parent: string) => { calls.push(`folders:${parent}`); return parent === 'root' ? [{ id: destination.id, name: destination.name, parents: ['root'], canAddChildren: true }] : []; },
+        UseDriveFolder: async (id: string) => { calls.push(`use-folder:${id}`); chosen = { ...destination, id }; return chosen; },
+      } : {}),
     } } };
-  }, { connected, destination, rootDestination, preview, plan, idle, uploading });
+  }, { connected, destination, rootDestination, preview, plan, idle, uploading, inApp });
   await page.goto('/');
   await page.getByRole('button', { name: 'Choose a local folder', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Upload this folder to Google Drive', exact: true })).toBeVisible();
@@ -108,6 +112,21 @@ test('My Drive uses the validated root and never uploads on destination choice',
   expect(await page.evaluate(() => window.uploadHarness.calls)).toEqual(['source', 'my-drive']);
   await page.getByRole('button', { name: 'Preview folder upload', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Review folder upload' })).toContainText('fixture-root');
+  expect(await page.evaluate(() => window.uploadHarness.starts)).toEqual([]);
+});
+
+test('with full Drive access an existing folder is chosen inside the app, without the browser', async ({ page }) => {
+  await start(page, true);
+  await expect(page.locator('.drive-destination')).toContainText('Choose My Drive or an existing Drive folder.');
+  await page.getByRole('button', { name: 'Choose existing Drive folder', exact: true }).click();
+  const browser = page.getByRole('region', { name: 'Choose a Google Drive folder' });
+  await browser.getByRole('button', { name: destination.name, exact: true }).click();
+  await browser.getByRole('button', { name: `Use “${destination.name}”`, exact: true }).click();
+  await expect(page.locator('.destination-name')).toHaveText(`Destination: ${destination.name}`);
+  await expect(browser).toHaveCount(0);
+  expect(await page.evaluate(() => window.uploadHarness.calls)).toEqual(['source', 'folders:root', `folders:${destination.id}`, `use-folder:${destination.id}`]);
+  await page.getByRole('button', { name: 'Preview folder upload', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Review folder upload' })).toContainText(destination.id);
   expect(await page.evaluate(() => window.uploadHarness.starts)).toEqual([]);
 });
 

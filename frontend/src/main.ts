@@ -3,7 +3,7 @@ import { describe, guidanceFor, parseError } from './errors';
 import type { AutomationView, RestoreProgress, DesktopBridge, DriveConnectionStatus, DriveDestination, DriveFolder, DriveTransferStatus, DriveUploadPlan, Entry, Explanation, Operation, PolicyGroup, Preview, Project, ProjectPolicy, RunSummary, Settings, SyncActivity, SyncState, SyncStatus, TransferState } from './types';
 
 type View = 'sync' | 'files' | 'preview' | 'policies' | 'connections' | 'activity' | 'history' | 'settings';
-const version = '0.1.0-alpha.7';
+const version = '0.1.0-alpha.8';
 type DriveAction = 'status' | 'connect' | 'check' | 'disconnect' | 'revoke';
 const state = {
   preview: null as Preview | null, view: 'files' as View, path: '', query: '',
@@ -17,7 +17,7 @@ const state = {
   destination: null as DriveDestination | null,
   uploadPlan: null as DriveUploadPlan | null,
   transfer: null as DriveTransferStatus | null,
-  uploadBusy: '' as '' | 'destination' | 'preview' | 'start' | 'cancel',
+  uploadBusy: '' as '' | 'destination' | 'folder' | 'preview' | 'start' | 'cancel',
   uploadError: '',
   uploadRevision: 0,
   transferPoll: 0,
@@ -52,7 +52,7 @@ const state = {
   syncBusy: '',
   syncActivity: [] as SyncActivity[],
   syncParent: { id: 'root', name: 'My Drive' },
-  folderBrowser: { open: false, stack: [] as { id: string; name: string }[], folders: [] as DriveFolder[], loading: false, error: '' },
+  folderBrowser: { open: false, purpose: 'sync' as 'sync' | 'copy', stack: [] as { id: string; name: string }[], folders: [] as DriveFolder[], loading: false, error: '' },
 };
 // Optional bridge methods are absent from older builds and browser previews.
 function optional<K extends keyof DesktopBridge>(name: K): NonNullable<DesktopBridge[K]> | null {
@@ -291,13 +291,17 @@ async function loadDriveDestination() {
     state.uploadError = 'Could not read the saved destination. Choose a destination again before preparing an upload.'; render();
   }
 }
-async function chooseDestination(method: 'ChooseDriveDestination' | 'UseMyDrive') {
+// inAppFolders reports whether Drive folders can be chosen inside the app,
+// without a browser selection, as full Drive access allows.
+function inAppFolders() { return Boolean(optional('UseDriveFolder') && optional('DriveFolders')); }
+async function chooseDestination(method: 'ChooseDriveDestination' | 'UseMyDrive' | 'UseDriveFolder', folderID = '') {
   if (!uploadAvailable() || uploadLocked()) return;
   // Even a canceled destination dialog requires a new preview before mutation.
-  invalidateUploadPlan(); state.uploadBusy = 'destination'; state.destinationCancelIntent = false; render();
+  invalidateUploadPlan(); state.uploadBusy = method === 'ChooseDriveDestination' ? 'destination' : 'folder'; state.destinationCancelIntent = false; render();
   const revision = state.uploadRevision;
   try {
-    const destination = await bridge()[method]();
+    const useFolder = optional('UseDriveFolder');
+    const destination = method === 'UseDriveFolder' ? (useFolder ? await useFolder(folderID) : null) : await bridge()[method]();
     if (revision !== state.uploadRevision) return;
     if (destination && !matchingDestination(destination)) throw new Error('Account changed');
     if (destination) { state.destination = destination; state.transfer = null; }
@@ -414,15 +418,17 @@ function renderDriveDestination(container: HTMLElement) {
     const target = el('p', 'destination-name');
     target.append(el('span', '', 'Destination: '), el('strong', '', destination ? displayPath(destination.name) : 'Not selected'));
     section.append(target);
-    section.append(el('p', 'muted', destination ? `Your folder structure is preserved inside a LedgeSync-managed folder in ${displayPath(destination.name)}. Later uploads copy new files, verify existing copies and keep both versions of changed files.` : 'Choose My Drive or select an existing folder in your browser. Choosing a folder does not upload anything.'));
+    const inApp = inAppFolders();
+    section.append(el('p', 'muted', destination ? `Your folder structure is preserved inside a LedgeSync-managed folder in ${displayPath(destination.name)}. Later uploads copy new files, verify existing copies and keep both versions of changed files.` : `Choose My Drive or ${inApp ? 'an existing Drive folder' : 'select an existing folder in your browser'}. Choosing a folder does not upload anything.`));
     if (state.currentProject) section.append(el('p', 'pair-note', `Saved sync pair: ${displayPath(state.currentProject.name)}`));
     const actions = el('div', 'upload-actions');
-    actions.append(uploadButton('Choose existing Drive folder', () => void chooseDestination('ChooseDriveDestination'), 'destination'), uploadButton('Use My Drive', () => void chooseDestination('UseMyDrive'), 'root'));
+    actions.append(uploadButton('Choose existing Drive folder', () => void (inApp ? openFolderBrowser('copy') : chooseDestination('ChooseDriveDestination')), 'destination'), uploadButton('Use My Drive', () => void chooseDestination('UseMyDrive'), 'root'));
     const preview = uploadButton('Preview folder upload', () => void previewDriveUpload(), 'preview', true);
     preview.disabled ||= !state.preview || !destination;
     actions.append(preview); section.append(actions);
-    if (state.uploadBusy === 'destination' || state.uploadBusy === 'preview') {
-      const pending = el('p', 'upload-pending', state.uploadBusy === 'destination' ? 'Complete the folder selection in your browser, then return here.' : 'Reading source files and checking the Drive destination…');
+    if (inApp && state.folderBrowser.open && state.folderBrowser.purpose === 'copy') renderFolderBrowser(section);
+    if (state.uploadBusy === 'destination' || state.uploadBusy === 'folder' || state.uploadBusy === 'preview') {
+      const pending = el('p', 'upload-pending', state.uploadBusy === 'destination' ? 'Complete the folder selection in your browser, then return here.' : state.uploadBusy === 'folder' ? 'Checking the Drive folder…' : 'Reading source files and checking the Drive destination…');
       pending.setAttribute('role', 'status'); section.append(pending);
       if (state.uploadBusy === 'destination') {
         const cancel = button(state.destinationCancelling ? 'Cancelling selection…' : 'Cancel folder selection', () => void cancelDestination(), 'button subtle'); cancel.id = 'upload-cancel-destination'; cancel.disabled = state.destinationCancelling; section.append(cancel);
@@ -1260,11 +1266,11 @@ function renderSync(container: HTMLElement) {
   }
   const location = el('div', 'sync-location');
   location.append(icon('cloud'), el('span', '', 'New folders sync into'), el('strong', '', displayPath(state.syncParent.name)));
-  const change = button('Change', () => void openFolderBrowser(), 'button subtle'); change.id = 'sync-location-change';
+  const change = button('Change', () => void openFolderBrowser('sync'), 'button subtle'); change.id = 'sync-location-change';
   change.disabled = state.drive?.state !== 'connected' || Boolean(state.syncBusy) || !optional('DriveFolders');
   location.append(change); container.append(location);
   if (state.syncError) { const error = el('div', 'error', state.syncError); error.setAttribute('role', 'alert'); container.append(error); }
-  if (state.folderBrowser.open) renderFolderBrowser(container);
+  if (state.folderBrowser.open && state.folderBrowser.purpose === 'sync') renderFolderBrowser(container);
   const list = el('div', 'sync-list'); list.setAttribute('role', 'list');
   if (!state.syncs.length) list.append(el('p', 'empty-list', state.syncLoaded ? 'No folders are synced yet. Choose “Sync a folder” to start.' : 'Loading…'));
   for (const s of state.syncs) list.append(renderSyncCard(s));
@@ -1328,8 +1334,8 @@ function renderSyncActivityList(container: HTMLElement) {
   }
   section.append(list); container.append(section);
 }
-async function openFolderBrowser() {
-  state.folderBrowser = { open: true, stack: [{ id: 'root', name: 'My Drive' }], folders: [], loading: true, error: '' };
+async function openFolderBrowser(purpose: 'sync' | 'copy') {
+  state.folderBrowser = { open: true, purpose, stack: [{ id: 'root', name: 'My Drive' }], folders: [], loading: true, error: '' };
   render(); await loadFolders();
 }
 async function loadFolders() {
@@ -1362,10 +1368,13 @@ function renderFolderBrowser(container: HTMLElement) {
   const current = fb.stack[fb.stack.length - 1];
   const actions = el('div', 'pair-actions');
   const use = button(`Use “${current.name}”`, () => {
-    state.syncParent = { id: current.id, name: current.name }; fb.open = false;
+    fb.open = false;
+    if (fb.purpose === 'copy') { void chooseDestination('UseDriveFolder', current.id); return; }
+    state.syncParent = { id: current.id, name: current.name };
     try { localStorage.setItem('ledgesync.syncParent', JSON.stringify(state.syncParent)); } catch { /* per-viewer convenience only */ }
     render();
   }, 'button primary'); use.id = 'folder-use';
+  use.disabled = fb.purpose === 'copy' && uploadLocked();
   const cancel = button('Cancel', () => { fb.open = false; render(); }, 'button subtle');
   actions.append(use, cancel); box.append(actions); container.append(box);
 }

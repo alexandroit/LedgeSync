@@ -91,7 +91,6 @@ func TestNativePickerRejectsDifferentAccountWithoutPersisting(t *testing.T) {
 
 func TestNativePickerRejectsInvalidSelectionsBeforeExchange(t *testing.T) {
 	for name, modify := range map[string]func(url.Values){
-		"missing":               func(q url.Values) { q.Del("picked_file_ids") },
 		"empty":                 func(q url.Values) { q.Set("picked_file_ids", "") },
 		"multiple":              func(q url.Values) { q.Set("picked_file_ids", "one,two") },
 		"duplicate":             func(q url.Values) { q.Add("picked_file_ids", "another") },
@@ -125,8 +124,26 @@ func TestNativePickerDeniedPreservesConnection(t *testing.T) {
 	}
 }
 
-func TestNativePickerRequiresExactScopeEvenWithRetainedRefresh(t *testing.T) {
-	for _, scope := range []string{"", Scope + " https://www.googleapis.com/auth/drive"} {
+func TestNativePickerWithoutSelectionExplainsAndKeepsConnection(t *testing.T) {
+	f := newBundledFixture(t)
+	connected := f.connect()
+	before := f.store.value
+	pickerBrowser(f, func(q url.Values) { q.Del("picked_file_ids") })
+	if _, err := f.service.ChooseFolder(context.Background(), connected.Account.Reference); !errors.Is(err, ErrNoFolderSelected) {
+		t.Fatalf("missing selection was not explained: %v", err)
+	}
+	if f.tokenCalls != 1 || f.store.value != before {
+		t.Fatal("missing selection exchanged or changed credentials")
+	}
+}
+
+func TestNativePickerRequiresFullDriveScopeEvenWithRetainedRefresh(t *testing.T) {
+	for scope, want := range map[string]error{
+		"":                  ErrScope,
+		Scope + " " + Scope: ErrScopeUnexpected,
+		Scope + " https://www.googleapis.com/auth/gmail.readonly": ErrScopeUnexpected,
+		legacyScope: ErrScopeNotGranted,
+	} {
 		f := newBundledFixture(t)
 		connected := f.connect()
 		before := f.store.value
@@ -134,8 +151,8 @@ func TestNativePickerRequiresExactScopeEvenWithRetainedRefresh(t *testing.T) {
 		response := map[string]any{"access_token": "fake-access-token", "token_type": "Bearer", "expires_in": 3600, "scope": scope}
 		data, _ := json.Marshal(response)
 		f.tokenReply = string(data)
-		if _, err := f.service.ChooseFolder(context.Background(), connected.Account.Reference); !errors.Is(err, ErrScope) || f.store.value != before {
-			t.Fatal("Picker accepted missing or expanded scope")
+		if _, err := f.service.ChooseFolder(context.Background(), connected.Account.Reference); !errors.Is(err, want) || f.store.value != before {
+			t.Fatalf("Picker scope %q: got %v, want %v", scope, err, want)
 		}
 	}
 }

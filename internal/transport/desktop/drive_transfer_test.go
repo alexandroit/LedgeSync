@@ -176,6 +176,24 @@ func TestTransferBridgePickerPreservesSelectionOnCancelAndAccountMismatch(t *tes
 	}
 }
 
+func TestTransferBridgeUsesFolderFromTheInAppBrowser(t *testing.T) {
+	g := connectedGoogle()
+	f := &fakeTransfer{}
+	b := NewWithGoogleDrive(nil, nil, nil, g, nil)
+	b.transfer = f
+	d, err := b.UseDriveFolder("browsed-folder")
+	if err != nil || d.ID != "browsed-folder" || d.AccountReference != g.status.Account.Reference || f.selections != 1 {
+		t.Fatal("browsed folder was not bound to the current account")
+	}
+	if d, err = b.UseDriveFolder(""); err != nil || d.ID != "root" {
+		t.Fatal("an empty folder did not select My Drive")
+	}
+	g.status.State, g.status.Account = "disconnected", nil
+	if _, err = b.UseDriveFolder("browsed-folder"); err == nil || f.selections != 2 {
+		t.Fatal("a folder was selected without a connected account")
+	}
+}
+
 func TestTransferBridgeUsesNativeSourceAndExactApprovedDigest(t *testing.T) {
 	root := t.TempDir()
 	g := connectedGoogle()
@@ -217,7 +235,8 @@ func TestTransferBusyBlocksSourceAccountAndDestinationMutations(t *testing.T) {
 	checks := []func() error{
 		func() error { _, e := b.OpenFolder(); return e }, func() error { _, e := b.OpenConfiguration(); return e }, func() error { _, e := b.Refresh(); return e },
 		func() error { _, e := b.ConnectGoogleDrive(); return e }, func() error { _, e := b.CheckGoogleDrive(); return e }, func() error { _, e := b.ChooseDriveDestination(); return e },
-		func() error { _, e := b.UseMyDrive(); return e }, func() error { _, e := b.PreviewDriveUpload(); return e }, func() error { _, e := b.StartDriveUpload("digest"); return e },
+		func() error { _, e := b.UseMyDrive(); return e }, func() error { _, e := b.UseDriveFolder("folder-id"); return e },
+		func() error { _, e := b.PreviewDriveUpload(); return e }, func() error { _, e := b.StartDriveUpload("digest"); return e },
 	}
 	for _, check := range checks {
 		if err := check(); !errors.Is(err, errTransferBusy) {

@@ -165,14 +165,19 @@ func newSelectionCallback(ctx context.Context, state, host string, result chan<-
 		case len(q["error"]) == 1 && q.Get("error") != "" && len(q["code"]) == 0:
 			value.err = ErrDenied
 		case len(q["code"]) == 1 && len(q["error"]) == 0 && safeSecret(q.Get("code")) && len(q.Get("code")) <= 4096:
-			value.code = q.Get("code")
+			if value.err = callbackScopeError(q); value.err == nil {
+				value.code = q.Get("code")
+			}
 		default:
 			value.err = ErrCallback
 		}
 		if folder {
-			if value.err == nil && len(q["picked_file_ids"]) == 1 && validFolderID(q.Get("picked_file_ids")) {
+			switch {
+			case value.err == nil && len(q["picked_file_ids"]) == 1 && validFolderID(q.Get("picked_file_ids")):
 				value.folderID = q.Get("picked_file_ids")
-			} else if value.err == nil || len(q["picked_file_ids"]) != 0 {
+			case value.err == nil && len(q["picked_file_ids"]) == 0:
+				value.err = ErrNoFolderSelected
+			case value.err == nil || len(q["picked_file_ids"]) != 0:
 				value.err = ErrCallback
 			}
 		}
@@ -226,9 +231,6 @@ func validCallbackParameters(q url.Values) bool {
 			return false
 		}
 	}
-	if scope, present := q["scope"]; present && !acceptedScope(scope[0], false) {
-		return false
-	}
 	if issuer, present := q["iss"]; present && issuer[0] != "https://accounts.google.com" {
 		return false
 	}
@@ -241,10 +243,67 @@ func validCallbackParameters(q url.Values) bool {
 	return true
 }
 
-func acceptedScope(value string, allowMissing bool) bool {
-	if value == "" {
-		return allowMissing
+// signInScopes are Google's basic profile scopes. Google may report them next
+// to Drive access when the account signed in to another client of the same
+// Cloud project. They reveal nothing that Drive access does not.
+var signInScopes = map[string]bool{
+	"openid":  true,
+	"email":   true,
+	"profile": true,
+	"https://www.googleapis.com/auth/userinfo.email":   true,
+	"https://www.googleapis.com/auth/userinfo.profile": true,
+}
+
+// scopeGrant classifies a reported scope set: whether full Drive access is
+// granted, and whether it holds anything unexpected, that is a repeated scope
+// or one other than Drive access and Google's basic profile scopes.
+func scopeGrant(value string) (granted, unexpected bool) {
+	seen := map[string]bool{}
+	for _, s := range strings.Fields(value) {
+		switch {
+		case seen[s]:
+			unexpected = true
+		case s == Scope:
+			granted = true
+		case s == legacyScope || signInScopes[s]:
+		default:
+			unexpected = true
+		}
+		seen[s] = true
 	}
-	scopes := strings.Fields(value)
-	return len(scopes) == 1 && scopes[0] == Scope
+	return granted, unexpected
+}
+
+// scopeError explains a granted scope set that LedgeSync cannot use, or
+// returns nil. An empty set is accepted only when allowMissing is set: a
+// refresh may omit scope and then retains the already validated grant.
+func scopeError(value string, allowMissing bool) error {
+	if value == "" {
+		if allowMissing {
+			return nil
+		}
+		return ErrScope
+	}
+	granted, unexpected := scopeGrant(value)
+	switch {
+	case unexpected:
+		return ErrScopeUnexpected
+	case !granted:
+		return ErrScopeNotGranted
+	}
+	return nil
+}
+
+// callbackScopeError checks the scope a callback reports, if any. A reported
+// but empty scope means that nothing was granted, for example when the
+// permission was left unchecked. The token response is checked again.
+func callbackScopeError(q url.Values) error {
+	scope, present := q["scope"]
+	switch {
+	case !present:
+		return nil
+	case strings.TrimSpace(scope[0]) == "":
+		return ErrScopeNotGranted
+	}
+	return scopeError(scope[0], false)
 }

@@ -143,6 +143,7 @@ export interface DesktopBridge {
   SyncOpenLocal?(id: string): Promise<void>;
   SyncOpenDrive?(id: string): Promise<void>;
   DriveFolders?(parentID: string): Promise<DriveFolder[]>;
+  UseDriveFolder?(id: string): Promise<DriveDestination>;
 }
 
 export type SyncState = 'starting' | 'syncing' | 'synced' | 'paused' | 'waiting' | 'confirm_deletes' | 'error';

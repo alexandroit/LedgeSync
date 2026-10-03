@@ -139,8 +139,18 @@ func (a *App) ChooseDriveDestination() (*transfer.Destination, error) {
 }
 
 func (a *App) UseMyDrive() (*transfer.Destination, error) {
+	return a.UseDriveFolder(transfer.MyDriveID)
+}
+
+// UseDriveFolder selects a Drive folder chosen in the in-app folder browser
+// ("" or "root" for My Drive). Full Drive access lists every folder, so no
+// browser selection is needed. The folder is validated again before use.
+func (a *App) UseDriveFolder(id string) (*transfer.Destination, error) {
 	if a.transfer == nil {
 		return nil, errTransferUnavailable
+	}
+	if id == "" {
+		id = transfer.MyDriveID
 	}
 	ctx, err := a.begin()
 	if err != nil {
@@ -151,7 +161,7 @@ func (a *App) UseMyDrive() (*transfer.Destination, error) {
 	if err != nil {
 		return nil, connections.PublicError(err)
 	}
-	destination, err := a.transfer.SetDestination(ctx, transfer.MyDriveID, account)
+	destination, err := a.transfer.SetDestination(ctx, id, account)
 	if err == nil {
 		a.destinationChanged()
 	}

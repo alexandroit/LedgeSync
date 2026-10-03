@@ -13,6 +13,9 @@ export function parseError(error: unknown): PublicError | null {
 const guidance: Record<string, string> = {
   AUTH_REQUIRED: 'Open Connections and reconnect Google Drive.',
   AUTH_SCOPE_REQUIRED: 'Open Connections and reconnect Google Drive.',
+  AUTH_SCOPE_NOT_GRANTED: 'Connect again and allow LedgeSync to see, edit, create and delete your Google Drive files. If Google shows a checkbox for this permission, select it.',
+  AUTH_SCOPE_UNEXPECTED: 'Open myaccount.google.com/connections, remove LedgeSync, then connect Google Drive again.',
+  DRIVE_FOLDER_NOT_SELECTED: 'Choose a folder in Google\'s window and select it to continue.',
   AUTH_IDENTITY_CHANGED: 'Open Connections and check which account is connected.',
   ACCOUNT_CHANGED: 'Open Connections and check which account is connected.',
   AUTH_STORAGE_UNAVAILABLE: 'Unlock your system credential vault (Keychain, Credential Manager or GNOME Keyring), then try again.',

@@ -327,7 +327,7 @@ func (s *Service) refresh(ctx context.Context, r *record) error {
 	return s.save(ctx, r)
 }
 func (s *Service) checkFailure(ctx context.Context, r *record, err error) (Status, error) {
-	if errors.Is(err, ErrReconnect) || errors.Is(err, ErrIdentity) || errors.Is(err, ErrScope) {
+	if errors.Is(err, ErrReconnect) || errors.Is(err, ErrIdentity) || errors.Is(err, ErrScope) || errors.Is(err, ErrScopeNotGranted) || errors.Is(err, ErrScopeUnexpected) {
 		r.Credential.Reconnect = true
 		if saveErr := s.save(ctx, r); saveErr != nil {
 			return s.publish(r, saveErr)

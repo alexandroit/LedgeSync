@@ -2,7 +2,7 @@
 
 **Product direction:** the desktop application is the primary experience. The CLI is a secondary interface over the same Go application services; its currently implemented commands are listed below. The visual model should feel immediately familiar to users of the **current Google Drive web app / desktop experience** or desktop file managers without copying Google trademarks, artwork, proprietary assets, or pixel-for-pixel layout. Familiar patterns include: left navigation, top breadcrumb/path bar, search entry, list/grid toggle, file rows/cards with status, details pane, and activity/history views.
 
-## Current implementation (0.1.0-alpha.7)
+## Current implementation (0.1.0-alpha.8)
 
 **Two-way sync** is the primary workflow ([ADR-034](12_ADR_DECISIONS.md),
 [details](research/TWO_WAY_SYNC.md)). The desktop opens on **Synced folders**:
@@ -24,15 +24,15 @@ The earlier synchronization failure is fixed and regression-tested; see the
 [live acceptance](research/DRIVE_UPLOAD_ACCEPTANCE.md).
 
 In the desktop: choose a local folder, connect, choose **My Drive** or an
-existing folder through Google's system-browser Picker, **Preview folder
-upload**, review, then **Upload folder**. The local root becomes a managed child
+existing folder in the in-app Drive folder browser ([ADR-035](12_ADR_DECISIONS.md)),
+**Preview folder upload**, review, then **Upload folder**. The local root becomes a managed child
 folder; included files and empty folders keep their hierarchy; active ignore
 rules apply, and directories they exclude completely are not read. Links and
 special files are listed as *Not copied*. The review counts new, changed,
 unchanged and copied-again items. Verified copies are reused; changed files keep
 both versions (or are paused when the pair's conflict policy is *pause*). Items
 missing, trashed, renamed or moved in Drive are copied again without touching the
-existing item. No Drive file is overwritten or deleted. `drive.file` is unchanged.
+existing item. One-time copies never overwrite or delete a Drive file.
 
 Every approved run saves its **sync pair**. **Sync pairs** reopens a pair (the
 folder is rescanned and the destination revalidated; no approval is stored).

@@ -76,17 +76,15 @@ func TestCallbackRejectsParsedFragments(t *testing.T) {
 
 func TestCallbackParameterShapeAndRedactedCompletion(t *testing.T) {
 	for name, query := range map[string]string{
-		"duplicate-extension":          "code=synthetic-code&authuser=0&authuser=1",
-		"duplicate-scope":              "code=synthetic-code&scope=" + url.QueryEscape(Scope) + "&scope=" + url.QueryEscape(Scope),
-		"duplicate-error-description":  "error=access_denied&error_description=synthetic-description&error_description=other",
-		"callback-access-token":        "code=synthetic-code&access_token=synthetic-private-token",
-		"callback-refresh-token":       "code=synthetic-code&refresh_token=synthetic-private-token",
-		"callback-id-token":            "code=synthetic-code&id_token=synthetic-private-token",
-		"callback-token-type":          "code=synthetic-code&token_type=Bearer",
-		"callback-token-expiry":        "code=synthetic-code&expires_in=3600",
-		"broad-scope":                  "code=synthetic-code&scope=https://www.googleapis.com/auth/drive%20https://www.googleapis.com/auth/gmail.readonly",
-		"narrow-scope":                 "code=synthetic-code&scope=https://www.googleapis.com/auth/drive.file",
-		"empty-scope":                  "code=synthetic-code&scope=",
+		"duplicate-extension":         "code=synthetic-code&authuser=0&authuser=1",
+		"duplicate-scope":             "code=synthetic-code&scope=" + url.QueryEscape(Scope) + "&scope=" + url.QueryEscape(Scope),
+		"duplicate-error-description": "error=access_denied&error_description=synthetic-description&error_description=other",
+		"callback-access-token":       "code=synthetic-code&access_token=synthetic-private-token",
+		"callback-refresh-token":      "code=synthetic-code&refresh_token=synthetic-private-token",
+		"callback-id-token":           "code=synthetic-code&id_token=synthetic-private-token",
+		"callback-token-type":         "code=synthetic-code&token_type=Bearer",
+		"callback-token-expiry":       "code=synthetic-code&expires_in=3600",
+
 		"wrong-issuer":                 "code=synthetic-code&iss=https://attacker.invalid",
 		"mixed-code-error-description": "code=synthetic-code&error_description=synthetic-description",
 		"mixed-code-error-uri":         "code=synthetic-code&error_uri=https://attacker.invalid",
@@ -302,5 +300,47 @@ func TestCancellationClosesListenerWhileBrowserLauncherReturns(t *testing.T) {
 				t.Fatal("canceled attempt reached the provider")
 			}
 		})
+	}
+}
+
+func TestCallbackScopeProblemsAreExplained(t *testing.T) {
+	for name, tc := range map[string]struct {
+		scope string
+		want  error
+	}{
+		"only-file-scope":   {legacyScope, ErrScopeNotGranted},
+		"only-sign-in":      {"openid email", ErrScopeNotGranted},
+		"empty-scope":       {"", ErrScopeNotGranted},
+		"foreign-scope":     {Scope + " https://www.googleapis.com/auth/gmail.readonly", ErrScopeUnexpected},
+		"repeated-in-value": {Scope + " " + Scope, ErrScopeUnexpected},
+	} {
+		t.Run(name, func(t *testing.T) {
+			result := make(chan callbackResult, 1)
+			handler := newCallback(context.Background(), "synthetic-state", callbackHost, result)
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, callbackRequest("/?state=synthetic-state&code=synthetic-code&scope="+url.QueryEscape(tc.scope)))
+			if w.Code != http.StatusBadRequest || len(result) != 1 {
+				t.Fatal("an unusable grant must terminate safely")
+			}
+			if got := <-result; !errors.Is(got.err, tc.want) || got.code != "" {
+				t.Fatalf("got %v, want %v", got.err, tc.want)
+			}
+			assertRedactedCallback(t, w)
+		})
+	}
+}
+
+func TestCallbackAcceptsFullDriveWithEarlierOrSignInScopes(t *testing.T) {
+	for _, scope := range []string{Scope, legacyScope + " " + Scope, "openid email profile " + Scope, "https://www.googleapis.com/auth/userinfo.email " + Scope} {
+		result := make(chan callbackResult, 1)
+		handler := newCallback(context.Background(), "synthetic-state", callbackHost, result)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, callbackRequest("/?state=synthetic-state&code=synthetic-code&scope="+url.QueryEscape(scope)))
+		if w.Code != http.StatusOK || len(result) != 1 {
+			t.Fatalf("scope %q: full Drive access must be accepted: %d", scope, w.Code)
+		}
+		if got := <-result; got.err != nil || got.code != "synthetic-code" {
+			t.Fatalf("scope %q: %+v", scope, got)
+		}
 	}
 }

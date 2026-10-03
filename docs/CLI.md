@@ -1,14 +1,51 @@
-# LedgeSync CLI and server copies
+# LedgeSync CLI: sync and copies for servers
 
-**0.1.0-alpha.6 (current pre-release).** Uploads to Google Drive now work;
-alpha.5 could not upload files. Since alpha.5 the CLI has saved sync pairs,
-approved pair copies, opt-in automatic copies for servers and restore to a new
-folder (see
-[Saved pairs, automatic copies and restore](#saved-pairs-automatic-copies-and-restore)).
-CLI archives for all six targets are in the
-[release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.6), and
-`sudo apt-get install ledgesync-cli` installs it from the signed APT repository.
-The alpha.4 description below is historical.
+**0.1.0-alpha.7 (current pre-release).** Adds **two-way sync** like Google Drive
+for desktop (see [Two-way sync](#two-way-sync)), sharing saved folders and the
+engine with the desktop app. Saved pairs, approved one-time copies, automatic
+copies and restore remain available. CLI archives for all six targets are in
+the [release](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.7),
+and `sudo apt-get install ledgesync-cli` installs the CLI from the signed APT
+repository. The alpha.4 description further below is historical.
+
+## Two-way sync
+
+Each command is described below.
+
+- **`ledgesync sync add --root ~/Projects [--parent FOLDER_ID] [--watch]`**
+  starts syncing `~/Projects` with a Drive folder named `Projects` in My Drive,
+  or inside the folder whose ID you pass as `--parent`. It reuses that folder
+  if one exists, then runs a first pass. With `--watch` it keeps syncing until
+  interrupted.
+- **`ledgesync sync watch`** keeps every saved folder in sync while it runs,
+  printing one JSON line whenever a folder's state changes. Run it in a
+  terminal multiplexer or in a systemd service you create. LedgeSync installs
+  none.
+- **`ledgesync sync run [--pair ID]`** runs one pass of every active folder, or
+  of one folder, for cron or timers. Exit code 5 means deletions are waiting
+  for confirmation.
+- **`ledgesync sync list`** shows each folder's status, Drive folder link and
+  items not synced.
+- **`ledgesync sync pause|resume|remove --pair ID`** pauses, resumes or stops a
+  folder. `remove` keeps all files on both sides.
+- **`ledgesync sync confirm-deletes --pair ID --count N`** confirms exactly the
+  N held deletions shown by `sync run`. A different count deletes nothing.
+- **`ledgesync sync restore-deletes --pair ID`** copies the held items back
+  instead of deleting them.
+- **`ledgesync sync activity [--pair ID]`** lists recent uploads, downloads,
+  deletions and conflicts.
+
+How sync handles changes:
+- Edits become new Drive revisions.
+- Items deleted on one side go to the Drive trash, or locally to the folder's
+  `.ledgesync-trash` for 30 days.
+- When a file changed on both sides, both versions are kept.
+- Ignore rules (recursive `.gitignore` by default) apply in both directions.
+- Google Docs, Sheets and Slides stay in Drive.
+
+Sync needs the full Drive access granted by `ledgesync auth connect` in alpha.7
+([connection guide](GOOGLE_DRIVE_AUTH.md)). Details:
+[two-way sync](research/TWO_WAY_SYNC.md).
 
 **LedgeSync 0.1.0-alpha.4** provides manual Google Drive copies through the same
 authorization, provider, filtering, approval and journal services as the desktop.

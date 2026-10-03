@@ -1,28 +1,34 @@
 # Connect Google Drive
 
-LedgeSync **0.1.0-alpha.4** connects directly to Google and copies explicitly
-approved folders through its desktop and native CLI. Official builds include the
-project's Google OAuth Desktop client. You do not create a Google Cloud project,
-download credentials, import JSON or paste tokens into the app.
+LedgeSync **0.1.0-alpha.7** connects directly to Google and keeps folders in
+**two-way sync** with Google Drive through its desktop and native CLI. One-time
+approved copies remain available. Official builds include the project's Google
+OAuth Desktop client. You do not create a Google Cloud project, download
+credentials, import JSON or paste tokens into the app.
 
-The [alpha.4 applications and installers](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.4)
-are published and publicly verified. The signed Ubuntu APT repository serves
-alpha.4; native installation checks passed for amd64 and arm64. See the
-[installation guide](PLATFORMS.md).
-The release includes [OAuth hardening](research/OAUTH_SECURITY_HARDENING.md),
-native Google destination selection, desktop/CLI credential-operation locking,
-**Disconnect from this device**, and separately confirmed desktop revocation.
+## Access requested (alpha.7 and later)
 
-The owner reports Production OAuth, enabled Google Picker API and a successful
-account connection. Independent live acceptance of the new Picker, copy/recovery
-and SSH return paths remains unverified. Earlier alpha.3 installers connected an
-account and provided offline previews; they did not contain this copy executor.
+Sync requests **full Google Drive access**
+(`https://www.googleapis.com/auth/drive`; owner decision, see
+[ADR-034](12_ADR_DECISIONS.md)). Google shows this as permission to see, edit,
+create and delete all of your Google Drive files. Full access is needed because
+two-way sync must see and download files that you add to a synced folder
+through the Drive website, your phone or other apps; the earlier per-file
+`drive.file` scope only covers files the app created. LedgeSync uses the access
+only for the folders you sync or copy and for listing folders when you choose
+where a synced folder lives.
 
-**Current owner report:** files are not synchronizing in the application. The
-root cause and installed artifact have not been established. Account connection
-alone does not start a copy. Follow the [continuation handoff](../HANDOFF.md)
-to reproduce and fix the actual workflow; do not treat the published packages or
-instructions below as completed live acceptance.
+- **Existing connections reconnect once.** A connection made by alpha.6 or
+  earlier holds only `drive.file`. After updating, Connections shows
+  **Reconnect** (or `ledgesync auth connect`). Approve in the browser.
+- **Owner setup for the OAuth client.** In the Google Cloud Console project of
+  the bundled client, open **Google Auth Platform → Data Access → Add or remove
+  scopes** and add `.../auth/drive`. Until Google verifies the restricted scope,
+  Google shows an "unverified app" screen at consent (**Advanced → Go to
+  LedgeSync**). Unverified apps are limited to 100 users. Public distribution
+  needs Google's restricted-scope verification, including a security
+  assessment.
+
 
 ## Connect your account
 
@@ -133,10 +139,10 @@ Transfer-state writes and credential operations have separate native process
 locks. Neither lock contains credentials. Journal paths and
 filenames may be private, so do not publish the database as a diagnostic dump.
 
-The requested `https://www.googleapis.com/auth/drive.file` scope covers files
-created by or explicitly made available to the app. It does not grant access
-to every existing Drive file or recursively grant a selected folder's children.
-See Google's [scope description](https://developers.google.com/workspace/drive/api/guides/api-specific-auth).
+The requested `https://www.googleapis.com/auth/drive` scope is full Drive
+access (see above). LedgeSync reads and changes only the folders you sync or
+copy, plus folder names in the location browser. See Google's
+[scope description](https://developers.google.com/workspace/drive/api/guides/api-specific-auth).
 
 The alpha.4 native CLI supports explicit browser consent and interactive `copy`
 through the same services as the desktop. `auth status` reads safe local metadata

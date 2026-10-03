@@ -2,6 +2,34 @@
 
 **Updated:** 2026-10-02. **Product:** LedgeSync. **Specification:** 0.2.1.
 
+## Alpha.7 — two-way sync like Google Drive (in progress)
+
+**Owner request (2026-10-02):** "it has to be like Google Drive: once I select
+the directory it starts sending and receiving." The owner made two decisions:
+- **Full Drive access**, so that files added through the website or the phone
+  are received.
+- **Deletions propagate with trash recovery**, and the sync pauses when many
+  files disappear at once.
+
+Both are recorded in [ADR-034](12_ADR_DECISIONS.md). The design, safety rules,
+limitations and tests are in [two-way sync](research/TWO_WAY_SYNC.md).
+
+| Area | State |
+|---|---|
+| Engine (`internal/syncer`) | Implemented. 19 tests pass with `-race`, including end-to-end runs through the real Drive client and the emulator, and the background loop syncing both ways |
+| Drive client and request boundary | Implemented: revisions (resumable PATCH), trash, change feed, modification time; boundary tests |
+| Desktop | Implemented: **Synced folders** view, in-app Drive folder browser, guard choices, activity, minimize-to-keep-syncing; 5 new Playwright tests (58 in total) |
+| CLI | Implemented: `ledgesync sync add/list/run/watch/pause/resume/remove/confirm-deletes/restore-deletes/activity`; CLI test |
+| Privacy policy, terms, website | Updated for full access, local writes and deletion behavior |
+| Live Google acceptance | **Pending.** The owner adds the `drive` scope to the consent screen and reconnects once |
+| Release | **Pending:** 0.1.0-alpha.7 |
+
+**Owner actions:**
+1. In Google Cloud Console, add `https://www.googleapis.com/auth/drive` under
+   **Google Auth Platform → Data Access**.
+2. Reconnect Google Drive once (the existing grant is `drive.file`).
+3. For public distribution, Google's restricted-scope verification is required.
+
 ## Alpha.6 published — file uploads to Google Drive work
 
 **Alpha.5 cannot upload files to real Google Drive.** With the owner's consent,

@@ -1,9 +1,15 @@
 # LedgeSync
 
-LedgeSync is designed to copy explicitly approved local folders to Google Drive, preserving
-the included hierarchy and empty folders while applying your ignore policies.
-The desktop is the primary interface; the native CLI uses the same authorization,
-filtering, approval, transfer and recovery services.
+LedgeSync keeps folders on your computer and Google Drive in **two-way sync**,
+like Google Drive for desktop, while applying your ignore policies. Choose a
+folder and it starts sending and receiving changes:
+- edits become Drive revisions;
+- deleted files go to the trash on the other side;
+- when a file changed on both sides, both versions are kept.
+
+Approved one-time copies remain available. The desktop is the primary
+interface; the native CLI (including `ledgesync sync watch` for servers) uses
+the same engine. See [two-way sync](docs/research/TWO_WAY_SYNC.md).
 
 [Website](https://ledgesync.com/) ·
 [Download 0.1.0-alpha.6](https://github.com/alexandroit/LedgeSync/releases/tag/v0.1.0-alpha.6) ·

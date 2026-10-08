@@ -4,7 +4,7 @@ go 1.27.1
 
 require (
 	github.com/danieljoos/wincred v1.2.3
-	github.com/godbus/dbus/v5 v5.1.0
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/keybase/go-keychain v0.0.1
 	github.com/mattn/go-isatty v0.0.24
 	github.com/wailsapp/wails/v2 v2.14.0

@@ -86,7 +86,7 @@ jobs:
       - name: Verify install, upgrade, shortcuts and uninstall
         shell: pwsh
         run: ./tools/test_windows_installer.ps1 -Installer "build/installers/LedgeSync-${env:LEDGESYNC_RELEASE_VERSION}-windows-${{ matrix.arch }}-setup.exe" -Version "$env:LEDGESYNC_RELEASE_VERSION" -PayloadRoot build/installer-inputs/windows-${{ matrix.arch }}/desktop -Arch ${{ matrix.arch }} -ReportPath build/installers/windows-${{ matrix.arch }}-install-test.json -WizardSmoke
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: ledgesync-windows-installer-${{ matrix.arch }}
@@ -128,7 +128,7 @@ jobs:
           PY
       - name: Verify native package install and removal
         run: python3 deploy/linux/smoke_test.py --packages build/deb --arch ${{ matrix.arch }} --install --gui-smoke --version "$LEDGESYNC_RELEASE_VERSION" --manifest "$LEDGESYNC_SOURCE_MANIFEST"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ledgesync-debian-${{ matrix.arch }}
           path: build/deb/
@@ -150,7 +150,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y apt-utils gnupg
       - name: Verify signed repository and APT lifecycle with an ephemeral CI key
         run: python3 tools/test_apt_repository.py --packages build/apt-packages --version "$LEDGESYNC_RELEASE_VERSION"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ledgesync-apt-repository-test
           path: build/apt-validation/
@@ -167,7 +167,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Verify public HTTPS key, signed metadata and apt-get install
         run: python3 tools/test_apt_repository.py --public --version "$LEDGESYNC_RELEASE_VERSION"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ledgesync-public-apt-${{ matrix.runner }}
           path: build/apt-validation/
